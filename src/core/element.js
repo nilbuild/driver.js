@@ -81,12 +81,33 @@ export default class Element {
   }
 
   /**
+   * Manually scrolls to the position of element if `container` options was informed
+   * This helps to improve scroll experience to containers different from window
+   * @private
+   */
+  scrollContainerManually() {
+    const elementRect = this.node.getBoundingClientRect();
+    const containerRect = this.options.container.getBoundingClientRect();
+
+    const absoluteElementTop = elementRect.top + this.options.container.scrollTop;
+    const height = absoluteElementTop - (containerRect.height / 2);
+
+    this.options.container.scrollTo(0, height);
+  }
+
+  /**
    * Brings the element to middle of the view port if not in view
    * @public
    */
   bringInView() {
     // If the node is not there or already is in view
     if (!this.node || this.isInView()) {
+      return;
+    }
+
+    // If tour is inside a container different from window
+    if (this.options.container) {
+      this.scrollContainerManually();
       return;
     }
 
