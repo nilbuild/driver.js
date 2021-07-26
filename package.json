@@ -1,6 +1,6 @@
 {
   "name": "@contaazul/driver.js",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "A light-weight, no-dependency, vanilla JavaScript library to drive the user's focus across the page",
   "main": "dist/driver.min.js",
   "types": "types/index.d.ts",

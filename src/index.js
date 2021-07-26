@@ -28,6 +28,7 @@ export default class Driver {
    */
   constructor(options = {}) {
     this.options = {
+      container: null, // Whether tour will be inside a container different from window
       animate: SHOULD_ANIMATE_OVERLAY, // Whether to animate or not
       opacity: OVERLAY_OPACITY,    // Overlay opacity
       padding: OVERLAY_PADDING,    // Spacing around the element from the overlay
