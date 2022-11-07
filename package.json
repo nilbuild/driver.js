@@ -1,6 +1,6 @@
 {
   "name": "@contaazul/driver.js",
-  "version": "0.11.2",
+  "version": "0.11.3",
   "description": "A light-weight, no-dependency, vanilla JavaScript library to drive the user's focus across the page",
   "main": "dist/driver.min.js",
   "types": "types/index.d.ts",
@@ -18,9 +18,9 @@
   "author": "Kamran Ahmed <kamranahmed.se@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.4.5",
+    "@babel/core": "7.9.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
+    "@babel/preset-env": "7.9.0",
     "autoprefixer": "^9.7.4",
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.6",
