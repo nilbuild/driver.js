@@ -258,6 +258,9 @@ type DriveStep = {
   // Whether to disable interaction with the highlighted element. (default: false)
   disableActiveInteraction?: boolean;
 
+  // Arbitrary data that you can pass to the step in order to support complex custom logic in hooks.
+  data?: Record<string, any>;
+
   // Callback when the current step is deselected,
   // about to be highlighted or highlighted.
   // Each callback receives the following parameters:
