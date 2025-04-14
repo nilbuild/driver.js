@@ -48,8 +48,10 @@
     "webpack-cli": "^3.3.4",
     "webpack-dev-server": "^3.7.1"
   },
-  "dependencies": {},
   "browserslist": [
     "defaults"
-  ]
+  ],
+  "dependencies": {
+    "dompurify": "^3.2.5"
+  }
 }
