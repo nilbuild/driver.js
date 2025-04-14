@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 /**
  * Turn a string into a node
  * @param  {String} htmlString to convert
@@ -5,7 +7,7 @@
  */
 export const createNodeFromString = (htmlString) => {
   const div = document.createElement('div');
-  div.innerHTML = htmlString.trim();
+  div.innerHTML = DOMPurify.sanitize(htmlString.trim());
 
   // Change this to div.childNodes to support multiple top-level nodes
   return div.firstChild;
