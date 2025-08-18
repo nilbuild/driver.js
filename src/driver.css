@@ -137,7 +137,7 @@
 }
 
 /* Disable the scrolling of parent element if it has an active element*/
-:not(body):has(> .driver-active-element) {
+.driver-active-element-parent {
   overflow: hidden !important;
 }
 

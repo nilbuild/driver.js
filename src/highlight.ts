@@ -62,6 +62,9 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
 
   const fromStep = getState("__activeStep");
   const fromElement = getState("__activeElement") || toElement;
+  const fromParent = getState("__parentOfActiveElement") || (toElement?.parentElement || toElement.closest('*:not(html):not(body)') as Element | undefined);
+
+  const toParent = toElement?.parentElement || toElement.closest('*:not(html):not(body)') as Element | undefined;
 
   // If it's the first time we're highlighting an element, we show
   // the popover immediately. Otherwise, we wait for the animation
@@ -103,6 +106,7 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
   setState("previousElement", fromElement);
   setState("activeStep", toStep);
   setState("activeElement", toElement);
+  setState("parentOfActiveElement", toParent);
 
   const animate = () => {
     const transitionCallback = getState("__transitionCallback");
@@ -141,6 +145,7 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
       setState("__previousElement", fromElement);
       setState("__activeStep", toStep);
       setState("__activeElement", toElement);
+      setState("__parentOfActiveElement", toParent);
     }
 
     window.requestAnimationFrame(animate);
@@ -155,6 +160,7 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
     renderPopover(toElement, toStep);
   }
 
+  fromParent?.classList.remove("driver-active-element-parent");
   fromElement.classList.remove("driver-active-element", "driver-no-interaction");
   fromElement.removeAttribute("aria-haspopup");
   fromElement.removeAttribute("aria-expanded");
@@ -165,6 +171,7 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
     toElement.classList.add("driver-no-interaction");
   }
 
+  toParent?.classList.add("driver-active-element-parent");
   toElement.classList.add("driver-active-element");
   toElement.setAttribute("aria-haspopup", "dialog");
   toElement.setAttribute("aria-expanded", "true");
@@ -174,6 +181,7 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
 export function destroyHighlight() {
   document.getElementById("driver-dummy-element")?.remove();
   document.querySelectorAll(".driver-active-element").forEach(element => {
+    element.parentElement?.classList.remove("driver-active-element-parent");
     element.classList.remove("driver-active-element", "driver-no-interaction");
     element.removeAttribute("aria-haspopup");
     element.removeAttribute("aria-expanded");

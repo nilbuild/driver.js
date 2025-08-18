@@ -7,6 +7,7 @@ export type State = {
 
   activeIndex?: number;
   activeElement?: Element;
+  parentOfActiveElement?: Element;
   activeStep?: DriveStep;
   previousElement?: Element;
   previousStep?: DriveStep;
@@ -18,6 +19,7 @@ export type State = {
   // the positions etc.
   __previousElement?: Element;
   __activeElement?: Element;
+  __parentOfActiveElement?: Element;
   __previousStep?: DriveStep;
   __activeStep?: DriveStep;
 
