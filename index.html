@@ -213,6 +213,7 @@
         <button id="basic-tour">Animated Tour</button>
         <button id="non-animated-tour">Non-Animated Tour</button>
         <button id="async-tour">Asynchronous Tour</button>
+        <button id="before-show-tour">Async action before show</button>
         <button id="confirm-exit-tour">Confirm on Exit</button>
         <button id="progress-tour">Progress Text</button>
         <button id="progress-tour-template">Progress Text Template</button>
@@ -619,6 +620,51 @@ npm install driver.js</pre
               popover: {
                 title: "Nested Scrolls",
                 description: "Even the nested scrollable elements work now.",
+              },
+            },
+          ],
+        });
+
+        driverObj.drive();
+      });
+
+      document.getElementById("before-show-tour").addEventListener("click", () => {
+        const driverObj = driver({
+          animate: false,
+          overlayOpacity: 0.3,
+          showProgress: true,
+          progressText: "{{current}} / {{total}}",
+          steps: [
+            {
+              element: ".page-header",
+              popover: {
+                title: "Async Driver.js",
+                description:
+                  "Driver.js has been written from the ground up. The new version is more powerful, has less surprises, more customizable and tons of new features.",
+                side: "bottom",
+                align: "start",
+              },
+            },
+            {
+              element: ".page-header h1",
+              popover: {
+                title: "Before show Test",
+                description: "By adding `beforeShow` you can run async functions before showing the highlight.",
+                side: "left",
+                align: "start",
+              },
+              beforeShow: () => new Promise((resolve) => { 
+                  console.log('this is the async function that runs');
+                  setTimeout(resolve, 1000); 
+                }),
+            },
+            {
+              element: "#scrollable-area",
+              popover: {
+                title: "Before show Test",
+                description: "If you go to the previous from this step, the `beforeShow` will run again",
+                side: "left",
+                align: "start",
               },
             },
           ],

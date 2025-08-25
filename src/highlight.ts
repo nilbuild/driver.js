@@ -1,5 +1,5 @@
 import { DriveStep } from "./driver";
-import { refreshOverlay, trackActiveElement, transitionStage } from "./overlay";
+import { destroyOverlay, refreshOverlay, trackActiveElement, transitionStage } from "./overlay";
 import { getConfig, getCurrentDriver } from "./config";
 import { hidePopover, renderPopover, repositionPopover } from "./popover";
 import { bringInView } from "./utils";
@@ -27,7 +27,7 @@ function mountDummyElement(): Element {
   return element;
 }
 
-export function highlight(step: DriveStep) {
+export function highlight(step: DriveStep, handleBeforeShow: boolean = true) {
   const { element } = step;
   let elemObj =
     typeof element === "function" ? element() : typeof element === "string" ? document.querySelector(element) : element;
@@ -39,8 +39,21 @@ export function highlight(step: DriveStep) {
   if (!elemObj) {
     elemObj = mountDummyElement();
   }
-
+ 
+  if (handleBeforeShow && step.beforeShow) {
+    // if there is a before show promise we remove the previous 
+    // popover and higlight before that step is shown
+    destroyOverlay();
+    setState('__overlaySvg', undefined);
+    hidePopover();
+    step.beforeShow().then(() => {
+        highlight(step, false);
+      }
+    );
+    return;
+  }
   transferHighlight(elemObj, step);
+
 }
 
 export function refreshActiveHighlight() {

@@ -14,6 +14,7 @@ export type DriveStep = {
   onDeselected?: DriverHook;
   popover?: Popover;
   disableActiveInteraction?: boolean;
+  beforeShow?: () => Promise<any>;
 };
 
 export interface Driver {
