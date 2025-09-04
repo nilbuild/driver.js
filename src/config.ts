@@ -24,6 +24,9 @@ export type Config = {
 
   allowKeyboardControl?: boolean;
 
+  // View offset
+  viewOffset?: number;
+
   // Popover specific configuration
   popoverClass?: string;
   popoverOffset?: number;
@@ -71,6 +74,7 @@ export function configure(config: Config = {}) {
     showButtons: ["next", "previous", "close"],
     disableButtons: [],
     overlayColor: "#000",
+    viewOffset: 10,
     ...config,
   };
 }

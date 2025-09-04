@@ -32,12 +32,60 @@ export function bringInView(element: Element) {
 
   const isTallerThanViewport = (element as HTMLElement).offsetHeight > window.innerHeight;
 
+  if (isTallerThanViewport) {
+    const viewOffset = getConfig("viewOffset") || 10;
+    bringInViewWithOffset(element, viewOffset);
+    return;
+  }
+
   element.scrollIntoView({
     // Removing the smooth scrolling for elements which exist inside the scrollable parent
     // This was causing the highlight to not properly render
     behavior: !shouldSmoothScroll || hasScrollableParent(element) ? "auto" : "smooth",
     inline: "center",
-    block: isTallerThanViewport ? "start" : "center",
+    block: "center",
+  });
+}
+
+function bringInViewWithOffset(element: Element, offset: number) {
+  if (!element || isElementInView(element)) {
+    return;
+  }
+
+  const offsetNumber = (!offset || offset < 0) ? 10 : offset;
+
+  const elementRect = element.getBoundingClientRect();
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+
+  // Check which direction we need to scroll
+  const isAboveViewport = elementRect.bottom < 0;
+  const isBelowViewport = elementRect.top > viewportHeight;
+  const isLeftOfViewport = elementRect.right < 0;
+  const isRightOfViewport = elementRect.left > viewportWidth;
+
+  let scrollToY = window.pageYOffset;
+  let scrollToX = window.pageXOffset;
+
+  // Calculate vertical scroll position
+  if (isAboveViewport) {
+    scrollToY = elementRect.top + window.pageYOffset - offsetNumber;
+  } else if (isBelowViewport) {
+    scrollToY = elementRect.bottom + window.pageYOffset - viewportHeight + offsetNumber;
+  }
+
+  // Calculate horizontal scroll position
+  if (isLeftOfViewport) {
+    scrollToX = elementRect.left + window.pageXOffset - offsetNumber;
+  } else if (isRightOfViewport) {
+    scrollToX = elementRect.right + window.pageXOffset - viewportWidth + offsetNumber;
+  }
+
+  // Scroll to calculated position
+  window.scrollTo({
+    top: Math.max(0, scrollToY),
+    left: Math.max(0, scrollToX),
+    behavior: "smooth"
   });
 }
 
