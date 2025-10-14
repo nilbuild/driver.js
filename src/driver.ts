@@ -54,6 +54,10 @@ export function driver(options: Config = {}): Driver {
   function handleOverlayClick() {
     const overlayClickBehavior = getConfig("overlayClickBehavior");
 
+    if (overlayClickBehavior === "preventDismiss") {
+      return;
+    }
+
     if (getConfig("allowClose") && overlayClickBehavior === "close") {
       destroy();
       return;

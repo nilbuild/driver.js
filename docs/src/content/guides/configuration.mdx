@@ -34,7 +34,10 @@ type Config = {
   // Opacity of the backdrop. (default: 0.5)
   overlayOpacity?: number;
   // What to do when the overlay backdrop is clicked.
-  // Possible options are 'close' and 'nextStep'. (default: 'close')
+  // Possible options are 'close', 'nextStep', and 'preventDismiss'. (default: 'close')
+  // - 'close': Closes the driver when overlay is clicked
+  // - 'nextStep': Moves to the next step when overlay is clicked
+  // - 'preventDismiss': Prevents any action when overlay is clicked
   overlayClickBehavior?: string,
   // Distance between the highlighted element and the cutout. (default: 10)
   stagePadding?: number;

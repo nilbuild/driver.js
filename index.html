@@ -1144,6 +1144,21 @@ npm install driver.js</pre
         driverObj.drive();
       });
 
+      const preventDismissBtn = document.createElement("button");
+      preventDismissBtn.id = "prevent-dismiss-btn";
+      preventDismissBtn.textContent = "Prevent Overlay Dismiss";
+      preventDismissBtn.addEventListener("click", () => {
+        const driverObj = driver({
+          animate: true,
+          overlayClickBehavior: "preventDismiss",
+          steps: basicTourSteps,
+        });
+
+        driverObj.drive();
+      });
+      
+      document.getElementById("click-overlay-to-next").after(preventDismissBtn);
+
       document.getElementById("destroy-btn").addEventListener("click", () => {
         driver().destroy();
       });

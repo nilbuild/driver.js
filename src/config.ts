@@ -16,7 +16,7 @@ export type Config = {
   overlayOpacity?: number;
   smoothScroll?: boolean;
   allowClose?: boolean;
-  overlayClickBehavior?: "close" | "nextStep";
+  overlayClickBehavior?: "close" | "nextStep" | "preventDismiss";
   stagePadding?: number;
   stageRadius?: number;
 
