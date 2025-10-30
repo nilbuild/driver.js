@@ -203,10 +203,6 @@ export function driver(options: Config = {}): Driver {
         ? currentStep.popover?.showProgress
         : getConfig("showProgress");
     const progressText = currentStep.popover?.progressText || getConfig("progressText") || "{{current}} of {{total}}";
-    const progressTextReplaced = progressText
-      .replace("{{current}}", `${stepIndex + 1}`)
-      .replace("{{total}}", `${steps.length}`);
-
     const configuredButtons = currentStep.popover?.showButtons || getConfig("showButtons");
     const calculatedButtons: AllowedButtons[] = [
       "next",
@@ -220,35 +216,45 @@ export function driver(options: Config = {}): Driver {
     const onPrevClick = currentStep.popover?.onPrevClick || getConfig("onPrevClick");
     const onCloseClick = currentStep.popover?.onCloseClick || getConfig("onCloseClick");
 
+    // --- Merge global config with current step config ---
+    const mergedConfig = {
+      showButtons: calculatedButtons,
+      nextBtnText: !hasNextStep ? doneBtnText : undefined,
+      disableButtons: [...(!hasPreviousStep ? ["previous" as AllowedButtons] : [])],
+      showProgress: showProgress,
+      progressText: progressText, // Use the first template
+      onNextClick: onNextClick
+        ? onNextClick
+        : () => {
+            if (!hasNextStep) {
+              destroy();
+            } else {
+              drive(stepIndex + 1);
+            }
+          },
+      onPrevClick: onPrevClick
+        ? onPrevClick
+        : () => {
+            drive(stepIndex - 1);
+          },
+      onCloseClick: onCloseClick
+        ? onCloseClick
+        : () => {
+            destroy();
+          },
+      ...(currentStep?.popover || {}),
+    };
+
+    // --- Create correct rendering of progressText AFTER merge ---
+    if (mergedConfig.progressText) {
+      mergedConfig.progressText = mergedConfig.progressText
+        .replace("{{current}}", `${stepIndex + 1}`)
+        .replace("{{total}}", `${steps.length}`);
+    }
+
     highlight({
       ...currentStep,
-      popover: {
-        showButtons: calculatedButtons,
-        nextBtnText: !hasNextStep ? doneBtnText : undefined,
-        disableButtons: [...(!hasPreviousStep ? ["previous" as AllowedButtons] : [])],
-        showProgress: showProgress,
-        progressText: progressTextReplaced,
-        onNextClick: onNextClick
-          ? onNextClick
-          : () => {
-              if (!hasNextStep) {
-                destroy();
-              } else {
-                drive(stepIndex + 1);
-              }
-            },
-        onPrevClick: onPrevClick
-          ? onPrevClick
-          : () => {
-              drive(stepIndex - 1);
-            },
-        onCloseClick: onCloseClick
-          ? onCloseClick
-          : () => {
-              destroy();
-            },
-        ...(currentStep?.popover || {}),
-      },
+      popover: mergedConfig,
     });
   }
 
