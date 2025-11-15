@@ -5,7 +5,7 @@
   "version": "1.3.6",
   "main": "./dist/driver.js.cjs",
   "module": "./dist/driver.js.mjs",
-  "types": "./dist/driver.js.d.ts",
+  "types": "./dist/driver.js.d.cts",
   "homepage": "https://driverjs.com",
   "repository": "https://github.com/kamranahmedse/driver.js",
   "author": "Kamran Ahmed <kamranahmed.se@gmail.com>",
@@ -14,10 +14,10 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/driver.js.d.ts",
-      "require": "./dist/driver.js.cjs",
-      "import": "./dist/driver.js.mjs"
+      "import": "./dist/driver.js.mjs",
+      "require": "./dist/driver.js.cjs"
     },
+    "./package.json": "./package.json",
     "./dist/driver.css": {
       "require": "./dist/driver.css",
       "import": "./dist/driver.css",
@@ -26,7 +26,7 @@
   },
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc && vite build && dts-bundle-generator --config ./dts-bundle-generator.config.ts",
+    "build": "tsdown",
     "test": "vitest",
     "format": "prettier . --write"
   },
@@ -40,14 +40,14 @@
     "@types/jsdom": "^21.1.2",
     "@types/node": "^20.5.9",
     "@vitest/coverage-c8": "^0.32.0",
-    "dts-bundle-generator": "^8.0.1",
     "postcss": "^8.4.29",
     "postcss-scss": "^4.0.7",
     "prettier": "^3.0.3",
     "ts-node": "^10.9.1",
+    "tsdown": "^0.16.4",
     "typescript": "^5.2.2",
-    "vite": "^4.4.9",
-    "vitest": "^0.34.3"
+    "vitest": "^0.34.3",
+    "vite": "^5.0.0"
   },
   "keywords": [
     "driver.js",
