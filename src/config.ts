@@ -16,7 +16,7 @@ export type Config = {
   overlayOpacity?: number;
   smoothScroll?: boolean;
   allowClose?: boolean;
-  overlayClickBehavior?: "close" | "nextStep";
+  overlayClickBehavior?: "close" | "nextStep" | DriverHook;
   stagePadding?: number;
   stageRadius?: number;
 

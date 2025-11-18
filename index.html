@@ -172,6 +172,7 @@
         <button id="transition-highlight-btn">Transition Highlight</button>
         <button id="disallow-close">Disallow Close</button>
         <button id="click-overlay-to-next">Click Overlay to Next</button>
+        <button id="click-overlay-to-handle">Custom Overlay Click Handler</button>
         <button id="dark-highlight-btn">Super Dark Highlight</button>
         <button id="dim-highlight-btn">Super Dim Highlight</button>
         <button id="scrollable-area-btn">Scrollable Area</button>
@@ -1138,6 +1139,18 @@ npm install driver.js</pre
         const driverObj = driver({
           animate: true,
           overlayClickBehavior: "nextStep",
+          steps: basicTourSteps,
+        });
+
+        driverObj.drive();
+      });
+
+      document.getElementById("click-overlay-to-handle").addEventListener("click", () => {
+        const driverObj = driver({
+          animate: true,
+          overlayClickBehavior: (element, step) => {
+            alert("Clicking me");
+          },
           steps: basicTourSteps,
         });
 

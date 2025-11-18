@@ -59,6 +59,19 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
+    if (typeof overlayClickBehavior === "function") {
+      const activeStep = getState("__activeStep");
+      const activeElement = getState("__activeElement");
+
+      overlayClickBehavior(activeElement, activeStep!, {
+        config: getConfig(),
+        state: getState(),
+        driver: getCurrentDriver(),
+      });
+
+      return;
+    }
+
     if (overlayClickBehavior === "nextStep") {
       moveNext();
     }
