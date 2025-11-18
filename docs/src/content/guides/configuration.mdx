@@ -35,12 +35,6 @@ type Config = {
   overlayOpacity?: number;
   // What to do when the overlay backdrop is clicked.
   // Possible options are 'close', 'nextStep', or a custom function. (default: 'close')
-  // When a function is provided, it receives the same parameters as other hooks:
-  //   - element: The current DOM element of the step
-  //   - step: The step object configured for the step
-  //   - options.config: The current configuration options
-  //   - options.state: The current state of the driver
-  //   - options.driver: Current driver object
   overlayClickBehavior?: "close" | "nextStep" | ((element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void),
   // Distance between the highlighted element and the cutout. (default: 10)
   stagePadding?: number;
