@@ -97,6 +97,18 @@
   zoom: 1;
 }
 
+.driver-popover-description[style*="block"] + .driver-popover-content {
+  margin-top: 10px;
+}
+
+.driver-popover-content {
+  margin-bottom: 0;
+  font: 14px / normal sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  zoom: 1;
+}
+
 .driver-popover-footer {
   margin-top: 15px;
   text-align: right;
@@ -141,7 +153,8 @@
   overflow: hidden !important;
 }
 
-.driver-no-interaction, .driver-no-interaction * {
+.driver-no-interaction,
+.driver-no-interaction * {
   pointer-events: none !important;
 }
 

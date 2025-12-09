@@ -206,6 +206,9 @@
         <button id="custom-classes">Custom Classes</button>
         <button id="popover-hook">Popover Hook</button>
         <button id="padding-change">Padding Change</button>
+        <button id="test-content-string">Content (String)</button>
+        <button id="test-content-element">Content (Element)</button>
+        <button id="test-content-interactive">Content (Interactive)</button>
       </div>
 
       <h2>Tour Feature</h2>
@@ -918,7 +921,8 @@ npm install driver.js</pre
           element: ".page-header h1 sup",
           popover: {
             title: "Buggy Highlight",
-            description: "Unlike the older version, new version doesn't work with z-indexes so no more positional issues.",
+            description:
+              "Unlike the older version, new version doesn't work with z-indexes so no more positional issues.",
             side: "bottom",
             align: "start",
           },
@@ -930,7 +934,8 @@ npm install driver.js</pre
           element: ".container",
           popover: {
             title: "Buggy Highlight",
-            description: "Unlike the older version, new version doesn't work with z-indexes so no more positional issues.",
+            description:
+              "Unlike the older version, new version doesn't work with z-indexes so no more positional issues.",
             side: "bottom",
             align: "start",
           },
@@ -1159,6 +1164,73 @@ npm install driver.js</pre
 
       document.getElementById("destroy-btn").addEventListener("click", () => {
         driver().destroy();
+      });
+
+      document.getElementById("test-content-string").addEventListener("click", () => {
+        const driverObj = driver();
+        driverObj.highlight({
+          element: "#test-content-string",
+          popover: {
+            title: "Content with HTML String",
+            description: "This is the regular description.",
+            content:
+              '<div style="padding: 10px; background: #f0f0f0; border-radius: 5px; margin-top: 5px;"><strong>Custom Content</strong><p style="margin: 5px 0 0 0;">This content is inserted via an HTML string.</p></div>',
+          },
+        });
+      });
+
+      document.getElementById("test-content-element").addEventListener("click", () => {
+        const driverObj = driver();
+
+        // Create a custom element
+        const contentDiv = document.createElement("div");
+        contentDiv.style.cssText = "padding: 10px; background: #f0f0f0; border-radius: 5px; margin-top: 5px;";
+
+        const title = document.createElement("strong");
+        title.textContent = "Dynamically Created DOM Element";
+
+        const list = document.createElement("ul");
+        list.style.cssText = "margin: 10px 0 0 0; padding-left: 20px;";
+        ["Item 1", "Item 2", "Item 3"].forEach(text => {
+          const li = document.createElement("li");
+          li.textContent = text;
+          list.appendChild(li);
+        });
+
+        contentDiv.appendChild(title);
+        contentDiv.appendChild(list);
+
+        driverObj.highlight({
+          element: "#test-content-element",
+          popover: {
+            title: "Content with DOM Element",
+            description: "The description is displayed first.",
+            content: contentDiv,
+          },
+        });
+      });
+
+      document.getElementById("test-content-interactive").addEventListener("click", () => {
+        const driverObj = driver();
+
+        const contentDiv = document.createElement("div");
+        contentDiv.style.cssText = " margin-top: 5px; text-align: center;";
+
+        const img = document.createElement("img");
+        img.src = "https://i.imgur.com/EAQhHu5.gif";
+        img.alt = "Demo animation";
+        img.style.cssText = "max-width: 100%; height: auto;";
+
+        contentDiv.appendChild(img);
+
+        driverObj.highlight({
+          element: "#test-content-interactive",
+          popover: {
+            title: "Interactive Content",
+            description: "This popover contains an image!",
+            content: contentDiv,
+          },
+        });
       });
     </script>
   </body>

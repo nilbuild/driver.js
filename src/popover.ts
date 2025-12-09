@@ -12,6 +12,7 @@ export type AllowedButtons = "next" | "previous" | "close";
 export type Popover = {
   title?: string;
   description?: string;
+  content?: string | HTMLElement | Node;
   side?: Side;
   align?: Alignment;
 
@@ -41,6 +42,7 @@ export type PopoverDOM = {
   arrow: HTMLElement;
   title: HTMLElement;
   description: HTMLElement;
+  content: HTMLElement;
   footer: HTMLElement;
   progress: HTMLElement;
   previousButton: HTMLButtonElement;
@@ -70,6 +72,7 @@ export function renderPopover(element: Element, step: DriveStep) {
   const {
     title,
     description,
+    content,
     showButtons,
     disableButtons,
     showProgress,
@@ -95,6 +98,20 @@ export function renderPopover(element: Element, step: DriveStep) {
     popover.description.style.display = "block";
   } else {
     popover.description.style.display = "none";
+  }
+
+  if (content) {
+    popover.content.innerHTML = "";
+
+    if (typeof content === "string") {
+      popover.content.innerHTML = content;
+    } else if (content instanceof HTMLElement || content instanceof Node) {
+      popover.content.appendChild(content);
+    }
+
+    popover.content.style.display = "block";
+  } else {
+    popover.content.style.display = "none";
   }
 
   const showButtonsConfig: AllowedButtons[] = showButtons || getConfig("showButtons")!;
@@ -642,6 +659,11 @@ function createPopover(): PopoverDOM {
   description.style.display = "none";
   description.innerText = "Popover description is here";
 
+  const content = document.createElement("div");
+  content.id = "driver-popover-content";
+  content.classList.add("driver-popover-content");
+  content.style.display = "none";
+
   const closeButton = document.createElement("button");
   closeButton.type = "button";
   closeButton.classList.add("driver-popover-close-btn");
@@ -677,6 +699,7 @@ function createPopover(): PopoverDOM {
   wrapper.appendChild(arrow);
   wrapper.appendChild(title);
   wrapper.appendChild(description);
+  wrapper.appendChild(content);
   wrapper.appendChild(footer);
 
   return {
@@ -684,6 +707,7 @@ function createPopover(): PopoverDOM {
     arrow,
     title,
     description,
+    content,
     footer,
     previousButton,
     nextButton,
