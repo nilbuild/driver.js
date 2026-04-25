@@ -1,0 +1,43 @@
+# Driver.js
+
+Driver.js is a lightweight (~5kb gzipped), vanilla TypeScript library for creating overlays, highlights, tours, and focus shifters on web pages. It has zero external dependencies.
+
+**Website**: https://driverjs.com
+**Repository**: https://github.com/kamranahmedse/driver.js
+**Version**: 1.4.0
+**License**: MIT
+
+## Project Structure
+
+```
+src/
+  config.ts    - Configuration types and defaults
+  driver.ts    - Main Driver class - the public API
+  emitter.ts   - Event emitter for publishing/subscribing to events
+  events.ts    - Event type definitions
+  highlight.ts - Highlight element functionality
+  overlay.ts   - Overlay rendering and management
+  popover.ts   - Popover/tooltip rendering
+  state.ts     - Application state management
+  utils.ts     - Utility functions
+```
+
+## Key Concepts
+
+- **Driver**: Main class - call `driver()` to start, `driver().highlight()` to highlight elements
+- **Popover**: The floating tooltip/card that appears during tours
+- **Overlay**: The dimmed background layer
+- **Highlight**: The highlighted element with padding/glow effect
+
+## Build Commands
+
+- `npm run dev` - Start dev server with Vite
+- `npm run build` - Build for production (TypeScript + Vite + dts-bundle-generator)
+- `npm run test` - Run tests with Vitest
+- `npm run format` - Format code with Prettier
+
+## Entry Points
+
+- Main export: `./dist/driver.js.cjs` (CommonJS) and `./dist/driver.js.mjs` (ESM)
+- CSS: `./dist/driver.css`
+- Types: `./dist/driver.js.d.ts`
