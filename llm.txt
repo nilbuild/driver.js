@@ -22,12 +22,160 @@ src/
   utils.ts     - Utility functions
 ```
 
-## Key Concepts
+## Installation
 
-- **Driver**: Main class - call `driver()` to start, `driver().highlight()` to highlight elements
-- **Popover**: The floating tooltip/card that appears during tours
-- **Overlay**: The dimmed background layer
-- **Highlight**: The highlighted element with padding/glow effect
+```bash
+npm install driver.js
+# or
+pnpm install driver.js
+# or
+yarn add driver.js
+```
+
+Or via CDN:
+```html
+<script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.css"/>
+```
+
+## Basic Usage
+
+```javascript
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const driverObj = driver();
+driverObj.highlight({
+  element: "#some-element",
+  popover: {
+    title: "Title",
+    description: "Description"
+  }
+});
+```
+
+For tours with multiple steps:
+```javascript
+const driverObj = driver({
+  showProgress: true,
+  steps: [
+    { element: '.page-header', popover: { title: 'Title', description: 'Description' } },
+    { element: '.top-nav', popover: { title: 'Title', description: 'Description' } },
+  ]
+});
+driverObj.drive();
+```
+
+## Configuration
+
+### Config Type
+
+```typescript
+type Config = {
+  // Array of steps for product tour
+  steps?: DriveStep[];
+
+  // Animation (default: true)
+  animate?: boolean;
+  // Overlay color (default: black)
+  overlayColor?: string;
+  // Smooth scroll to element (default: false)
+  smoothScroll?: boolean;
+  // Allow closing popover by clicking backdrop (default: true)
+  allowClose?: boolean;
+  // Backdrop opacity (default: 0.5)
+  overlayOpacity?: number;
+  // Overlay click behavior: 'close', 'nextStep', or function
+  overlayClickBehavior?: "close" | "nextStep" | ((element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void);
+  // Distance between highlighted element and cutout (default: 10)
+  stagePadding?: number;
+  // Radius of cutout (default: 5)
+  stageRadius?: number;
+  // Allow keyboard navigation (default: true)
+  allowKeyboardControl?: boolean;
+  // Disable interaction with highlighted element (default: false)
+  disableActiveInteraction?: boolean;
+  // Custom class for popover
+  popoverClass?: string;
+  // Distance between popover and highlighted element (default: 10)
+  popoverOffset?: number;
+  // Buttons to show (default: ["next", "previous", "close"] for tours, [] for single highlight)
+  showButtons?: AllowedButtons[];
+  // Buttons to disable
+  disableButtons?: AllowedButtons[];
+  // Show progress text (default: false)
+  showProgress?: boolean;
+  // Progress text template: {{current}}, {{total}}
+  progressText?: string;
+  // Button texts
+  nextBtnText?: string;
+  prevBtnText?: string;
+  doneBtnText?: string;
+
+  // Hooks
+  onPopoverRender?: (popover: PopoverDOM, options: { config: Config; state: State, driver: Driver }) => void;
+  onHighlightStarted?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onHighlighted?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onDeselected?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onDestroyStarted?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onDestroyed?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onNextClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onPrevClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onCloseClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+};
+```
+
+### Popover Type
+
+```typescript
+type Popover = {
+  title?: string;
+  description?: string;
+  // Position relative to target element
+  side?: "top" | "right" | "bottom" | "left";
+  align?: "start" | "center" | "end";
+  showButtons?: ("next" | "previous" | "close")[];
+  disableButtons?: ("next" | "previous" | "close")[];
+  nextBtnText?: string;
+  prevBtnText?: string;
+  doneBtnText?: string;
+  showProgress?: boolean;
+  progressText?: string;
+  popoverClass?: string;
+  onPopoverRender?: (popover: PopoverDOM, options: { config: Config; state: State, driver: Driver }) => void;
+  onNextClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onPrevClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onCloseClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+}
+```
+
+### DriveStep Type
+
+```typescript
+type DriveStep = {
+  // DOM element, CSS selector, or function returning Element
+  element?: Element | string | (() => Element);
+  popover?: Popover;
+  disableActiveInteraction?: boolean;
+  onDeselected?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onHighlightStarted?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onHighlighted?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+}
+```
+
+### State Type
+
+```typescript
+type State = {
+  isInitialized?: boolean;
+  activeIndex?: number;
+  activeElement?: Element;
+  activeStep?: DriveStep;
+  previousElement?: Element;
+  previousStep?: DriveStep;
+  popover?: PopoverDOM;
+}
+```
 
 ## Build Commands
 
