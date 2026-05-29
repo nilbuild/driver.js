@@ -212,6 +212,7 @@
       <p>Examples below show the tour usage of driver.js.</p>
       <div class="buttons">
         <button id="basic-tour">Animated Tour</button>
+        <button id="skippable-tour">Skippable Tour</button>
         <button id="non-animated-tour">Non-Animated Tour</button>
         <button id="async-tour">Asynchronous Tour</button>
         <button id="confirm-exit-tour">Confirm on Exit</button>
@@ -633,6 +634,22 @@ npm install driver.js</pre
           showProgress: true,
           showButtons: ["next", "previous", "close"],
           steps: basicTourSteps,
+        });
+
+        driverObj.drive();
+      });
+
+      document.getElementById("skippable-tour").addEventListener("click", () => {
+        const driverObj = driver({
+          showProgress: true,
+          showButtons: ["skip", "previous", "next"],
+          skipBtnText: "Skip this tour",
+          progressText: "{{current}} / {{total}}",
+          steps: basicTourSteps,
+          onSkipClick: () => {
+            console.log("Tour skipped");
+            driverObj.destroy();
+          },
         });
 
         driverObj.drive();

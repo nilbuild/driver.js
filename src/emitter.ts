@@ -4,6 +4,7 @@ type allowedEvents =
   | "nextClick"
   | "prevClick"
   | "closeClick"
+  | "skipClick"
   | "arrowRightPress"
   | "arrowLeftPress";
 

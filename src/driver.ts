@@ -51,6 +51,14 @@ export function driver(options: Config = {}): Driver {
     destroy();
   }
 
+  function handleSkip() {
+    if (!getConfig("allowClose")) {
+      return;
+    }
+
+    destroy();
+  }
+
   function handleOverlayClick() {
     const overlayClickBehavior = getConfig("overlayClickBehavior");
 
@@ -184,6 +192,7 @@ export function driver(options: Config = {}): Driver {
 
     listen("overlayClick", handleOverlayClick);
     listen("escapePress", handleClose);
+    listen("skipClick", handleSkip);
     listen("arrowLeftPress", handleArrowLeft);
     listen("arrowRightPress", handleArrowRight);
   }
@@ -222,6 +231,7 @@ export function driver(options: Config = {}): Driver {
 
     const configuredButtons = currentStep.popover?.showButtons || getConfig("showButtons");
     const calculatedButtons: AllowedButtons[] = [
+      ...(allowsClosing ? ["skip" as AllowedButtons] : []),
       "next",
       "previous",
       ...(allowsClosing ? ["close" as AllowedButtons] : []),
@@ -232,13 +242,16 @@ export function driver(options: Config = {}): Driver {
     const onNextClick = currentStep.popover?.onNextClick || getConfig("onNextClick");
     const onPrevClick = currentStep.popover?.onPrevClick || getConfig("onPrevClick");
     const onCloseClick = currentStep.popover?.onCloseClick || getConfig("onCloseClick");
+    const onSkipClick = currentStep.popover?.onSkipClick || getConfig("onSkipClick");
+    const disabledButtons = currentStep.popover?.disableButtons || getConfig("disableButtons") || [];
 
     highlight({
       ...currentStep,
       popover: {
+        ...(currentStep?.popover || {}),
         showButtons: calculatedButtons,
-        nextBtnText: !hasNextStep ? doneBtnText : undefined,
-        disableButtons: [...(!hasPreviousStep ? ["previous" as AllowedButtons] : [])],
+        nextBtnText: !hasNextStep ? doneBtnText : currentStep.popover?.nextBtnText,
+        disableButtons: [...disabledButtons, ...(!hasPreviousStep ? ["previous" as AllowedButtons] : [])],
         showProgress: showProgress,
         progressText: progressTextReplaced,
         onNextClick: onNextClick
@@ -260,7 +273,11 @@ export function driver(options: Config = {}): Driver {
           : () => {
               destroy();
             },
-        ...(currentStep?.popover || {}),
+        onSkipClick: onSkipClick
+          ? onSkipClick
+          : () => {
+              destroy();
+            },
       },
     });
   }

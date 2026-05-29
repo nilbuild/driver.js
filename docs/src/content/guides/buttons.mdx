@@ -6,7 +6,7 @@ sort: 9
 
 import { CodeSample } from "../../components/CodeSample.tsx";
 
-You can use the `showButtons` option to choose which buttons to show in the popover. The default value is `['next', 'previous', 'close']`.
+You can use the `showButtons` option to choose which buttons to show in the popover. The default value is `['next', 'previous', 'close']`. You can also show a footer skip button by adding `'skip'`.
 
 <div id="driver-note" className="mb-5">
   > **Note:** When using the `highlight` method to highlight a single element, the only button shown is the `close`
@@ -100,6 +100,53 @@ You can use the `showButtons` option to choose which buttons to show in the popo
     id={"code-sample"}
     client:load />
   <CodeSample
+    buttonText="With Skip Button"
+    config={{
+      showButtons: [
+        'skip',
+        'previous',
+        'next',
+      ],
+      skipBtnText: 'Skip tour',
+    }}
+    tour={[
+      {
+        element: '#driver-note',
+        popover: {
+          title: 'Popover Title',
+          description: 'Popover Description'
+        }
+      },
+      {
+        element: '#driver-note code:nth-child(2)',
+        popover: {
+          title: 'Popover Title',
+          description: 'Popover Description'
+        }
+      }
+    ]}
+    id={"code-sample"}
+    client:load>
+    ```js
+    import { driver } from "driver.js";
+    import "driver.js/dist/driver.css";
+
+    const driverObj = driver({
+      showButtons: [
+        'skip',
+        'previous',
+        'next'
+      ],
+      skipBtnText: 'Skip tour',
+      steps: [
+        // ...
+      ]
+    });
+
+    driverObj.drive();
+    ```
+  </CodeSample>
+  <CodeSample
     buttonText="No Buttons (Use Arrows)"
     config={{
       showButtons: [undefined],
@@ -128,7 +175,7 @@ You can use the `showButtons` option to choose which buttons to show in the popo
 
 ## Change Button Text
 
-You can also change the text of buttons using `nextBtnText`, `prevBtnText` and `doneBtnText` options.
+You can also change the text of buttons using `nextBtnText`, `prevBtnText`, `doneBtnText` and `skipBtnText` options.
 
 <div className='flex flex-col gap-1'>
   <CodeSample
@@ -179,7 +226,7 @@ You can also change the text of buttons using `nextBtnText`, `prevBtnText` and `
 
 ## Event Handlers
 
-You can use the `onNextClick`, `onPreviousClick` and `onCloseClick` callbacks to implement custom functionality when the user clicks on the next and previous buttons.
+You can use the `onNextClick`, `onPreviousClick`, `onCloseClick` and `onSkipClick` callbacks to implement custom functionality when the user clicks on the footer buttons.
 
 > Please note that when you configure these callbacks, the default functionality of the buttons will be disabled. You will have to implement the functionality yourself.
 

@@ -71,6 +71,7 @@ type Config = {
   nextBtnText?: string;
   prevBtnText?: string;
   doneBtnText?: string;
+  skipBtnText?: string;
 
   // Called after the popover is rendered.
   // PopoverDOM is an object with references to
@@ -111,6 +112,7 @@ type Config = {
   onNextClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
   onPrevClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
   onCloseClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  onSkipClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
 };
 ```
 
@@ -142,17 +144,18 @@ type Popover = {
   // are no buttons by default. When showing
   // a tour, the default buttons are "next",
   // "previous" and "close".
-  showButtons?: ("next" | "previous" | "close")[];
+  showButtons?: ("next" | "previous" | "close" | "skip")[];
   // An array of buttons to disable. This is
   // useful when you want to show some of the
   // buttons, but disable some of them.
-  disableButtons?: ("next" | "previous" | "close")[];
+  disableButtons?: ("next" | "previous" | "close" | "skip")[];
 
   // Text to show in the buttons. `doneBtnText`
   // is used on the last step of a tour.
   nextBtnText?: string;
   prevBtnText?: string;
   doneBtnText?: string;
+  skipBtnText?: string;
 
   // Whether to show the progress text in popover.
   showProgress?: boolean;
@@ -186,6 +189,7 @@ type Popover = {
   onNextClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void
   onPrevClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void
   onCloseClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void
+  onSkipClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void
 }
 ```
 

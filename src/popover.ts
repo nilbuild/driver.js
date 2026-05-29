@@ -7,7 +7,7 @@ import { bringInView, getFocusableElements } from "./utils";
 
 export type Side = "top" | "right" | "bottom" | "left" | "over";
 export type Alignment = "start" | "center" | "end";
-export type AllowedButtons = "next" | "previous" | "close";
+export type AllowedButtons = "next" | "previous" | "close" | "skip";
 
 export type Popover = {
   title?: string;
@@ -26,6 +26,7 @@ export type Popover = {
   doneBtnText?: string;
   nextBtnText?: string;
   prevBtnText?: string;
+  skipBtnText?: string;
 
   // Called after the popover is rendered
   onPopoverRender?: (popover: PopoverDOM, opts: { config: Config; state: State; driver: Driver }) => void;
@@ -34,6 +35,7 @@ export type Popover = {
   onNextClick?: DriverHook;
   onPrevClick?: DriverHook;
   onCloseClick?: DriverHook;
+  onSkipClick?: DriverHook;
 };
 
 export type PopoverDOM = {
@@ -45,6 +47,7 @@ export type PopoverDOM = {
   progress: HTMLElement;
   previousButton: HTMLButtonElement;
   nextButton: HTMLButtonElement;
+  skipButton: HTMLButtonElement;
   closeButton: HTMLButtonElement;
   footerButtons: HTMLElement;
 };
@@ -76,11 +79,13 @@ export function renderPopover(element: Element, step: DriveStep) {
 
     nextBtnText = getConfig("nextBtnText") || "Next &rarr;",
     prevBtnText = getConfig("prevBtnText") || "&larr; Previous",
+    skipBtnText = getConfig("skipBtnText") || "Skip tour",
     progressText = getConfig("progressText") || "{current} of {total}",
   } = step.popover || {};
 
   popover.nextButton.innerHTML = nextBtnText;
   popover.previousButton.innerHTML = prevBtnText;
+  popover.skipButton.innerHTML = skipBtnText;
   popover.progress.innerHTML = progressText;
 
   if (title) {
@@ -100,7 +105,10 @@ export function renderPopover(element: Element, step: DriveStep) {
   const showButtonsConfig: AllowedButtons[] = showButtons || getConfig("showButtons")!;
   const showProgressConfig = showProgress || getConfig("showProgress") || false;
   const showFooter =
-    showButtonsConfig?.includes("next") || showButtonsConfig?.includes("previous") || showProgressConfig;
+    showButtonsConfig?.includes("skip") ||
+    showButtonsConfig?.includes("next") ||
+    showButtonsConfig?.includes("previous") ||
+    showProgressConfig;
 
   popover.closeButton.style.display = showButtonsConfig.includes("close") ? "block" : "none";
 
@@ -108,6 +116,7 @@ export function renderPopover(element: Element, step: DriveStep) {
     popover.footer.style.display = "flex";
 
     popover.progress.style.display = showProgressConfig ? "block" : "none";
+    popover.skipButton.style.display = showButtonsConfig.includes("skip") ? "block" : "none";
     popover.nextButton.style.display = showButtonsConfig.includes("next") ? "block" : "none";
     popover.previousButton.style.display = showButtonsConfig.includes("previous") ? "block" : "none";
   } else {
@@ -128,6 +137,11 @@ export function renderPopover(element: Element, step: DriveStep) {
   if (disabledButtonsConfig?.includes("close")) {
     popover.closeButton.disabled = true;
     popover.closeButton.classList.add("driver-popover-btn-disabled");
+  }
+
+  if (disabledButtonsConfig?.includes("skip")) {
+    popover.skipButton.disabled = true;
+    popover.skipButton.classList.add("driver-popover-btn-disabled");
   }
 
   // Reset the popover position
@@ -160,6 +174,7 @@ export function renderPopover(element: Element, step: DriveStep) {
       const onNextClick = step.popover?.onNextClick || getConfig("onNextClick");
       const onPrevClick = step.popover?.onPrevClick || getConfig("onPrevClick");
       const onCloseClick = step.popover?.onCloseClick || getConfig("onCloseClick");
+      const onSkipClick = step.popover?.onSkipClick || getConfig("onSkipClick");
 
       if (!!target.closest(".driver-popover-next-btn")) {
         // If the user has provided a custom callback, call it
@@ -196,6 +211,18 @@ export function renderPopover(element: Element, step: DriveStep) {
           });
         } else {
           return emit("closeClick");
+        }
+      }
+
+      if (!!target.closest(".driver-popover-skip-btn")) {
+        if (onSkipClick) {
+          return onSkipClick(element, step, {
+            config: getConfig(),
+            state: getState(),
+            driver: getCurrentDriver(),
+          });
+        } else {
+          return emit("skipClick");
         }
       }
 
@@ -663,11 +690,17 @@ function createPopover(): PopoverDOM {
   previousButton.classList.add("driver-popover-prev-btn");
   previousButton.innerHTML = "&larr; Previous";
 
+  const skipButton = document.createElement("button");
+  skipButton.type = "button";
+  skipButton.classList.add("driver-popover-skip-btn");
+  skipButton.innerHTML = "Skip tour";
+
   const nextButton = document.createElement("button");
   nextButton.type = "button";
   nextButton.classList.add("driver-popover-next-btn");
   nextButton.innerHTML = "Next &rarr;";
 
+  footerButtons.appendChild(skipButton);
   footerButtons.appendChild(previousButton);
   footerButtons.appendChild(nextButton);
   footer.appendChild(progress);
@@ -687,6 +720,7 @@ function createPopover(): PopoverDOM {
     footer,
     previousButton,
     nextButton,
+    skipButton,
     closeButton,
     footerButtons,
     progress,

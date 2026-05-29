@@ -36,9 +36,10 @@ export type Config = {
   nextBtnText?: string;
   prevBtnText?: string;
   doneBtnText?: string;
+  skipBtnText?: string;
 
   // Called after the popover is rendered
-  onPopoverRender?: (popover: PopoverDOM, opts: { config: Config; state: State, driver: Driver }) => void;
+  onPopoverRender?: (popover: PopoverDOM, opts: { config: Config; state: State; driver: Driver }) => void;
 
   // State based callbacks, called upon state changes
   onHighlightStarted?: DriverHook;
@@ -51,6 +52,7 @@ export type Config = {
   onNextClick?: DriverHook;
   onPrevClick?: DriverHook;
   onCloseClick?: DriverHook;
+  onSkipClick?: DriverHook;
 };
 
 let currentConfig: Config = {};
