@@ -1,0 +1,10 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "paths": {
+      "driver.js": ["../src/driver.ts"]
+    }
+  },
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"]
+}

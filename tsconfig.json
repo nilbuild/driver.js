@@ -1,23 +1,24 @@
 {
   "compilerOptions": {
     "rootDir": "./src",
-    "target": "ES2019",
+    "target": "ES2020",
     "useDefineForClassFields": true,
-    "module": "CommonJS",
-    "lib": ["ES2019", "DOM"],
-    "moduleResolution": "Node",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM"],
+    "moduleResolution": "Bundler",
     "strict": true,
     "sourceMap": true,
     "resolveJsonModule": true,
+    "isolatedModules": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "noEmit": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["vite/client", "node"]
+    "types": ["vite/client"]
   },
   "include": ["src"],
-  "exclude": ["**/*.test.ts", "node_modules",
-    "tests/**", ".history/**"]
+  "exclude": ["**/*.test.ts", "node_modules", "tests/**", ".history/**"]
 }

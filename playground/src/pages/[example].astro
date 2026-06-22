@@ -1,0 +1,29 @@
+---
+import PlaygroundLayout from "../layouts/PlaygroundLayout.astro";
+import { examples } from "../examples";
+
+export function getStaticPaths() {
+  return examples.map(example => ({
+    params: { example: example.id },
+    props: { title: example.title, description: example.description },
+  }));
+}
+
+const { example } = Astro.params;
+const { title, description } = Astro.props;
+---
+
+<PlaygroundLayout title={title} description={description} activeId={example}>
+  <div id="example-runner" data-example-id={example}></div>
+</PlaygroundLayout>
+
+<script>
+  import { findExample } from "../examples";
+
+  const runner = document.getElementById("example-runner");
+  const example = findExample(runner?.dataset.exampleId);
+
+  // Each example page auto-runs its scenario against the shared stage. Navigating
+  // to another example is a full page load, so the stage always starts clean.
+  example?.run();
+</script>

@@ -1,4 +1,4 @@
-/// <reference types="vitest" />
+/// <reference types="vitest/config" />
 import path from "path";
 import { defineConfig } from "vite";
 
@@ -12,10 +12,10 @@ const fileName = {
 
 const formats = Object.keys(fileName) as Array<keyof typeof fileName>;
 
-module.exports = defineConfig({
+export default defineConfig({
   base: "./",
   build: {
-    target: "ES2019",
+    target: "es2020",
     lib: {
       entry: path.resolve(__dirname, "src/driver.ts"),
       name: packageName,
@@ -25,10 +25,13 @@ module.exports = defineConfig({
     rollupOptions: {
       output: {
         assetFileNames: assetInfo => {
-          return assetInfo.name === "style.css" ? `driver.css` : assetInfo.name as string;
+          const name = assetInfo.names?.[0] ?? assetInfo.name;
+          return name?.endsWith(".css") ? `driver.css` : (name as string);
         },
       },
     },
   },
-  test: {},
+  test: {
+    environment: "jsdom",
+  },
 });
