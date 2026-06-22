@@ -48,6 +48,25 @@ Driver.js is written in Vanilla TypeScript, has zero dependencies and is highly 
 
 <br>
 
+## Developing locally
+
+The library lives in `src/`. To try your changes against a set of live examples, run the playground — an Astro app in `playground/` that imports the library straight from source, so edits hot-reload instantly:
+
+```sh
+pnpm install                 # install the library's dev dependencies
+pnpm run playground:install  # one-time install of the playground's dependencies
+pnpm dev                     # start the playground
+```
+
+Each example lives in its own file under `playground/src/examples/` and shows up as a page in the sidebar. To add one, drop an entry into the relevant group (`highlight.ts`, `popover.ts`, `tour.ts`, `api.ts`).
+
+Other useful scripts:
+
+```sh
+pnpm build   # type-check and build the distributable library into dist/
+pnpm test    # run the unit tests (Vitest)
+```
+
 ## Contributions
 
 Feel free to submit pull requests, create issues or spread the word.

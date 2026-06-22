@@ -1,0 +1,34 @@
+---
+import { exampleGroups } from "../examples";
+
+interface Props {
+  activeId?: string;
+}
+
+const { activeId } = Astro.props;
+---
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="/">
+    driver.js <span>playground</span>
+  </a>
+
+  <nav>
+    {
+      exampleGroups.map(group => (
+        <section class="sidebar-group">
+          <h2>{group.title}</h2>
+          <ul>
+            {group.examples.map(example => (
+              <li>
+                <a href={`/${example.id}`} class={example.id === activeId ? "is-active" : ""}>
+                  {example.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </nav>
+</aside>
