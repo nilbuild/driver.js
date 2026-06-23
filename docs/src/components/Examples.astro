@@ -28,7 +28,7 @@ import { ExampleButton } from "./ExampleButton";
 <script>
   import { driver } from "driver.js";
   import "driver.js/dist/driver.css";
-  import { mountDummyElement, removeDummyElement } from "../components/CodeSample";
+  import { mountDummyElement, removeDummyElement } from "../lib/dummyElement";
 
   function markDone(btn) {
     btn.classList.add("bg-gray-300", "hover:bg-gray-200", "line-through");
