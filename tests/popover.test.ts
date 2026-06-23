@@ -70,6 +70,17 @@ describe("popover rendering", () => {
     expect(progressText()).toBe("1/3");
   });
 
+  it("marks the next button as done on the last step only", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+
+    expect(navButton("next")?.classList.contains("driver-popover-done-btn")).toBe(false);
+
+    d.moveTo(SAMPLE_STEPS.length - 1);
+
+    expect(navButton("next")?.classList.contains("driver-popover-done-btn")).toBe(true);
+  });
+
   it("applies a custom popover class", () => {
     const d = createDriver({ animate: false, popoverClass: "my-custom-popover" });
     d.highlight({ element: "#intro", popover: { title: "Intro" } });
