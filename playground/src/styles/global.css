@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/*
+ * These rules target DOM that driver.js renders at runtime, so they can't be
+ * expressed as utility classes on our own markup. The "Custom Classes" example
+ * opts into the dark theme below via `popoverClass: "custom-driver-popover"`.
+ */
+.driver-popover.custom-driver-popover {
+  min-width: 450px;
+  background: #2d2d2d;
+  color: white;
+}
+
+.driver-popover.custom-driver-popover .driver-popover-title {
+  font-size: 26px;
+}
+
+.driver-popover.custom-driver-popover .driver-popover-description {
+  font-size: 14px;
+}
+
+.driver-popover.custom-driver-popover button {
+  background: #454545;
+  border-color: #454545;
+  text-shadow: none;
+  color: white;
+  font-size: 13px;
+  padding: 7px 10px;
+}
+
+.driver-popover.custom-driver-popover button:hover {
+  background: #575757;
+}
+
+/* Markup injected as popover HTML by the "No Element" example. */
+.gif-popover {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.gif-popover img {
+  width: 100%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.gif-popover p {
+  margin-bottom: 0;
+}
