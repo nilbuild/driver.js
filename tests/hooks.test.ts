@@ -39,6 +39,18 @@ describe("lifecycle hooks", () => {
     expect(onDestroyed).toHaveBeenCalledTimes(1);
   });
 
+  it("passes the active state to onDestroyed", async () => {
+    const onDestroyed = vi.fn();
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onDestroyed });
+    d.drive(1);
+    await nextFrame();
+    d.destroy();
+
+    const [, , options] = onDestroyed.mock.calls[0];
+    expect(options.state.activeIndex).toBe(1);
+    expect(options.state.activeElement).toBe(document.querySelector("#card-1"));
+  });
+
   it("fires onDestroyStarted when closing, leaving teardown to the hook", () => {
     const onDestroyStarted = vi.fn();
     const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onDestroyStarted });

@@ -302,6 +302,8 @@ export function driver(options: Config = {}): Driver {
     destroyOverlay();
     destroyEmitter();
 
+    const stateBeforeDestroy = getState();
+
     resetState();
 
     if (activeElement && activeStep) {
@@ -309,7 +311,7 @@ export function driver(options: Config = {}): Driver {
       if (onDeselected) {
         onDeselected(isActiveDummyElement ? undefined : activeElement, activeStep, {
           config: getConfig(),
-          state: getState(),
+          state: stateBeforeDestroy,
           driver: getCurrentDriver(),
         });
       }
@@ -317,7 +319,7 @@ export function driver(options: Config = {}): Driver {
       if (onDestroyed) {
         onDestroyed(isActiveDummyElement ? undefined : activeElement, activeStep, {
           config: getConfig(),
-          state: getState(),
+          state: stateBeforeDestroy,
           driver: getCurrentDriver(),
         });
       }
