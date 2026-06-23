@@ -1,5 +1,5 @@
 ---
-import { CollectionEntry, getCollection } from "astro:content";
+import { type CollectionEntry, getCollection, render } from "astro:content";
 import DocsLayout from "../../layouts/DocsLayout.astro";
 
 export interface Props {
@@ -10,7 +10,7 @@ export async function getStaticPaths() {
   const guides = await getCollection("guides");
 
   return guides.map(guide => ({
-    params: { guideId: guide.slug },
+    params: { guideId: guide.id },
     props: { guide },
   }));
 }
@@ -18,7 +18,7 @@ export async function getStaticPaths() {
 const { guideId } = Astro.params;
 const { guide } = Astro.props;
 
-const { Content, headings } = await guide.render();
+const { Content, headings } = await render(guide);
 ---
 
 <DocsLayout guide={guide}>

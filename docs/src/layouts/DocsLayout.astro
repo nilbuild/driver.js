@@ -19,7 +19,7 @@ const { guide } = Astro.props;
 const { groupTitle, sort, title } = guide.data;
 ---
 
-<BaseLayout title={`${title} - Driver.js`} permalink={`/docs/${guide.slug}`}>
+<BaseLayout title={`${title} - Driver.js`} permalink={`/docs/${guide.id}`}>
   <div class="block md:hidden">
     <DocsHeader activeGuideTitle={title} groupedGuides={groupedGuides} client:load />
   </div>

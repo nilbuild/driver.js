@@ -31,7 +31,7 @@ export function DocsHeader(props: DocsHeaderProps) {
             <div className="font-bold text-gray-900 text-sm uppercase">{category}</div>
             <div className="flex flex-col">
               {guides.map(guide => (
-                <a key={guide.slug} href={`/docs/${guide.slug}`} className={`${activeGuideTitle === guide.data.title ? 'text-black': 'text-gray-400'} hover:text-gray-900 py-1`}>
+                <a key={guide.id} href={`/docs/${guide.id}`} className={`${activeGuideTitle === guide.data.title ? 'text-black': 'text-gray-400'} hover:text-gray-900 py-1`}>
                   {guide.data.title}
                 </a>
               ))}

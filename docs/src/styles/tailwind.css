@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Recreates the custom `sh` screen from the old tailwind.config.cjs. */
+@custom-variant sh (@media (min-height: 750px));

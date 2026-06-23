@@ -25,7 +25,7 @@ const { activePath, groupedGuides, activeGuideTitle } = Astro.props;
           <h2 class="text-xl font-bold mb-2 pr-5 relative">{groupTitle}</h2>
           <ul class="text-gray-400 mb-5">
             {guides.map(guide => {
-              const guidePath = `/docs/${guide.slug}`;
+              const guidePath = `/docs/${guide.id}`;
               return (
                 <li class="mb-2">
                   <a href={guidePath}
