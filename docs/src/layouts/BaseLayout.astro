@@ -12,6 +12,8 @@ const {
   title = "driver.js",
   description = "A light-weight, no-dependency, vanilla JavaScript library to drive user's focus across the page.",
 } = Astro.props;
+
+const canonical = new URL(permalink, Astro.site ?? "https://driverjs.com").href;
 ---
 
 <!doctype html>
@@ -23,23 +25,24 @@ const {
     <meta name="robots" content="index,follow" />
     <meta name="description" itemprop="description" content={description} />
 
-    <link href={`https://driverjs.com${permalink}`} rel="canonical" />
+    <link href={canonical} rel="canonical" />
 
     <meta content="Kamran Ahmed" name="author" />
     <meta content="summary_large_image" name="twitter:card" />
     <meta content="@kamrify" name="twitter:creator" />
+    <meta content={title} name="twitter:title" />
+    <meta content={description} name="twitter:description" />
+    <meta content="https://driverjs.com/og-img.png" name="twitter:image" />
     <meta content="1200" property="og:image:width" />
     <meta content="630" property="og:image:height" />
     <meta content="https://driverjs.com/og-img.png" property="og:image" />
-    <meta content="driverjs.com" property="og:image:alt" />
-    <meta content="driverjs.com" property="og:site_name" />
-    <meta content="Driver.js" property="og:title" />
-    <meta
-      content="A light-weight, no-dependency, vanilla JavaScript library to drive user's focus across the page."
-      property="og:description"
-    />
+    <meta content="Driver.js — lightweight JavaScript library for product tours and highlights" property="og:image:alt" />
+    <meta content="Driver.js" property="og:site_name" />
+    <meta content={title} property="og:title" />
+    <meta content={description} property="og:description" />
     <meta content="website" property="og:type" />
-    <meta content="https://driverjs.com/" property="og:url" />
+    <meta content="en_US" property="og:locale" />
+    <meta content={canonical} property="og:url" />
 
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

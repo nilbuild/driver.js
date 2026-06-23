@@ -16,10 +16,14 @@ export interface Props {
 const groupedGuides = await getAllGuides();
 
 const { guide } = Astro.props;
-const { groupTitle, sort, title } = guide.data;
+const { groupTitle, sort, title, description } = guide.data;
+
+const metaDescription =
+  description ??
+  `${title} — learn how to use Driver.js, the lightweight, no-dependency JavaScript library for product tours, feature highlights and contextual help.`;
 ---
 
-<BaseLayout title={`${title} - Driver.js`} permalink={`/docs/${guide.id}`}>
+<BaseLayout title={`${title} - Driver.js`} description={metaDescription} permalink={`/docs/${guide.id}`}>
   <div class="block md:hidden">
     <DocsHeader activeGuideTitle={title} groupedGuides={groupedGuides} client:load />
   </div>

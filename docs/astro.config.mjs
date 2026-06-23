@@ -3,11 +3,13 @@ import { unified } from "@astrojs/markdown-remark";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
+import sitemap from "@astrojs/sitemap";
 
 import compress from "astro-compress";
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://driverjs.com",
   build: {
     format: "file",
   },
@@ -25,6 +27,7 @@ export default defineConfig({
   integrations: [
     react(),
     mdx(),
+    sitemap(),
     compress({
       CSS: false,
       JS: false,
