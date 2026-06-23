@@ -31,7 +31,9 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "format": "prettier . --write"
+    "format": "prettier . --write",
+    "release": "np --test-script test:run",
+    "prepublishOnly": "pnpm build"
   },
   "files": [
     "!tests/**/*",
@@ -45,6 +47,7 @@
     "@vitest/coverage-v8": "^4.1.9",
     "dts-bundle-generator": "^9.5.1",
     "jsdom": "^29.1.1",
+    "np": "^11.2.1",
     "postcss": "^8.5.15",
     "postcss-scss": "^4.0.9",
     "prettier": "^3.8.4",
