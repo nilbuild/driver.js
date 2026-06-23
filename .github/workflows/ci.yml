@@ -30,3 +30,6 @@ jobs:
 
       - name: Test
         run: pnpm test:run
+
+      - name: Lint package
+        run: pnpm lint:package

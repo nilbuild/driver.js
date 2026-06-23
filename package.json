@@ -7,33 +7,42 @@
   "module": "./dist/driver.js.mjs",
   "types": "./dist/driver.js.d.ts",
   "homepage": "https://driverjs.com",
-  "repository": "https://github.com/kamranahmedse/driver.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kamranahmedse/driver.js.git"
+  },
   "author": "Kamran Ahmed <kamranahmed.se@gmail.com>",
   "bugs": {
     "url": "https://github.com/kamranahmedse/driver.js/issues"
   },
   "exports": {
     ".": {
-      "types": "./dist/driver.js.d.ts",
-      "require": "./dist/driver.js.cjs",
-      "import": "./dist/driver.js.mjs"
+      "import": {
+        "types": "./dist/driver.js.d.mts",
+        "default": "./dist/driver.js.mjs"
+      },
+      "require": {
+        "types": "./dist/driver.js.d.cts",
+        "default": "./dist/driver.js.cjs"
+      }
     },
     "./dist/driver.css": {
-      "require": "./dist/driver.css",
       "import": "./dist/driver.css",
+      "require": "./dist/driver.css",
       "default": "./dist/driver.css"
     }
   },
   "scripts": {
     "dev": "pnpm --dir playground dev",
     "playground:install": "pnpm --dir playground install",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && node scripts/postbuild.mjs",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "lint:package": "publint && attw --pack . --exclude-entrypoints ./dist/driver.css",
     "format": "prettier . --write",
     "release": "np --test-script test:run",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build && pnpm lint:package"
   },
   "files": [
     "!tests/**/*",
@@ -42,6 +51,7 @@
     "!dist/**/*.js.map"
   ],
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.3",
     "@microsoft/api-extractor": "^7.58.9",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^26.0.0",
@@ -51,6 +61,7 @@
     "postcss": "^8.5.15",
     "postcss-scss": "^4.0.9",
     "prettier": "^3.8.4",
+    "publint": "^0.3.21",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
     "vite-plugin-dts": "^5.0.2",
