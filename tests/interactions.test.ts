@@ -1,0 +1,68 @@
+import { describe, expect, it, vi } from "vitest";
+import { createDriver, navButton, popoverTitle, SAMPLE_STEPS, useDriverHarness } from "./utils";
+
+useDriverHarness();
+
+describe("button interactions", () => {
+  it("advances when the next button is clicked", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+    navButton("next")?.click();
+
+    expect(d.getActiveIndex()).toBe(1);
+    expect(popoverTitle()).toBe("Step 2");
+  });
+
+  it("goes back when the previous button is clicked", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive(1);
+    navButton("prev")?.click();
+
+    expect(d.getActiveIndex()).toBe(0);
+    expect(popoverTitle()).toBe("Step 1");
+  });
+
+  it("closes the tour when the close button is clicked", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+    navButton("close")?.click();
+
+    expect(d.isActive()).toBe(false);
+  });
+
+  it("runs onNextClick instead of auto-advancing when provided", () => {
+    const onNextClick = vi.fn();
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onNextClick });
+    d.drive();
+    navButton("next")?.click();
+
+    expect(onNextClick).toHaveBeenCalledTimes(1);
+    expect(d.getActiveIndex()).toBe(0);
+  });
+
+  it("runs onPrevClick instead of going back when provided", () => {
+    const onPrevClick = vi.fn();
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onPrevClick });
+    d.drive(1);
+    navButton("prev")?.click();
+
+    expect(onPrevClick).toHaveBeenCalledTimes(1);
+    expect(d.getActiveIndex()).toBe(1);
+  });
+
+  it("supports a step-level onNextClick override", () => {
+    const onNextClick = vi.fn();
+    const d = createDriver({
+      animate: false,
+      steps: [
+        { element: "#intro", popover: { title: "Step 1", onNextClick } },
+        { element: "#card-1", popover: { title: "Step 2" } },
+      ],
+    });
+    d.drive();
+    navButton("next")?.click();
+
+    expect(onNextClick).toHaveBeenCalledTimes(1);
+    expect(d.getActiveIndex()).toBe(0);
+  });
+});

@@ -29,6 +29,8 @@
     "playground:install": "pnpm --dir playground install",
     "build": "tsc && vite build && dts-bundle-generator --config ./dts-bundle-generator.config.ts",
     "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "format": "prettier . --write"
   },
   "files": [
