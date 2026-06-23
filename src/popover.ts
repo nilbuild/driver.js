@@ -74,8 +74,8 @@ export function renderPopover(element: Element, step: DriveStep) {
     disableButtons,
     showProgress,
 
-    nextBtnText = getConfig("nextBtnText") || "Next &rarr;",
-    prevBtnText = getConfig("prevBtnText") || "&larr; Previous",
+    nextBtnText = getConfig("nextBtnText") || "Next",
+    prevBtnText = getConfig("prevBtnText") || "Previous",
     progressText = getConfig("progressText") || "{current} of {total}",
   } = step.popover || {};
 
@@ -668,12 +668,12 @@ function createPopover(): PopoverDOM {
   const previousButton = document.createElement("button");
   previousButton.type = "button";
   previousButton.classList.add("driver-popover-prev-btn");
-  previousButton.innerHTML = "&larr; Previous";
+  previousButton.innerHTML = "Previous";
 
   const nextButton = document.createElement("button");
   nextButton.type = "button";
   nextButton.classList.add("driver-popover-next-btn");
-  nextButton.innerHTML = "Next &rarr;";
+  nextButton.innerHTML = "Next";
 
   footerButtons.appendChild(previousButton);
   footerButtons.appendChild(nextButton);
