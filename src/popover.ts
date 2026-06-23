@@ -502,6 +502,13 @@ export function repositionPopover(element: Element, step: DriveStep) {
   } else {
     popover.arrow.classList.add("driver-popover-arrow-none");
   }
+
+  [...popover.wrapper.classList]
+    .filter(className => className.startsWith("driver-popover-side-") || className.startsWith("driver-popover-align-"))
+    .forEach(className => popover.wrapper.classList.remove(className));
+
+  popover.wrapper.classList.add(`driver-popover-side-${popoverRenderedSide}`);
+  popover.wrapper.classList.add(`driver-popover-align-${requiredAlignment}`);
 }
 
 function renderPopoverArrow(alignment: Alignment, side: Side, element: Element) {

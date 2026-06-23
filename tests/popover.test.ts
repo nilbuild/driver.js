@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDriver, navButton, popoverEl, progressText, SAMPLE_STEPS, useDriverHarness } from "./utils";
+import { createDriver, navButton, nextFrame, popoverEl, progressText, SAMPLE_STEPS, useDriverHarness } from "./utils";
 
 useDriverHarness();
 
@@ -86,6 +86,45 @@ describe("popover rendering", () => {
     d.highlight({ element: "#intro", popover: { title: "Intro" } });
 
     expect(popoverEl()?.classList.contains("my-custom-popover")).toBe(true);
+  });
+
+  it("exposes the rendered side and alignment as classes", () => {
+    const d = createDriver({ animate: false });
+    d.highlight({ element: "#intro", popover: { title: "Intro", side: "bottom", align: "center" } });
+
+    expect(popoverEl()?.classList.contains("driver-popover-side-bottom")).toBe(true);
+    expect(popoverEl()?.classList.contains("driver-popover-align-center")).toBe(true);
+  });
+
+  it("reflects the flipped side rather than the configured one", () => {
+    const d = createDriver({ animate: false });
+    // There is no room above a zero-height element, so the popover flips away from "top".
+    d.highlight({ element: "#intro", popover: { title: "Intro", side: "top" } });
+
+    expect(popoverEl()?.classList.contains("driver-popover-side-top")).toBe(false);
+  });
+
+  it("clears stale side classes when the popover is repositioned", async () => {
+    const rect = (over: Partial<DOMRect>): DOMRect =>
+      ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() {}, ...over }) as DOMRect;
+
+    const el = document.querySelector<HTMLElement>("#intro")!;
+
+    // Plenty of room above the element, so it renders on "top".
+    el.getBoundingClientRect = () => rect({ top: 300, left: 400, right: 600, bottom: 320, width: 200, height: 20 });
+
+    const d = createDriver({ animate: false });
+    d.highlight({ element: "#intro", popover: { title: "Intro", side: "top" } });
+
+    expect(popoverEl()?.classList.contains("driver-popover-side-top")).toBe(true);
+
+    // No room above and only room below, so it flips to "bottom" on refresh.
+    el.getBoundingClientRect = () => rect({ top: 0, left: 5, right: 1020, bottom: 5, width: 1015, height: 5 });
+    d.refresh();
+    await nextFrame();
+
+    const sideClasses = [...popoverEl()!.classList].filter(className => className.startsWith("driver-popover-side-"));
+    expect(sideClasses).toEqual(["driver-popover-side-bottom"]);
   });
 
   it("allows mutating the popover from onPopoverRender", () => {
