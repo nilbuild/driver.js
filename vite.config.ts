@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import path from "path";
 import { defineConfig } from "vite";
+import dts from "vite-plugin-dts";
 
 const packageName = "driver.js";
 
@@ -14,6 +15,12 @@ const formats = Object.keys(fileName) as Array<keyof typeof fileName>;
 
 export default defineConfig({
   base: "./",
+  plugins: [
+    dts({
+      bundleTypes: true,
+      tsconfigPath: "./tsconfig.json",
+    }),
+  ],
   build: {
     target: "es2020",
     lib: {
