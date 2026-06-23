@@ -8,20 +8,28 @@ interface Props {
 const { activeId } = Astro.props;
 ---
 
-<aside class="sidebar">
-  <a class="sidebar-brand" href="/">
-    driver.js <span>playground</span>
+<aside class="sticky top-0 h-screen self-start overflow-y-auto border-r border-gray-200 bg-gray-50 p-5">
+  <a href="/" class="mb-5 block text-lg font-semibold text-gray-900 no-underline">
+    driver.js <span class="font-normal text-gray-500">playground</span>
   </a>
 
   <nav>
     {
       exampleGroups.map(group => (
-        <section class="sidebar-group">
-          <h2>{group.title}</h2>
+        <section class="mb-5">
+          <h2 class="mb-2 text-[11px] font-semibold tracking-wider text-gray-500 uppercase">{group.title}</h2>
           <ul>
             {group.examples.map(example => (
               <li>
-                <a href={`/${example.id}`} class={example.id === activeId ? "is-active" : ""}>
+                <a
+                  href={`/${example.id}`}
+                  class:list={[
+                    "block rounded-md px-2.5 py-1.5 no-underline",
+                    example.id === activeId
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-700 hover:bg-indigo-50 hover:text-blue-600",
+                  ]}
+                >
                   {example.title}
                 </a>
               </li>
