@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { FeatureMarquee } from "../components/FeatureMarquee";
+import FeatureMarquee from "../components/FeatureMarquee.astro";
 import Container from "../components/Container.astro";
 import UsecaseItem from "../components/UsecaseItem.astro";
 import { ExampleButton } from "../components/ExampleButton";
@@ -14,7 +14,7 @@ import OpenSourceLove from "../components/OpenSourceLove.astro";
   <div
     class="bg-white overflow-x-hidden overflow-y-hidden relative h-[48px] md:h-[56px] lg:h-[64px] border-b-2 border-b-black"
     data-feat-marquee>
-    <FeatureMarquee client:only />
+    <FeatureMarquee />
   </div>
 
   <div class="py-10 md:py-12 lg:py-24 bg-white text-black">
