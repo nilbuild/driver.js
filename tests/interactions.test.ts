@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { createDriver, navButton, popoverTitle, SAMPLE_STEPS, useDriverHarness } from "./utils";
+import { createDriver, navButton, nextFrame, popoverTitle, SAMPLE_STEPS, useDriverHarness } from "./utils";
 
 useDriverHarness();
+
+function clickOverlay(): void {
+  document.querySelector(".driver-overlay path")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+}
 
 describe("button interactions", () => {
   it("advances when the next button is clicked", () => {
@@ -48,6 +52,23 @@ describe("button interactions", () => {
 
     expect(onPrevClick).toHaveBeenCalledTimes(1);
     expect(d.getActiveIndex()).toBe(1);
+  });
+
+  it("runs onNextClick when overlayClickBehavior is 'nextStep'", async () => {
+    const onNextClick = vi.fn();
+    const d = createDriver({
+      animate: false,
+      overlayClickBehavior: "nextStep",
+      steps: SAMPLE_STEPS,
+      onNextClick,
+    });
+    d.drive();
+    await nextFrame();
+
+    clickOverlay();
+
+    expect(onNextClick).toHaveBeenCalledTimes(1);
+    expect(d.getActiveIndex()).toBe(0);
   });
 
   it("supports a step-level onNextClick override", () => {
