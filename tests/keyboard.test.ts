@@ -36,6 +36,18 @@ describe("keyboard control", () => {
     expect(d.getActiveIndex()).toBe(0);
   });
 
+  it("does not close the tour when ArrowLeft is pressed on the first step", async () => {
+    const d = createDriver({ animate: false, allowClose: false, steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+
+    pressKey("ArrowLeft");
+    await nextFrame();
+
+    expect(d.isActive()).toBe(true);
+    expect(d.getActiveIndex()).toBe(0);
+  });
+
   it("ignores keys when allowKeyboardControl is false", () => {
     const d = createDriver({ animate: false, allowKeyboardControl: false, steps: SAMPLE_STEPS });
     d.drive();

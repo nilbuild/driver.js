@@ -136,8 +136,8 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    const currentStepIndex = getState("activeIndex");
-    if (typeof currentStepIndex === "undefined") {
+    const steps = getConfig("steps") || [];
+    if (!steps[activeIndex - 1]) {
       return;
     }
 
