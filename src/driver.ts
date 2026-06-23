@@ -7,6 +7,12 @@ import { destroyEmitter, listen } from "./emitter";
 import { getState, resetState, setState } from "./state";
 import "./driver.css";
 
+// Re-export the public types so they remain part of the package's type surface.
+export type { Config, DriverHook } from "./config";
+export type { State } from "./state";
+export type { StageDefinition } from "./overlay";
+export type { Popover, PopoverDOM, Side, Alignment, AllowedButtons } from "./popover";
+
 export type DriveStep = {
   element?: string | Element | (() => Element);
   onHighlightStarted?: DriverHook;

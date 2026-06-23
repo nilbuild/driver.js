@@ -1,5 +1,5 @@
 import { defineConfig } from "astro/config";
-import tailwind from "@astrojs/tailwind";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
 
@@ -12,14 +12,11 @@ export default defineConfig({
   },
   markdown: {
     shikiConfig: {
-      // theme: "material-theme"
       theme: "monokai",
-      // theme: 'poimandres'
     },
   },
 
   integrations: [
-    tailwind(),
     react(),
     mdx(),
     compress({
@@ -27,4 +24,8 @@ export default defineConfig({
       JS: false,
     }),
   ],
+
+  vite: {
+    plugins: [tailwindcss()],
+  },
 });

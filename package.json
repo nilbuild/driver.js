@@ -27,7 +27,7 @@
   "scripts": {
     "dev": "pnpm --dir playground dev",
     "playground:install": "pnpm --dir playground install",
-    "build": "tsc && vite build && dts-bundle-generator --config ./dts-bundle-generator.config.ts",
+    "build": "tsc && vite build",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -42,10 +42,10 @@
     "!dist/**/*.js.map"
   ],
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.58.9",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^4.1.9",
-    "dts-bundle-generator": "^9.5.1",
     "jsdom": "^29.1.1",
     "np": "^11.2.1",
     "postcss": "^8.5.15",
@@ -53,6 +53,7 @@
     "prettier": "^3.8.4",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
+    "vite-plugin-dts": "^5.0.2",
     "vitest": "^4.1.9"
   },
   "keywords": [
