@@ -48,6 +48,16 @@ describe("tour navigation", () => {
     expect(popoverTitle()).toBe("Step 3");
   });
 
+  it("exposes the next step", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+
+    expect(d.getNextStep()?.popover?.title).toBe("Step 2");
+
+    d.moveTo(SAMPLE_STEPS.length - 1);
+    expect(d.getNextStep()).toBeUndefined();
+  });
+
   it("exposes the active and previous step and element", async () => {
     const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
     d.drive();

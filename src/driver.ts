@@ -37,6 +37,7 @@ export interface Driver {
   getActiveElement: () => Element | undefined;
   getPreviousElement: () => Element | undefined;
   getPreviousStep: () => DriveStep | undefined;
+  getNextStep: () => DriveStep | undefined;
   moveNext: () => void;
   movePrevious: () => void;
   moveTo: (index: number) => void;
@@ -372,6 +373,12 @@ export function driver(options: Config = {}): Driver {
     getActiveElement: () => getState("activeElement"),
     getPreviousElement: () => getState("previousElement"),
     getPreviousStep: () => getState("previousStep"),
+    getNextStep: () => {
+      const steps = getConfig("steps") || [];
+      const activeIndex = getState("activeIndex");
+
+      return activeIndex !== undefined ? steps[activeIndex + 1] : undefined;
+    },
     moveNext,
     movePrevious,
     moveTo,
