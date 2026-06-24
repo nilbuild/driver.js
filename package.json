@@ -9,11 +9,11 @@
   "homepage": "https://driverjs.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kamranahmedse/driver.js.git"
+    "url": "git+https://github.com/nilbuild/driver.js.git"
   },
   "author": "Kamran Ahmed <kamranahmed.se@gmail.com>",
   "bugs": {
-    "url": "https://github.com/kamranahmedse/driver.js/issues"
+    "url": "https://github.com/nilbuild/driver.js/issues"
   },
   "exports": {
     ".": {
