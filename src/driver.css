@@ -202,43 +202,8 @@
   display: none;
 }
 
-/* Left/Start + Right/Start */
-.driver-popover-arrow-side-left.driver-popover-arrow-align-start,
-.driver-popover-arrow-side-right.driver-popover-arrow-align-start {
-  top: 15px;
-}
-
-/* Top/Start + Bottom/Start */
-.driver-popover-arrow-side-top.driver-popover-arrow-align-start,
-.driver-popover-arrow-side-bottom.driver-popover-arrow-align-start {
-  left: 15px;
-}
-
-/* End/Left + End/Right */
-.driver-popover-arrow-align-end.driver-popover-arrow-side-left,
-.driver-popover-arrow-align-end.driver-popover-arrow-side-right {
-  bottom: 15px;
-}
-
-/* Top/End + Bottom/End */
-.driver-popover-arrow-side-top.driver-popover-arrow-align-end,
-.driver-popover-arrow-side-bottom.driver-popover-arrow-align-end {
-  right: 15px;
-}
-
-/* Left/Center + Right/Center */
-.driver-popover-arrow-side-left.driver-popover-arrow-align-center,
-.driver-popover-arrow-side-right.driver-popover-arrow-align-center {
-  top: 50%;
-  margin-top: -5px;
-}
-
-/* Top/Center + Bottom/Center */
-.driver-popover-arrow-side-top.driver-popover-arrow-align-center,
-.driver-popover-arrow-side-bottom.driver-popover-arrow-align-center {
-  left: 50%;
-  margin-left: -5px;
-}
+/* The offset of the arrow along its edge is set inline by the library so the
+   tip points at the center of the highlighted element. */
 
 /* No arrow */
 .driver-popover-arrow-none {

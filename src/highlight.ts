@@ -1,7 +1,8 @@
 import { DriveStep } from "./driver";
 import { refreshOverlay, trackActiveElement, transitionStage } from "./overlay";
 import { getConfig, getCurrentDriver } from "./config";
-import { hidePopover, renderPopover, repositionPopover } from "./popover";
+import { hidePopover, renderPopover } from "./popover";
+import { repositionPopover } from "./position";
 import { bringInView } from "./utils";
 import { getState, setState } from "./state";
 
