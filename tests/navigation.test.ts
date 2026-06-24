@@ -58,6 +58,33 @@ describe("tour navigation", () => {
     expect(d.getNextStep()).toBeUndefined();
   });
 
+  it("destroys the tour when moving next past the last step", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive(SAMPLE_STEPS.length - 1);
+
+    d.moveNext();
+
+    expect(d.isActive()).toBe(false);
+  });
+
+  it("destroys the tour when moving previous before the first step", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+
+    d.movePrevious();
+
+    expect(d.isActive()).toBe(false);
+  });
+
+  it("destroys the tour when moving to an out-of-range index", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+
+    d.moveTo(99);
+
+    expect(d.isActive()).toBe(false);
+  });
+
   it("exposes the active and previous step and element", async () => {
     const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
     d.drive();

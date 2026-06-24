@@ -34,6 +34,14 @@ describe("button interactions", () => {
     expect(d.isActive()).toBe(false);
   });
 
+  it("destroys the tour when next is clicked on the final step without onDoneClick", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive(SAMPLE_STEPS.length - 1);
+    navButton("next")?.click();
+
+    expect(d.isActive()).toBe(false);
+  });
+
   it("runs onNextClick instead of auto-advancing when provided", () => {
     const onNextClick = vi.fn();
     const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onNextClick });
