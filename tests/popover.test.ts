@@ -93,6 +93,21 @@ describe("popover rendering", () => {
     expect(progressText()).toBe("1/3");
   });
 
+  it("interpolates a step-level progress template", () => {
+    const d = createDriver({
+      animate: false,
+      showProgress: true,
+      steps: [
+        { element: "#intro", popover: { title: "Step 1", progressText: "{{current}} localized text {{total}} done" } },
+        { element: "#card-1", popover: { title: "Step 2" } },
+        { element: ".feature-list", popover: { title: "Step 3" } },
+      ],
+    });
+    d.drive();
+
+    expect(progressText()).toBe("1 localized text 3 done");
+  });
+
   it("marks the next button as done on the last step only", () => {
     const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
     d.drive();

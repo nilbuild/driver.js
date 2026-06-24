@@ -283,7 +283,6 @@ export function driver(options: Config = {}): Driver {
         nextBtnText: !hasNextStep ? doneBtnText : undefined,
         disableButtons: [...(!hasPreviousStep ? ["previous" as AllowedButtons] : [])],
         showProgress: showProgress,
-        progressText: progressTextReplaced,
         onNextClick: onNextClick
           ? onNextClick
           : () => {
@@ -304,6 +303,7 @@ export function driver(options: Config = {}): Driver {
               destroy();
             },
         ...(currentStep?.popover || {}),
+        progressText: progressTextReplaced,
       },
     });
   }
