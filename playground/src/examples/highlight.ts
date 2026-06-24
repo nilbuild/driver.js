@@ -165,7 +165,7 @@ export const highlightGroup: ExampleGroup = {
           popover: {
             showButtons: [],
             description:
-              "<div class='gif-popover'><img style='max-width: 100%' src='https://i.imgur.com/EAQhHu5.gif' /><p>Go and build something cool!</p></div>",
+              "<div class='gif-popover'><img style='max-width: 100%' src='https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExajhtbHRuc21hbHRmaGdtMjB5NTNmOTljaW9xZzU1Z3piMjh1aWpqdSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/cMnt7i2RykmpW/200.webp' /><p>Go and build something cool!</p></div>",
           },
         });
       },
