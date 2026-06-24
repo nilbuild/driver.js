@@ -86,4 +86,57 @@ describe("button interactions", () => {
     expect(onNextClick).toHaveBeenCalledTimes(1);
     expect(d.getActiveIndex()).toBe(0);
   });
+
+  it("runs onDoneClick instead of onNextClick on the final step", () => {
+    const onDoneClick = vi.fn();
+    const onNextClick = vi.fn();
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onDoneClick, onNextClick });
+    d.drive(SAMPLE_STEPS.length - 1);
+    navButton("next")?.click();
+
+    expect(onDoneClick).toHaveBeenCalledTimes(1);
+    expect(onNextClick).not.toHaveBeenCalled();
+
+    const [element, step, options] = onDoneClick.mock.calls[0];
+    expect(element).toBe(document.querySelector(".feature-list"));
+    expect(step.popover?.title).toBe("Step 3");
+    expect(options.driver).toBe(d);
+  });
+
+  it("leaves teardown to onDoneClick instead of auto-destroying", () => {
+    const onDoneClick = vi.fn();
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onDoneClick });
+    d.drive(SAMPLE_STEPS.length - 1);
+    navButton("next")?.click();
+
+    expect(onDoneClick).toHaveBeenCalledTimes(1);
+    expect(d.isActive()).toBe(true);
+  });
+
+  it("does not fire onDoneClick on non-final steps", () => {
+    const onDoneClick = vi.fn();
+    const onNextClick = vi.fn();
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onDoneClick, onNextClick });
+    d.drive();
+    navButton("next")?.click();
+
+    expect(onDoneClick).not.toHaveBeenCalled();
+    expect(onNextClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports a step-level onDoneClick override", () => {
+    const onDoneClick = vi.fn();
+    const d = createDriver({
+      animate: false,
+      steps: [
+        { element: "#intro", popover: { title: "Step 1" } },
+        { element: "#card-1", popover: { title: "Step 2", onDoneClick } },
+      ],
+    });
+    d.drive(1);
+    navButton("next")?.click();
+
+    expect(onDoneClick).toHaveBeenCalledTimes(1);
+    expect(d.isActive()).toBe(true);
+  });
 });

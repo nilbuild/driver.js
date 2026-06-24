@@ -82,8 +82,20 @@ export function driver(options: Config = {}): Driver {
     if (overlayClickBehavior === "nextStep") {
       const activeStep = getState("activeStep");
       const activeElement = getState("activeElement");
-      const onNextClick = activeStep?.popover?.onNextClick || getConfig("onNextClick");
 
+      const steps = getConfig("steps") || [];
+      const isLastStep = getState("activeIndex") === steps.length - 1;
+      const onDoneClick = activeStep?.popover?.onDoneClick || getConfig("onDoneClick");
+      if (isLastStep && onDoneClick) {
+        onDoneClick(activeElement, activeStep!, {
+          config: getConfig(),
+          state: getState(),
+          driver: getCurrentDriver(),
+        });
+        return;
+      }
+
+      const onNextClick = activeStep?.popover?.onNextClick || getConfig("onNextClick");
       if (onNextClick) {
         onNextClick(activeElement, activeStep!, {
           config: getConfig(),
@@ -178,6 +190,17 @@ export function driver(options: Config = {}): Driver {
     const activeElement = getState("__activeElement");
     if (typeof activeIndex === "undefined" || typeof activeStep === "undefined") {
       return;
+    }
+
+    const steps = getConfig("steps") || [];
+    const isLastStep = activeIndex === steps.length - 1;
+    const onDoneClick = activeStep.popover?.onDoneClick || getConfig("onDoneClick");
+    if (isLastStep && onDoneClick) {
+      return onDoneClick(activeElement, activeStep, {
+        config: getConfig(),
+        state: getState(),
+        driver: getCurrentDriver(),
+      });
     }
 
     const onNextClick = activeStep.popover?.onNextClick || getConfig("onNextClick");

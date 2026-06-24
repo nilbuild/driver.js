@@ -180,9 +180,11 @@ You can also change the text of buttons using `nextBtnText`, `prevBtnText` and `
 
 ## Event Handlers
 
-You can use the `onNextClick`, `onPreviousClick` and `onCloseClick` callbacks to implement custom functionality when the user clicks on the next and previous buttons.
+You can use the `onNextClick`, `onPrevClick`, `onCloseClick` and `onDoneClick` callbacks to implement custom functionality when the user clicks on the buttons.
 
 > Please note that when you configure these callbacks, the default functionality of the buttons will be disabled. You will have to implement the functionality yourself.
+
+> `onDoneClick` runs when the done button (the next button on the last step) is clicked. When provided, it runs instead of `onNextClick` on the last step, so you can detect when the user finishes the tour. Driver.js won't tear down the tour for you here — call `driverObj.destroy()` yourself.
 
 <CodeSample
   buttonText={"Show Example"}
@@ -223,6 +225,11 @@ You can use the `onNextClick`, `onPreviousClick` and `onCloseClick` callbacks to
     onCloseClick:() => {
       console.log('Close Button Clicked');
       // Implement your own functionality here
+      driverObj.destroy();
+    },
+    onDoneClick:() => {
+      console.log('Done Button Clicked');
+      // Runs on the last step instead of onNextClick
       driverObj.destroy();
     },
     steps: [

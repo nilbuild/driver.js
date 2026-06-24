@@ -34,6 +34,7 @@ export type Popover = {
   onNextClick?: DriverHook;
   onPrevClick?: DriverHook;
   onCloseClick?: DriverHook;
+  onDoneClick?: DriverHook;
 };
 
 export type PopoverDOM = {
@@ -167,8 +168,19 @@ export function renderPopover(element: Element, step: DriveStep) {
       const onNextClick = step.popover?.onNextClick || getConfig("onNextClick");
       const onPrevClick = step.popover?.onPrevClick || getConfig("onPrevClick");
       const onCloseClick = step.popover?.onCloseClick || getConfig("onCloseClick");
+      const onDoneClick = step.popover?.onDoneClick || getConfig("onDoneClick");
 
       if (!!target.closest(".driver-popover-next-btn")) {
+        // On the final step the next button acts as the done button, so a
+        // dedicated onDoneClick takes precedence over onNextClick when provided.
+        if (isDoneStep && onDoneClick) {
+          return onDoneClick(element, step, {
+            config: getConfig(),
+            state: getState(),
+            driver: getCurrentDriver(),
+          });
+        }
+
         // If the user has provided a custom callback, call it
         // otherwise, emit the event.
         if (onNextClick) {

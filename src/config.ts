@@ -51,6 +51,7 @@ export type Config = {
   onNextClick?: DriverHook;
   onPrevClick?: DriverHook;
   onCloseClick?: DriverHook;
+  onDoneClick?: DriverHook;
 };
 
 let currentConfig: Config = {};

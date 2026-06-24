@@ -112,6 +112,10 @@ type Config = {
   onNextClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
   onPrevClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
   onCloseClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
+  // Runs when the done button (the next button on the
+  // last step of a tour) is clicked. When provided, it
+  // runs instead of `onNextClick` on the last step.
+  onDoneClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void;
 };
 ```
 
@@ -120,6 +124,8 @@ type Config = {
 > You can use this to implement custom logic for navigating between steps. This is also useful when you are dealing with dynamic content and want to highlight the next/previous element based on some logic.
 >
 > `onNextClick` and `onPrevClick` hooks can be configured at the step level as well. When configured at the driver level, you control the navigation for all the steps. When configured at the step level, you control the navigation for that particular step only.
+>
+> `onDoneClick` lets you detect when the user finishes the tour by clicking the done button on the last step. When provided, it runs instead of `onNextClick` on the last step, and Driver.js won't destroy the tour automatically — you control teardown by calling `driverObj.destroy()` yourself. Like the other click hooks, it can be configured at the driver or step level.
 
 ## Popover Configuration
 
@@ -187,6 +193,9 @@ type Popover = {
   onNextClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void
   onPrevClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void
   onCloseClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void
+  // Runs instead of `onNextClick` when the done button
+  // (the next button on the last step) is clicked.
+  onDoneClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State, driver: Driver }) => void
 }
 ```
 

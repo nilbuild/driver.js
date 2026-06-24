@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createDriver, nextFrame, popoverTitle, pressKey, SAMPLE_STEPS, useDriverHarness } from "./utils";
 
 useDriverHarness();
@@ -46,6 +46,20 @@ describe("keyboard control", () => {
 
     expect(d.isActive()).toBe(true);
     expect(d.getActiveIndex()).toBe(0);
+  });
+
+  it("runs onDoneClick when ArrowRight is pressed on the final step", async () => {
+    const onDoneClick = vi.fn();
+    const onNextClick = vi.fn();
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onDoneClick, onNextClick });
+    d.drive(SAMPLE_STEPS.length - 1);
+    await nextFrame();
+
+    pressKey("ArrowRight");
+
+    expect(onDoneClick).toHaveBeenCalledTimes(1);
+    expect(onNextClick).not.toHaveBeenCalled();
+    expect(d.isActive()).toBe(true);
   });
 
   it("ignores keys when allowKeyboardControl is false", () => {
