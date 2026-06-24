@@ -8,6 +8,8 @@ import HeroSection from "../components/HeroSection.astro";
 import Examples from "../components/Examples.astro";
 import UsecaseList from "../components/UsecaseList.astro";
 import OpenSourceLove from "../components/OpenSourceLove.astro";
+
+const currentYear = new Date().getFullYear();
 ---
 <BaseLayout
   title="Driver.js — Product Tours & Highlights in Vanilla JS"
@@ -33,7 +35,7 @@ import OpenSourceLove from "../components/OpenSourceLove.astro";
   <div class="py-8 bg-black text-white">
     <Container>
       <p class="text-lg text-white text-center">
-        MIT Licensed &copy; 2024
+        MIT Licensed &copy; {currentYear}
         <span class="hidden sm:inline">
           <span class="mx-3">&middot;</span>
           <a href="/docs/installation" class="">
