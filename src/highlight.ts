@@ -156,6 +156,10 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
     renderPopover(toElement, toStep);
   }
 
+  document.querySelectorAll(".driver-active-element-parent").forEach(element => {
+    element.classList.remove("driver-active-element-parent");
+  });
+
   fromElement.classList.remove("driver-active-element", "driver-no-interaction");
   fromElement.removeAttribute("aria-haspopup");
   fromElement.removeAttribute("aria-expanded");
@@ -164,6 +168,11 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
   const disableActiveInteraction = toStep.disableActiveInteraction ?? getConfig("disableActiveInteraction");
   if (disableActiveInteraction) {
     toElement.classList.add("driver-no-interaction");
+  }
+
+  const toParent = toElement.parentElement;
+  if (toParent && toParent !== document.body) {
+    toParent.classList.add("driver-active-element-parent");
   }
 
   toElement.classList.add("driver-active-element");
@@ -175,6 +184,11 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
 export function destroyHighlight() {
   document.getElementById("driver-dummy-element")?.remove();
   document.querySelectorAll(".driver-active-element").forEach(element => {
+    const parent = element.parentElement;
+    if (parent && parent !== document.body) {
+      parent.classList.remove("driver-active-element-parent");
+    }
+
     element.classList.remove("driver-active-element", "driver-no-interaction");
     element.removeAttribute("aria-haspopup");
     element.removeAttribute("aria-expanded");
