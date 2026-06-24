@@ -7,7 +7,7 @@ sort: 7
 
 import { CodeSample } from "../../components/CodeSample.tsx";
 
-You can control the popover position using the `side` and `align` options. The `side` option controls the side of the element where the popover will be shown and the `align` option controls the alignment of the popover with the element.
+You can control the popover position using the `side` and `align` options. The `side` option controls which side of the element the popover is shown on (`top`, `right`, `bottom`, or `left`, defaulting to `bottom`). The `align` option controls how the popover is aligned along that side: `start` lines its leading edge up with the element, `center` centers it, and `end` lines up the trailing edges (defaults to `start`).
 
 > **Note:** Popover is intelligent enough to adjust itself to fit in the viewport. So, if you set `side` to `left` and `align` to `start`, but the popover doesn't fit in the viewport, it will automatically adjust itself to fit in the viewport. Consider highlighting and scrolling the browser to the element below to see this in action.
 
@@ -17,17 +17,17 @@ import "driver.js/dist/driver.css";
 
 const driverObj = driver();
 driverObj.highlight({
-  element: '#left-start',
+  element: "#left-start",
   popover: {
-    title: 'Animated Tour Example',
-    description: 'Here is the code example showing animated tour. Let\'s walk you through it.',
+    title: "Animated Tour Example",
+    description: "Here is the code example showing animated tour. Let's walk you through it.",
     side: "left",
-    align: 'start'
-  }
+    align: "start",
+  },
 });
 ```
 
-<div id="sample-box" className='p-12 bg-gray-200 rounded-md flex items-center justify-center'>
+<div id="sample-box" className="p-12 bg-gray-200 rounded-md flex items-center justify-center">
   <p>Use the buttons below to show the popover.</p>
 </div>
 
@@ -47,155 +47,165 @@ driverObj.highlight({
     client:load
   />
 
-  <CodeSample
-    buttonText={"Left Center"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Left Center Example',
-        description: 'We have side set to <mark>left</mark> and align set to <mark>center</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "left",
-        align: 'center'
-      }
-    }}
-    id={"left-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Left Center"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Left Center Example",
+      description:
+        "We have side set to <mark>left</mark> and align set to <mark>center</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "left",
+      align: "center",
+    },
+  }}
+  id={"left-center"}
+  client:load
+/>
 
-  <CodeSample
-    buttonText={"Left End"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Left End Example',
-        description: 'We have side set to <mark>left</mark> and align set to <mark>end</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "left",
-        align: 'end'
-      }
-    }}
-    id={"left-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Left End"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Left End Example",
+      description:
+        "We have side set to <mark>left</mark> and align set to <mark>end</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "left",
+      align: "end",
+    },
+  }}
+  id={"left-end"}
+  client:load
+/>
 
-  <CodeSample
-    buttonText={"Top Start"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Top Start Example',
-        description: 'We have side set to <mark>top</mark> and align set to <mark>start</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "top",
-        align: 'start'
-      }
-    }}
-    id={"top-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Top Start"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Top Start Example",
+      description:
+        "We have side set to <mark>top</mark> and align set to <mark>start</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "top",
+      align: "start",
+    },
+  }}
+  id={"top-start"}
+  client:load
+/>
 
-  <CodeSample
-    buttonText={"Top Center"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Top Center Example',
-        description: 'We have side set to <mark>top</mark> and align set to <mark>center</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "top",
-        align: 'center'
-      }
-    }}
-    id={"top-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Top Center"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Top Center Example",
+      description:
+        "We have side set to <mark>top</mark> and align set to <mark>center</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "top",
+      align: "center",
+    },
+  }}
+  id={"top-center"}
+  client:load
+/>
 
-  <CodeSample
-    buttonText={"Top End"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Top End Example',
-        description: 'We have side set to <mark>top</mark> and align set to <mark>end</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "top",
-        align: 'end'
-      }
-    }}
-    id={"top-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Top End"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Top End Example",
+      description:
+        "We have side set to <mark>top</mark> and align set to <mark>end</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "top",
+      align: "end",
+    },
+  }}
+  id={"top-end"}
+  client:load
+/>
 
-  <CodeSample
-    buttonText={"Right Start"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Right Start Example',
-        description: 'We have side set to <mark>right</mark> and align set to <mark>start</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "right",
-        align: 'start'
-      }
-    }}
-    id={"right-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Right Start"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Right Start Example",
+      description:
+        "We have side set to <mark>right</mark> and align set to <mark>start</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "right",
+      align: "start",
+    },
+  }}
+  id={"right-start"}
+  client:load
+/>
 
-  <CodeSample
-    buttonText={"Right Center"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Right Center Example',
-        description: 'We have side set to <mark>right</mark> and align set to <mark>center</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "right",
-        align: 'center'
-      }
-    }}
-    id={"right-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Right Center"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Right Center Example",
+      description:
+        "We have side set to <mark>right</mark> and align set to <mark>center</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "right",
+      align: "center",
+    },
+  }}
+  id={"right-center"}
+  client:load
+/>
 
-  <CodeSample
-    buttonText={"Right End"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Right End Example',
-        description: 'We have side set to <mark>right</mark> and align set to <mark>end</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "right",
-        align: 'end'
-      }
-    }}
-    id={"right-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Right End"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Right End Example",
+      description:
+        "We have side set to <mark>right</mark> and align set to <mark>end</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "right",
+      align: "end",
+    },
+  }}
+  id={"right-end"}
+  client:load
+/>
 
-  <CodeSample
-    buttonText={"Bottom Start"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Bottom Start Example',
-        description: 'We have side set to <mark>bottom</mark> and align set to <mark>start</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "bottom",
-        align: 'start'
-      }
-    }}
-    id={"bottom-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Bottom Start"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Bottom Start Example",
+      description:
+        "We have side set to <mark>bottom</mark> and align set to <mark>start</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "bottom",
+      align: "start",
+    },
+  }}
+  id={"bottom-start"}
+  client:load
+/>
 
-  <CodeSample
-    buttonText={"Bottom Center"}
-    highlight={{
-      element: '#sample-box',
-      popover: {
-        title: 'Bottom Center Example',
-        description: 'We have side set to <mark>bottom</mark> and align set to <mark>center</mark>. PS, we can use HTML in the title and descriptions of popover.',
-        side: "bottom",
-        align: 'center'
-      }
-    }}
-    id={"bottom-start"}
-    client:load
-  />
+<CodeSample
+  buttonText={"Bottom Center"}
+  highlight={{
+    element: "#sample-box",
+    popover: {
+      title: "Bottom Center Example",
+      description:
+        "We have side set to <mark>bottom</mark> and align set to <mark>center</mark>. PS, we can use HTML in the title and descriptions of popover.",
+      side: "bottom",
+      align: "center",
+    },
+  }}
+  id={"bottom-center"}
+  client:load
+/>
 
   <CodeSample
     buttonText={"Bottom End"}
@@ -208,7 +218,7 @@ driverObj.highlight({
         align: 'end'
       }
     }}
-    id={"right-start"}
+    id={"bottom-end"}
     client:load
   />
 </div>
