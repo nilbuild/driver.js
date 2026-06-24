@@ -222,6 +222,9 @@ export function driver(options: Config = {}): Driver {
 
     setState("isInitialized", true);
     document.body.classList.add("driver-active", getConfig("animate") ? "driver-fade" : "driver-simple");
+    if (!getConfig("allowScroll")) {
+      document.body.classList.add("driver-no-scroll");
+    }
     document.body.style.setProperty("--driver-animation-duration", `${getConfig("duration") || 400}ms`);
 
     initEvents();
@@ -332,7 +335,7 @@ export function driver(options: Config = {}): Driver {
     const onDeselected = activeStep?.onDeselected || getConfig("onDeselected");
     const onDestroyed = getConfig("onDestroyed");
 
-    document.body.classList.remove("driver-active", "driver-fade", "driver-simple");
+    document.body.classList.remove("driver-active", "driver-fade", "driver-simple", "driver-no-scroll");
     document.body.style.removeProperty("--driver-animation-duration");
 
     destroyEvents();

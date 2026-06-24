@@ -2,6 +2,10 @@
   pointer-events: none;
 }
 
+.driver-active.driver-no-scroll {
+  overflow: hidden;
+}
+
 .driver-active * {
   pointer-events: none;
 }

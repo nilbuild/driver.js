@@ -5,6 +5,7 @@ import { arrowGroup } from "./arrow";
 import { tourGroup } from "./tour";
 import { apiGroup } from "./api";
 import { durationGroup } from "./duration";
+import { scrollGroup } from "./scroll";
 
 export const exampleGroups: ExampleGroup[] = [
   highlightGroup,
@@ -12,6 +13,7 @@ export const exampleGroups: ExampleGroup[] = [
   arrowGroup,
   tourGroup,
   durationGroup,
+  scrollGroup,
   apiGroup,
 ];
 

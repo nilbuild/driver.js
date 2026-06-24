@@ -17,6 +17,7 @@ export type Config = {
   overlayOpacity?: number;
   smoothScroll?: boolean;
   allowClose?: boolean;
+  allowScroll?: boolean;
   overlayClickBehavior?: "close" | "nextStep" | DriverHook;
   stagePadding?: number;
   stageRadius?: number;
@@ -63,6 +64,7 @@ export function configure(config: Config = {}) {
     animate: true,
     duration: 400,
     allowClose: true,
+    allowScroll: true,
     overlayClickBehavior: "close",
     overlayOpacity: 0.7,
     smoothScroll: false,

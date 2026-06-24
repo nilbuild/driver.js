@@ -36,6 +36,9 @@ type Config = {
   smoothScroll?: boolean;
   // Whether to allow closing the popover by clicking on the backdrop. (default: true)
   allowClose?: boolean;
+  // Whether to allow scrolling the page while the driver is active.
+  // Set to false to lock body scrolling for the duration of the tour. (default: true)
+  allowScroll?: boolean;
   // Opacity of the backdrop. (default: 0.5)
   overlayOpacity?: number;
   // What to do when the overlay backdrop is clicked.
