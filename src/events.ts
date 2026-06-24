@@ -64,6 +64,17 @@ function onKeyup(e: KeyboardEvent) {
   }
 }
 
+// The pointer events we intercept to make sure no external library ever hears
+// about a click before driver.js does. `click` carries the actual handler; the
+// rest are only suppressed.
+const DRIVER_CLICK_EVENTS = ["pointerdown", "mousedown", "pointerup", "mouseup", "click"] as const;
+
+// Associates each driver element with the single document-level handler that
+// was registered on its behalf, so it can be removed when the element is torn
+// down. A WeakMap keyed by the element avoids leaking handlers onto `document`
+// (the popover is rebuilt every step) and needs no id bookkeeping on the DOM.
+const driverClickHandlers = new WeakMap<Element, (e: MouseEvent | PointerEvent) => void>();
+
 /**
  * Attaches click handler to the elements created by driver.js. It makes
  * sure to give the listener the first chance to handle the event, and
@@ -79,7 +90,11 @@ export function onDriverClick(
   listener: (pointer: MouseEvent | PointerEvent) => void,
   shouldPreventDefault?: (target: HTMLElement) => boolean
 ) {
-  const listenerWrapper = (e: MouseEvent | PointerEvent, listener?: (pointer: MouseEvent | PointerEvent) => void) => {
+  // Defensive: if this element somehow already has a handler attached, remove
+  // it first so we never register duplicates.
+  destroyDriverClick(element);
+
+  const handler = (e: MouseEvent | PointerEvent) => {
     const target = e.target as HTMLElement;
     if (!element.contains(target)) {
       return;
@@ -91,26 +106,34 @@ export function onDriverClick(
       e.stopImmediatePropagation();
     }
 
-    listener?.(e);
+    // Only the actual click should invoke the user's listener; the other
+    // events exist purely to suppress interaction beneath the overlay/popover.
+    if (e.type === "click") {
+      listener?.(e);
+    }
   };
 
   // We want to be the absolute first one to hear about the event
   const useCapture = true;
 
-  // Events to disable
-  document.addEventListener("pointerdown", listenerWrapper, useCapture);
-  document.addEventListener("mousedown", listenerWrapper, useCapture);
-  document.addEventListener("pointerup", listenerWrapper, useCapture);
-  document.addEventListener("mouseup", listenerWrapper, useCapture);
+  for (const type of DRIVER_CLICK_EVENTS) {
+    document.addEventListener(type, handler, useCapture);
+  }
 
-  // Actual click handler
-  document.addEventListener(
-    "click",
-    e => {
-      listenerWrapper(e, listener);
-    },
-    useCapture
-  );
+  driverClickHandlers.set(element, handler);
+}
+
+export function destroyDriverClick(element: Element) {
+  const handler = driverClickHandlers.get(element);
+  if (!handler) {
+    return;
+  }
+
+  for (const type of DRIVER_CLICK_EVENTS) {
+    document.removeEventListener(type, handler, true);
+  }
+
+  driverClickHandlers.delete(element);
 }
 
 export function initEvents() {
@@ -122,6 +145,7 @@ export function initEvents() {
 
 export function destroyEvents() {
   window.removeEventListener("keyup", onKeyup);
+  window.removeEventListener("keydown", trapFocus);
   window.removeEventListener("resize", requireRefresh);
   window.removeEventListener("scroll", requireRefresh);
 }

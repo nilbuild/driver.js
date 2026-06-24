@@ -1,7 +1,7 @@
 import { Config, DriverHook, getConfig, getCurrentDriver } from "./config";
 import { Driver, DriveStep } from "./driver";
 import { emit } from "./emitter";
-import { onDriverClick } from "./events";
+import { destroyDriverClick, onDriverClick } from "./events";
 import { repositionPopover } from "./position";
 import { getState, setState, State } from "./state";
 import { bringInView, getFocusableElements } from "./utils";
@@ -63,6 +63,7 @@ export function hidePopover() {
 export function renderPopover(element: Element, step: DriveStep) {
   let popover = getState("popover");
   if (popover) {
+    destroyDriverClick(popover.wrapper);
     document.body.removeChild(popover.wrapper);
   }
 
@@ -331,5 +332,6 @@ export function destroyPopover() {
     return;
   }
 
+  destroyDriverClick(popover.wrapper);
   popover.wrapper.parentElement?.removeChild(popover.wrapper);
 }

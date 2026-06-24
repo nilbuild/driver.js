@@ -1,5 +1,5 @@
 import { easeInOutQuad } from "./utils";
-import { onDriverClick } from "./events";
+import { destroyDriverClick, onDriverClick } from "./events";
 import { emit } from "./emitter";
 import { getConfig } from "./config";
 import { getState, setState } from "./state";
@@ -173,6 +173,7 @@ function generateStageSvgPathString(stage: StageDefinition) {
 export function destroyOverlay() {
   const overlaySvg = getState("__overlaySvg");
   if (overlaySvg) {
+    destroyDriverClick(overlaySvg);
     overlaySvg.remove();
   }
 }
