@@ -12,7 +12,7 @@ export function DocsHeader(props: DocsHeaderProps) {
 
   return (
     <>
-      <div className="border-b flex items-center justify-between">
+      <div className="border-b border-gray-200 flex items-center justify-between">
         <div className="text-right flex justify-end py-3 px-6">
           <a href="/" className="flex items-center justify-end text-xl font-bold">
             <img src="/driver-head.svg" alt="Astro" className="w-10 h-10 mr-2" />
@@ -25,7 +25,7 @@ export function DocsHeader(props: DocsHeaderProps) {
           </button>
         </div>
       </div>
-      <div className={`bg-gray-50 flex flex-col gap-5 px-6 py-6 border-b ${isActive ? "block" : "hidden"}`}>
+      <div className={`bg-gray-50 flex flex-col gap-5 px-6 py-6 border-b border-gray-200 ${isActive ? "block" : "hidden"}`}>
         {Object.entries(groupedGuides).map(([category, guides]) => (
           <div key={category} className="flex flex-col gap-2">
             <div className="font-bold text-gray-900 text-sm uppercase">{category}</div>
