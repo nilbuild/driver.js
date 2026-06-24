@@ -222,6 +222,7 @@ export function driver(options: Config = {}): Driver {
 
     setState("isInitialized", true);
     document.body.classList.add("driver-active", getConfig("animate") ? "driver-fade" : "driver-simple");
+    document.body.style.setProperty("--driver-animation-duration", `${getConfig("duration") || 400}ms`);
 
     initEvents();
 
@@ -332,6 +333,7 @@ export function driver(options: Config = {}): Driver {
     const onDestroyed = getConfig("onDestroyed");
 
     document.body.classList.remove("driver-active", "driver-fade", "driver-simple");
+    document.body.style.removeProperty("--driver-animation-duration");
 
     destroyEvents();
     destroyPopover();

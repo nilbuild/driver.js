@@ -24,11 +24,11 @@
 }
 
 .driver-fade .driver-overlay {
-  animation: animate-fade-in 200ms ease-in-out;
+  animation: animate-fade-in var(--driver-animation-duration, 400ms) ease-in-out;
 }
 
 .driver-fade .driver-popover {
-  animation: animate-fade-in 200ms;
+  animation: animate-fade-in var(--driver-animation-duration, 400ms);
 }
 
 /* Popover styles */

@@ -4,8 +4,16 @@ import { popoverGroup } from "./popover";
 import { arrowGroup } from "./arrow";
 import { tourGroup } from "./tour";
 import { apiGroup } from "./api";
+import { durationGroup } from "./duration";
 
-export const exampleGroups: ExampleGroup[] = [highlightGroup, popoverGroup, arrowGroup, tourGroup, apiGroup];
+export const exampleGroups: ExampleGroup[] = [
+  highlightGroup,
+  popoverGroup,
+  arrowGroup,
+  tourGroup,
+  durationGroup,
+  apiGroup,
+];
 
 export const examples: Example[] = exampleGroups.flatMap(group => group.examples);
 

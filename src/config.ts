@@ -12,6 +12,7 @@ export type Config = {
   steps?: DriveStep[];
 
   animate?: boolean;
+  duration?: number;
   overlayColor?: string;
   overlayOpacity?: number;
   smoothScroll?: boolean;
@@ -60,6 +61,7 @@ let currentDriver: Driver;
 export function configure(config: Config = {}) {
   currentConfig = {
     animate: true,
+    duration: 400,
     allowClose: true,
     overlayClickBehavior: "close",
     overlayOpacity: 0.7,

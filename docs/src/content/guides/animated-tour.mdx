@@ -49,3 +49,78 @@ The following example shows how to create a simple tour with a few steps. Click 
   driverObj.drive();
   ```
 </CodeSample>
+
+## Animation Duration
+
+Use the `duration` option to control how long the transition animation takes, in milliseconds. It controls both the speed at which the highlight moves between steps and the overlay/popover fade-in. It only applies when `animate` is `true` and defaults to `400`. Lower it for a snappier tour, or raise it for a more relaxed one.
+
+<CodeSample
+  heading={'Fast Animation Duration'}
+  config={{
+    animate: true,
+    duration: 150,
+    showProgress: true,
+    showButtons: ['next', 'previous'],
+  }}
+  tour={[
+    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'Notice how quickly the highlight snaps over to this line.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(4) span:nth-child(7)', popover: { title: 'Create Driver', description: 'The popover fades in almost instantly at this speed.', side: "left", align: 'start' }},
+    { element: '.line:nth-child(6)', popover: { title: 'Fast Duration', description: 'A low duration makes the whole tour feel snappy.', side: "top", align: 'start' }},
+  ]}
+  id={"duration-example-fast"}
+  client:load
+>
+  ```js
+  import { driver } from "driver.js";
+  import "driver.js/dist/driver.css";
+
+  const driverObj = driver({
+    // Speed the whole transition up to 150ms (default is 400ms)
+    duration: 150,
+    showProgress: true,
+    steps: [
+      { element: '#some-element', popover: { title: 'Import the Library', description: 'Notice how quickly the highlight snaps over to this line.' }},
+      { element: '#another-element', popover: { title: 'Create Driver', description: 'The popover fades in almost instantly at this speed.' }},
+      { element: '#yet-another-element', popover: { title: 'Fast Duration', description: 'A low duration makes the whole tour feel snappy.' }},
+    ]
+  });
+
+  driverObj.drive();
+  ```
+</CodeSample>
+
+<CodeSample
+  heading={'Slow Animation Duration'}
+  config={{
+    animate: true,
+    duration: 1200,
+    showProgress: true,
+    showButtons: ['next', 'previous'],
+  }}
+  tour={[
+    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'Notice how slowly the highlight glides over to this line.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(4) span:nth-child(7)', popover: { title: 'Create Driver', description: 'The popover fade-in runs over the same duration as the slide.', side: "left", align: 'start' }},
+    { element: '.line:nth-child(6)', popover: { title: 'Slow Duration', description: 'This is the duration option that controls the whole transition.', side: "top", align: 'start' }},
+  ]}
+  id={"duration-example"}
+  className={"mt-10"}
+  client:load
+>
+  ```js
+  import { driver } from "driver.js";
+  import "driver.js/dist/driver.css";
+
+  const driverObj = driver({
+    // Slow the whole transition down to 1200ms (default is 400ms)
+    duration: 1200,
+    showProgress: true,
+    steps: [
+      { element: '#some-element', popover: { title: 'Import the Library', description: 'Notice how slowly the highlight glides over to this line.' }},
+      { element: '#another-element', popover: { title: 'Create Driver', description: 'The popover fade-in runs over the same duration as the slide.' }},
+      { element: '#yet-another-element', popover: { title: 'Slow Duration', description: 'This is the duration option that controls the whole transition.' }},
+    ]
+  });
+
+  driverObj.drive();
+  ```
+</CodeSample>

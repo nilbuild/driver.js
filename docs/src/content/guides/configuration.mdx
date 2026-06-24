@@ -23,6 +23,10 @@ type Config = {
 
   // Whether to animate the product tour. (default: true)
   animate?: boolean;
+  // Duration of the transition animation in milliseconds. Controls both the
+  // speed of the stage moving between steps and the overlay/popover fade-in.
+  // Only applies when `animate` is true. (default: 400)
+  duration?: number;
   // Overlay color. (default: black)
   // This is useful when you have a dark background
   // and want to highlight elements with a light
