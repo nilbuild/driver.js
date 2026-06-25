@@ -73,4 +73,4 @@ Feel free to submit pull requests, create issues or spread the word.
 
 ## License
 
-MIT &copy; [Kamran Ahmed](https://twitter.com/kamrify)
+MIT &copy; [Kamran Ahmed](https://twitter.com/nilbuild)

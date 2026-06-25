@@ -3,6 +3,7 @@
   "license": "MIT",
   "private": false,
   "version": "1.5.0",
+  "packageManager": "pnpm@11.9.0",
   "main": "./dist/driver.js.cjs",
   "module": "./dist/driver.js.mjs",
   "types": "./dist/driver.js.d.ts",
