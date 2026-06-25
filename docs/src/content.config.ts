@@ -8,6 +8,8 @@ const guides = defineCollection({
     title: z.string(),
     sort: z.number(),
     description: z.string().optional(),
+    // Keep the page routable but omit it from the sidebar listing.
+    hidden: z.boolean().optional(),
   }),
 });
 

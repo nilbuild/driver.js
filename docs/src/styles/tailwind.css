@@ -3,3 +3,43 @@
 
 /* Recreates the custom `sh` screen from the old tailwind.config.cjs. */
 @custom-variant sh (@media (min-height: 750px));
+
+/* Inline code — render as a soft pill instead of backtick-quoted bold text. */
+.prose :not(pre) > code {
+  background-color: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.375rem;
+  padding: 0.125em 0.375em;
+  font-weight: 500;
+  font-size: 0.875em;
+  color: #27272a;
+  /* Keep an identifier on one line — move the whole token to the next line
+     rather than slicing the pill across a line break. */
+  white-space: nowrap;
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
+}
+
+/* Changelog — underline each version/section heading to separate releases. */
+.changelog-page :where(h2) {
+  border-bottom: 1px solid #e4e4e7;
+  padding-bottom: 0.3em;
+}
+
+/* Inline badge that flags a breaking change in the changelog. */
+.breaking-badge {
+  display: inline-block;
+  background-color: #dc2626;
+  color: #ffffff;
+  border-radius: 0.375rem;
+  padding: 0.05em 0.5em;
+  margin-right: 0.45em;
+  font-size: 0.7em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}

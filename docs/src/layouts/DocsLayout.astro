@@ -30,7 +30,10 @@ const metaDescription =
   <div class="flex">
     <Sidebar activeGuideTitle={title} groupedGuides={groupedGuides} />
     <div
-      class="min-w-0 max-w-[800px] py-6 md:py-12 prose px-6 md:px-14 prose-base md:proxe-xl mb-24 prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:text-gray-500 prose-p:before:content-['']">
+      class:list={[
+        "min-w-0 max-w-[800px] py-6 md:py-12 prose px-6 md:px-14 prose-base md:proxe-xl mb-24 prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:text-gray-500 prose-p:before:content-['']",
+        { "changelog-page": guide.id === "changelog" },
+      ]}>
       <slot />
     </div>
   </div>
