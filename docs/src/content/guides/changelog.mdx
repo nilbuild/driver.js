@@ -18,6 +18,8 @@ heading.
 - `allowScroll` config to lock body scroll while a tour is active.
 - `onDoneClick` hook, fired when the done button on the final step is clicked.
   ([#500](https://github.com/nilbuild/driver.js/issues/500))
+- `data` property on a step for passing arbitrary data, accessible from hooks
+  for custom per-step logic. ([#539](https://github.com/nilbuild/driver.js/issues/539))
 
 ### Changed
 
@@ -34,14 +36,18 @@ heading.
 - The popover exposes `driver-popover-side-*` and `driver-popover-align-*`
   classes so you can target its position from CSS, and the arrow positioning was
   rewritten for more accurate placement.
-- Dropped the CSS `:has()` selector for broader browser compatibility.
-  ([#586](https://github.com/nilbuild/driver.js/issues/586))
 
 ### Fixed
 
 - Document event listener leak in `onDriverClick` that left handlers attached
   after the tour was destroyed.
   ([#452](https://github.com/nilbuild/driver.js/issues/452))
+- Dropped the CSS `:has()` selector for broader browser compatibility.
+  ([#586](https://github.com/nilbuild/driver.js/issues/586))
+- Positioned highlighted elements and their children (e.g. dropdown menus) no
+  longer get clipped.
+  ([#454](https://github.com/nilbuild/driver.js/issues/454),
+  [#563](https://github.com/nilbuild/driver.js/issues/563))
 
 ## 1.5.0
 

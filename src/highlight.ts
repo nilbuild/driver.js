@@ -3,7 +3,7 @@ import { refreshOverlay, trackActiveElement, transitionStage } from "./overlay";
 import { getConfig, getCurrentDriver } from "./config";
 import { hidePopover, renderPopover } from "./popover";
 import { repositionPopover } from "./position";
-import { bringInView } from "./utils";
+import { bringInView, isScrollable } from "./utils";
 import { getState, setState } from "./state";
 
 function mountDummyElement(): Element {
@@ -157,7 +157,7 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
   }
 
   document.querySelectorAll(".driver-active-element-parent").forEach(element => {
-    element.classList.remove("driver-active-element-parent");
+    element.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
   });
 
   fromElement.classList.remove("driver-active-element", "driver-no-interaction");
@@ -173,6 +173,10 @@ function transferHighlight(toElement: Element, toStep: DriveStep) {
   const toParent = toElement.parentElement;
   if (toParent && toParent !== document.body) {
     toParent.classList.add("driver-active-element-parent");
+
+    if (isScrollable(toParent)) {
+      toParent.classList.add("driver-active-element-parent-no-scroll");
+    }
   }
 
   toElement.classList.add("driver-active-element");
@@ -186,7 +190,7 @@ export function destroyHighlight() {
   document.querySelectorAll(".driver-active-element").forEach(element => {
     const parent = element.parentElement;
     if (parent && parent !== document.body) {
-      parent.classList.remove("driver-active-element-parent");
+      parent.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
     }
 
     element.classList.remove("driver-active-element", "driver-no-interaction");

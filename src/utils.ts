@@ -1,5 +1,12 @@
 import { getConfig } from "./config";
 
+export function isScrollable(element: Element) {
+  const style = window.getComputedStyle(element);
+  return [style.overflow, style.overflowX, style.overflowY].some(value => {
+    return value === "auto" || value === "scroll";
+  });
+}
+
 export function easeInOutQuad(elapsed: number, initialValue: number, amountOfChange: number, duration: number): number {
   if ((elapsed /= duration / 2) < 1) {
     return (amountOfChange / 2) * elapsed * elapsed + initialValue;

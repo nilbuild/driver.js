@@ -7,14 +7,16 @@ const NO_INTERACTION_CLASS = "driver-no-interaction";
 
 const PARENT_CLASS = "driver-active-element-parent";
 
+const NO_SCROLL_CLASS = "driver-active-element-parent-no-scroll";
+
 const NESTED_HTML = `
   <div id="container-a"><button id="child-a" type="button">A</button></div>
   <div id="container-b"><button id="child-b" type="button">B</button></div>
   <button id="top-level" type="button">Top</button>
 `;
 
-describe("active element parent", () => {
-  it("locks scrolling on the highlighted element's parent", () => {
+describe("active element parent marker", () => {
+  it("marks the highlighted element's parent regardless of scrollability", () => {
     document.body.innerHTML = NESTED_HTML;
     const d = createDriver({ animate: false, steps: [{ element: "#child-a" }] });
     d.drive();
@@ -22,7 +24,7 @@ describe("active element parent", () => {
     expect(document.getElementById("container-a")?.classList.contains(PARENT_CLASS)).toBe(true);
   });
 
-  it("moves the lock to the new parent when highlighting a different branch", () => {
+  it("moves the marker to the new parent when highlighting a different branch", () => {
     document.body.innerHTML = NESTED_HTML;
     const d = createDriver({
       animate: false,
@@ -35,7 +37,7 @@ describe("active element parent", () => {
     expect(document.getElementById("container-b")?.classList.contains(PARENT_CLASS)).toBe(true);
   });
 
-  it("never locks the body element", () => {
+  it("never marks the body element", () => {
     document.body.innerHTML = NESTED_HTML;
     const d = createDriver({ animate: false, steps: [{ element: "#top-level" }] });
     d.drive();
@@ -43,13 +45,54 @@ describe("active element parent", () => {
     expect(document.body.classList.contains(PARENT_CLASS)).toBe(false);
   });
 
-  it("releases the lock when the tour is destroyed", () => {
+  it("releases the marker when the tour is destroyed", () => {
     document.body.innerHTML = NESTED_HTML;
     const d = createDriver({ animate: false, steps: [{ element: "#child-a" }] });
     d.drive();
     d.destroy();
 
     expect(document.getElementById("container-a")?.classList.contains(PARENT_CLASS)).toBe(false);
+  });
+});
+
+describe("active element parent scroll lock", () => {
+  it("does not lock a non-scrollable parent so positioned children are not clipped", () => {
+    document.body.innerHTML = `
+      <div id="dropdown" style="position: relative">
+        <button id="dropdown-toggle" type="button">Toggle</button>
+      </div>
+    `;
+    const d = createDriver({ animate: false, steps: [{ element: "#dropdown-toggle" }] });
+    d.drive();
+
+    const dropdown = document.getElementById("dropdown");
+    expect(dropdown?.classList.contains(PARENT_CLASS)).toBe(true);
+    expect(dropdown?.classList.contains(NO_SCROLL_CLASS)).toBe(false);
+  });
+
+  it("locks a genuinely scrollable parent", () => {
+    document.body.innerHTML = `
+      <div id="scroll-area" style="overflow: auto">
+        <button id="scroll-child" type="button">Child</button>
+      </div>
+    `;
+    const d = createDriver({ animate: false, steps: [{ element: "#scroll-child" }] });
+    d.drive();
+
+    expect(document.getElementById("scroll-area")?.classList.contains(NO_SCROLL_CLASS)).toBe(true);
+  });
+
+  it("releases the scroll lock when the tour is destroyed", () => {
+    document.body.innerHTML = `
+      <div id="scroll-area" style="overflow: auto">
+        <button id="scroll-child" type="button">Child</button>
+      </div>
+    `;
+    const d = createDriver({ animate: false, steps: [{ element: "#scroll-child" }] });
+    d.drive();
+    d.destroy();
+
+    expect(document.getElementById("scroll-area")?.classList.contains(NO_SCROLL_CLASS)).toBe(false);
   });
 });
 

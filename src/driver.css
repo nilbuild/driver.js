@@ -139,8 +139,8 @@
   pointer-events: none;
 }
 
-/* Disable the scrolling of parent element if it has an active element*/
-.driver-active-element-parent {
+/* Disable the scrolling of a scrollable parent that holds an active element*/
+.driver-active-element-parent-no-scroll {
   overflow: hidden !important;
 }
 
