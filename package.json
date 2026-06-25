@@ -42,7 +42,7 @@
     "test:coverage": "vitest run --coverage",
     "lint:package": "publint && attw --pack . --exclude-entrypoints ./dist/driver.css",
     "format": "prettier . --write",
-    "release": "np --test-script test:run",
+    "release": "GITHUB_TOKEN=$(gh auth token) release-it",
     "prepublishOnly": "pnpm build && pnpm lint:package"
   },
   "files": [
@@ -54,15 +54,16 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.3",
     "@microsoft/api-extractor": "^7.58.9",
+    "@release-it/keep-a-changelog": "^7.1.0",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^4.1.9",
     "jsdom": "^29.1.1",
-    "np": "^11.2.1",
     "postcss": "^8.5.15",
     "postcss-scss": "^4.0.9",
     "prettier": "^3.8.4",
     "publint": "^0.3.21",
+    "release-it": "^20.2.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
     "vite-plugin-dts": "^5.0.2",

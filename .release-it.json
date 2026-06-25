@@ -1,0 +1,23 @@
+{
+  "git": {
+    "commitMessage": "${version}",
+    "tagName": "${version}",
+    "tagAnnotation": "${version}",
+    "requireBranch": "master",
+    "push": true
+  },
+  "npm": {
+    "publish": true,
+    "publishPackageManager": "pnpm",
+    "publishArgs": ["--no-git-checks"]
+  },
+  "github": {
+    "release": true,
+    "releaseName": "${version}",
+    "releaseNotes": "node scripts/changelog-notes.mjs ${version}"
+  },
+  "hooks": {
+    "before:init": ["pnpm test:run"],
+    "after:bump": ["node scripts/changelog-release.mjs ${version}"]
+  }
+}
