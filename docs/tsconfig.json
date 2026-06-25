@@ -3,6 +3,9 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "paths": {
+      "driver.js": ["../src/driver.ts"]
+    }
   }
 }

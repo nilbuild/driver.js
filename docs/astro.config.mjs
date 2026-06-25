@@ -1,4 +1,5 @@
 import { defineConfig } from "astro/config";
+import { fileURLToPath } from "node:url";
 import { unified } from "@astrojs/markdown-remark";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@astrojs/react";
@@ -6,6 +7,12 @@ import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 
 import compress from "astro-compress";
+
+// Import the library straight from source (../src) so changes to driver.js are
+// reflected instantly with HMR — no build step in between. The CSS subpath is
+// aliased separately, and listed first so it matches before the bare specifier.
+const driverSource = fileURLToPath(new URL("../src/driver.ts", import.meta.url));
+const driverCss = fileURLToPath(new URL("../src/driver.css", import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
@@ -36,5 +43,17 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      alias: [
+        { find: "driver.js/dist/driver.css", replacement: driverCss },
+        { find: "driver.js", replacement: driverSource },
+      ],
+    },
+    server: {
+      fs: {
+        // Allow importing the library source that lives outside this project.
+        allow: [".."],
+      },
+    },
   },
 });

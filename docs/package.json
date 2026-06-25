@@ -19,7 +19,6 @@
     "@types/react-dom": "^19.2.3",
     "astro": "^7.0.0",
     "astro-compress": "^2.4.1",
-    "driver.js": "^1.4.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "tailwindcss": "^4.3.1"
