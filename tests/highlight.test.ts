@@ -127,6 +127,48 @@ describe("disableActiveInteraction", () => {
   });
 });
 
+describe("single element highlight close button", () => {
+  it("closes the popover when the close button is clicked", () => {
+    const d = createDriver({ animate: false, allowClose: true });
+    d.highlight({
+      element: "#intro",
+      popover: { title: "Highlighted", showButtons: ["close"] },
+    });
+
+    expect(d.isActive()).toBe(true);
+
+    navButton("close")?.click();
+
+    expect(d.isActive()).toBe(false);
+  });
+
+  it("runs a custom onCloseClick instead of closing when provided", () => {
+    const onCloseClick = vi.fn();
+    const d = createDriver({ animate: false, allowClose: true });
+    d.highlight({
+      element: "#intro",
+      popover: { title: "Highlighted", showButtons: ["close"], onCloseClick },
+    });
+
+    navButton("close")?.click();
+
+    expect(onCloseClick).toHaveBeenCalledTimes(1);
+    expect(d.isActive()).toBe(true);
+  });
+
+  it("keeps the popover open on close click when allowClose is false", () => {
+    const d = createDriver({ animate: false, allowClose: false });
+    d.highlight({
+      element: "#intro",
+      popover: { title: "Highlighted", showButtons: ["close"] },
+    });
+
+    navButton("close")?.click();
+
+    expect(d.isActive()).toBe(true);
+  });
+});
+
 describe("step data", () => {
   it("exposes a step's data via getActiveStep", () => {
     const d = createDriver({

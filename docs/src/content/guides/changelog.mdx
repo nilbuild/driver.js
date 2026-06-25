@@ -48,6 +48,12 @@ heading.
   longer get clipped.
   ([#454](https://github.com/nilbuild/driver.js/issues/454),
   [#563](https://github.com/nilbuild/driver.js/issues/563))
+- `removeChild` DOMException when re-rendering a popover whose wrapper was
+  already detached from the DOM.
+  ([#572](https://github.com/nilbuild/driver.js/issues/572))
+- Close button on a single-element `highlight()` popover did nothing when
+  clicked. It now closes the popover by default, respecting `allowClose` and any
+  custom `onCloseClick`. ([#444](https://github.com/nilbuild/driver.js/issues/444))
 
 ## 1.5.0
 

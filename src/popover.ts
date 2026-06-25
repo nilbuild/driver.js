@@ -64,7 +64,7 @@ export function renderPopover(element: Element, step: DriveStep) {
   let popover = getState("popover");
   if (popover) {
     destroyDriverClick(popover.wrapper);
-    document.body.removeChild(popover.wrapper);
+    popover.wrapper.remove();
   }
 
   popover = createPopover();
