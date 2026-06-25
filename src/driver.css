@@ -117,7 +117,7 @@
   zoom: 1;
 }
 
-.driver-popover-footer button {
+.driver-popover-footer-btn {
   all: unset;
   display: inline-block;
   box-sizing: border-box;
@@ -148,8 +148,8 @@
   pointer-events: none !important;
 }
 
-.driver-popover-footer button:hover,
-.driver-popover-footer button:focus {
+.driver-popover-footer-btn:hover,
+.driver-popover-footer-btn:focus {
   background-color: #f7f7f7;
 }
 

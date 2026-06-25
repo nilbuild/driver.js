@@ -223,13 +223,15 @@ export function renderPopover(element: Element, step: DriveStep) {
       return undefined;
     },
     target => {
-      // Only prevent the default action if we're clicking on a driver button
-      // This allows us to have links inside the popover title and description
-      return (
-        !popover?.description.contains(target) &&
-        !popover?.title.contains(target) &&
-        typeof target.className === "string" &&
-        target.className.includes("driver-popover")
+      // Only prevent the default action if we're clicking on a driver button.
+      // This allows links inside the popover title/description, as well as
+      // custom buttons added through onPopoverRender, to behave normally.
+      if (popover?.description.contains(target) || popover?.title.contains(target)) {
+        return false;
+      }
+
+      return !!target.closest(
+        ".driver-popover-prev-btn, .driver-popover-next-btn, .driver-popover-close-btn"
       );
     }
   );
@@ -293,12 +295,12 @@ function createPopover(): PopoverDOM {
 
   const previousButton = document.createElement("button");
   previousButton.type = "button";
-  previousButton.classList.add("driver-popover-prev-btn");
+  previousButton.classList.add("driver-popover-prev-btn", "driver-popover-footer-btn");
   previousButton.innerHTML = "Previous";
 
   const nextButton = document.createElement("button");
   nextButton.type = "button";
-  nextButton.classList.add("driver-popover-next-btn");
+  nextButton.classList.add("driver-popover-next-btn", "driver-popover-footer-btn");
   nextButton.innerHTML = "Next";
 
   footerButtons.appendChild(previousButton);
