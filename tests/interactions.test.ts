@@ -147,4 +147,35 @@ describe("button interactions", () => {
     expect(onDoneClick).toHaveBeenCalledTimes(1);
     expect(d.isActive()).toBe(true);
   });
+
+  it("runs onCloseClick instead of destroying when the close button is clicked", () => {
+    const onCloseClick = vi.fn();
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS, onCloseClick });
+    d.drive();
+    navButton("close")?.click();
+
+    expect(onCloseClick).toHaveBeenCalledTimes(1);
+    expect(d.isActive()).toBe(true);
+
+    const [element, step, options] = onCloseClick.mock.calls[0];
+    expect(element).toBe(document.querySelector("#intro"));
+    expect(step.popover?.title).toBe("Step 1");
+    expect(options.driver).toBe(d);
+  });
+
+  it("supports a step-level onCloseClick override", () => {
+    const onCloseClick = vi.fn();
+    const d = createDriver({
+      animate: false,
+      steps: [
+        { element: "#intro", popover: { title: "Step 1", onCloseClick } },
+        { element: "#card-1", popover: { title: "Step 2" } },
+      ],
+    });
+    d.drive();
+    navButton("close")?.click();
+
+    expect(onCloseClick).toHaveBeenCalledTimes(1);
+    expect(d.isActive()).toBe(true);
+  });
 });

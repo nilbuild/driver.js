@@ -349,3 +349,69 @@ describe("popover arrow", () => {
     expect(arrowEl().style.top).toBe("");
   });
 });
+
+describe("done button text", () => {
+  it("labels the final step's next button 'Done' by default", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive(SAMPLE_STEPS.length - 1);
+
+    expect(navButton("next")?.innerHTML).toBe("Done");
+  });
+
+  it("uses a custom doneBtnText on the final step", () => {
+    const d = createDriver({ animate: false, doneBtnText: "Finish", steps: SAMPLE_STEPS });
+    d.drive(SAMPLE_STEPS.length - 1);
+
+    expect(navButton("next")?.innerHTML).toBe("Finish");
+  });
+
+  it("prefers a step-level doneBtnText over the global one", () => {
+    const d = createDriver({
+      animate: false,
+      doneBtnText: "Global Done",
+      steps: [
+        { element: "#intro", popover: { title: "Step 1" } },
+        { element: "#card-1", popover: { title: "Step 2", doneBtnText: "Step Done" } },
+      ],
+    });
+    d.drive(1);
+
+    expect(navButton("next")?.innerHTML).toBe("Step Done");
+  });
+});
+
+describe("popover offset", () => {
+  const rect = (over: Partial<DOMRect>): DOMRect =>
+    ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() {}, ...over }) as DOMRect;
+
+  // Places a top-positioned popover with the given offset and returns its
+  // resolved top coordinate. Asserting the *difference* between two offsets
+  // tests the feature (offset distances the popover from the element) without
+  // hard-coding the full positioning formula.
+  async function topForOffset(popoverOffset: number): Promise<number> {
+    const el = document.querySelector<HTMLElement>("#intro")!;
+    el.getBoundingClientRect = () => rect({ top: 400, left: 400, right: 600, bottom: 420, width: 200, height: 20 });
+    el.scrollIntoView = () => {};
+
+    const d = createDriver({ animate: false, popoverOffset });
+    d.highlight({ element: "#intro", popover: { title: "Intro", side: "top" } });
+
+    const wrapper = popoverEl() as HTMLElement;
+    wrapper.getBoundingClientRect = () => rect({});
+    d.refresh();
+    await nextFrame();
+
+    const top = parseFloat(wrapper.style.top);
+    d.destroy();
+    return top;
+  }
+
+  it("moves the popover further from the element as the offset grows", async () => {
+    const near = await topForOffset(10);
+    const far = await topForOffset(50);
+
+    // A top-placed popover sits above the element, so a larger offset yields a
+    // smaller top — further away by exactly the offset delta.
+    expect(near - far).toBe(40);
+  });
+});

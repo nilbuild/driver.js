@@ -120,6 +120,86 @@ describe("document listener cleanup", () => {
   });
 });
 
+describe("keyboard focus trap", () => {
+  function pressTab(opts: { shift?: boolean } = {}): KeyboardEvent {
+    const event = new KeyboardEvent("keydown", { key: "Tab", shiftKey: !!opts.shift, cancelable: true });
+    window.dispatchEvent(event);
+    return event;
+  }
+
+  // jsdom doesn't lay elements out, so the focusable buttons read as invisible
+  // and focus never actually moves. We assert the trap swallows the Tab (the
+  // observable effect) rather than where focus lands.
+  it("traps Tab inside the popover while a tour is active", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+
+    expect(pressTab().defaultPrevented).toBe(true);
+  });
+
+  it("cycles backwards on Shift+Tab", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+
+    expect(pressTab({ shift: true }).defaultPrevented).toBe(true);
+  });
+
+  it("does not trap Tab once the tour is destroyed", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+    d.destroy();
+
+    expect(pressTab().defaultPrevented).toBe(false);
+  });
+
+  it("ignores non-Tab keys", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+
+    const event = new KeyboardEvent("keydown", { key: "a", cancelable: true });
+    window.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+  });
+});
+
+describe("refresh on viewport changes", () => {
+  const rect = (over: Partial<DOMRect>): DOMRect =>
+    ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() {}, ...over }) as DOMRect;
+  const overlayD = () => document.querySelector<SVGPathElement>(".driver-overlay path")?.getAttribute("d");
+
+  it("re-tracks the active element when the window resizes", async () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+
+    // Move the highlighted element, then resize: the overlay cutout should
+    // follow it. With default padding 10 / radius 5 the cutout's leading corner
+    // sits at (x - 10 + 5, y - 10) = (95, 190).
+    document.querySelector<HTMLElement>("#intro")!.getBoundingClientRect = () =>
+      rect({ x: 100, y: 200, top: 200, left: 100, width: 50, height: 60 });
+
+    window.dispatchEvent(new Event("resize"));
+    await nextFrame();
+
+    expect(overlayD()).toContain("M95,190");
+  });
+
+  it("re-tracks the active element on scroll", async () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+
+    document.querySelector<HTMLElement>("#intro")!.getBoundingClientRect = () =>
+      rect({ x: 300, y: 400, top: 400, left: 300, width: 50, height: 60 });
+
+    window.dispatchEvent(new Event("scroll"));
+    await nextFrame();
+
+    expect(overlayD()).toContain("M295,390");
+  });
+});
+
 describe("overlay pointer suppression", () => {
   it("prevents default on pointer events over the overlay to block page interaction", async () => {
     const d = createDriver({ animate: false, steps: SAMPLE_STEPS });

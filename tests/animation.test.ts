@@ -1,7 +1,20 @@
-import { describe, expect, it } from "vitest";
-import { createDriver, SAMPLE_STEPS, useDriverHarness } from "./utils";
+import { describe, expect, it, vi } from "vitest";
+import { createDriver, nextFrame, popoverTitle, SAMPLE_STEPS, useDriverHarness } from "./utils";
 
 useDriverHarness();
+
+// Advances the rAF loop until the predicate holds or the frame budget runs out.
+// The animated stage transition settles over several frames, so polling beats a
+// fixed wait.
+async function flushFrames(predicate: () => boolean, maxFrames = 120): Promise<void> {
+  for (let i = 0; i < maxFrames; i++) {
+    if (predicate()) {
+      return;
+    }
+    await nextFrame();
+  }
+  throw new Error("condition not met within frame budget");
+}
 
 // The library drives the CSS fade via a custom property on <body> so a single
 // `duration` config controls both the JS stage slide and the CSS fade-in.
@@ -40,5 +53,25 @@ describe("animation duration", () => {
     d.destroy();
 
     expect(cssDuration()).toBe("");
+  });
+});
+
+describe("animated stage transition", () => {
+  it("runs the rAF stage transition and settles on the next step", async () => {
+    const onHighlighted = vi.fn();
+    const d = createDriver({ animate: true, duration: 30, steps: SAMPLE_STEPS, onHighlighted });
+    d.drive();
+
+    await flushFrames(() => onHighlighted.mock.calls.length >= 1);
+    expect(d.getActiveIndex()).toBe(0);
+
+    d.moveNext();
+
+    // Drives transitionStage/easeInOutQuad across frames until step 2 settles.
+    await flushFrames(() => onHighlighted.mock.calls.length >= 2);
+
+    expect(d.getActiveIndex()).toBe(1);
+    expect(popoverTitle()).toBe("Step 2");
+    expect(d.getState("__activeStep")?.popover?.title).toBe("Step 2");
   });
 });
