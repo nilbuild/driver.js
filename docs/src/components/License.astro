@@ -1,0 +1,53 @@
+---
+import Container from "./Container.astro";
+
+const permissions = [
+  "Personal projects",
+  "Commercial products",
+  "Unlimited projects",
+  "No attribution required",
+];
+
+const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5"><path d="M5 12l5 5L20 7"/></svg>`;
+---
+
+<div class="bg-white border-t border-gray-200 pt-20 pb-28">
+  <Container>
+    <div class="mx-auto max-w-2xl text-center" data-driver-license="MIT">
+      <span class="inline-flex items-center gap-2 rounded-full border-2 border-black bg-yellow-300 px-4 py-1.5 text-sm font-semibold text-black shadow-[3px_3px_0_0_#000]">
+        MIT Licensed
+      </span>
+
+      <h2 class="mt-5 text-3xl md:text-5xl font-bold tracking-tight text-black !leading-tight">
+        Free for everyone, <span class="marker">forever</span>
+      </h2>
+      <p class="mx-auto mt-4 max-w-lg text-base md:text-lg text-black/60 mb-8">
+        driver.js is open source under the MIT license. Use it in your side
+        projects, your startup, or your client work.
+      </p>
+
+      <ul class="mx-auto mt-8 grid w-fit grid-cols-1 gap-x-10 gap-y-3 text-left sm:grid-cols-2">
+        {
+          permissions.map((item) => (
+            <li class="flex items-center gap-2.5 text-sm md:text-base font-medium text-black/80">
+              <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-yellow-300 text-black">
+                <Fragment set:html={checkIcon} />
+              </span>
+              {item}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </Container>
+</div>
+
+<style>
+  .marker {
+    background-color: #fef08a;
+    border-radius: 0.4em 0.7em 0.45em 0.65em;
+    padding: 0.02em 0.3em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+</style>

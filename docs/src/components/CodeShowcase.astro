@@ -1,0 +1,149 @@
+---
+import { Code } from "astro:components";
+import Container from "./Container.astro";
+
+const tabs = [
+  {
+    name: "Product Tour",
+    code: `import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const driverObj = driver({
+  showProgress: true,
+  steps: [
+    {
+      element: "#search",
+      popover: { title: "Search", description: "Find anything in seconds." },
+    },
+    {
+      element: "#notifications",
+      popover: { title: "Stay updated", description: "All your alerts live here." },
+    },
+    {
+      element: "#profile",
+      popover: { title: "Your account", description: "Manage settings and billing." },
+    },
+  ],
+});
+
+driverObj.drive();`,
+  },
+  {
+    name: "Single Highlight",
+    code: `import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const driverObj = driver();
+
+driverObj.highlight({
+  element: "#new-feature",
+  popover: {
+    title: "New: Dark Mode 🌙",
+    description: "Toggle the theme right from the toolbar.",
+  },
+});`,
+  },
+  {
+    name: "Customize",
+    code: `import { driver } from "driver.js";
+
+const driverObj = driver({
+  animate: true,
+  smoothScroll: true,
+  allowClose: true,
+  stagePadding: 4,
+  popoverClass: "my-popover",
+  nextBtnText: "Next →",
+  prevBtnText: "← Back",
+  doneBtnText: "Finish",
+});
+
+driverObj.drive();`,
+  },
+];
+---
+
+<div class="bg-white border-t border-gray-200 py-12 md:py-20">
+  <Container>
+    <h2 class="text-3xl md:text-4xl font-bold mb-2 md:mb-3">Your first tour in seconds 🦊</h2>
+    <p class="text-base text-black/70 md:text-lg mb-8 md:mb-10">
+      Import driver.js, describe your steps, and call <code class="rounded bg-gray-100 px-1.5 py-0.5 text-sm text-black">drive()</code>. That's the whole setup.
+    </p>
+
+    <div id="code-showcase" class="overflow-hidden rounded-2xl bg-[#272822] shadow-[6px_6px_0_0_#000]">
+      <div class="flex flex-wrap gap-2 p-3 pb-5 md:gap-3 md:p-4 md:pb-6">
+        {
+          tabs.map((tab, i) => (
+            <button
+              type="button"
+              data-code-tab={i}
+              class:list={[
+                "code-tab cursor-pointer rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors md:px-5 md:py-2 md:text-base",
+                i === 0
+                  ? "border-black bg-yellow-300 text-black"
+                  : "border-transparent bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200",
+              ]}
+            >
+              {tab.name}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="overflow-x-auto px-3 pb-4 md:px-5 md:pb-5">
+        {
+          tabs.map((tab, i) => (
+            <div data-code-panel={i} class:list={[i === 0 ? "block" : "hidden"]}>
+              <Code code={tab.code} lang="js" theme="monokai" />
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </Container>
+</div>
+
+<style is:global>
+  #code-showcase pre.astro-code {
+    margin: 0;
+    background: transparent !important;
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+
+  @media (min-width: 768px) {
+    #code-showcase pre.astro-code {
+      font-size: 1rem;
+    }
+  }
+</style>
+
+<script>
+  const root = document.getElementById("code-showcase");
+
+  if (root) {
+    const activeClasses = ["border-black", "bg-yellow-300", "text-black"];
+    const inactiveClasses = ["border-transparent", "bg-white/5", "text-gray-400", "hover:bg-white/10", "hover:text-gray-200"];
+
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-code-tab]"));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>("[data-code-panel]"));
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const index = tab.dataset.codeTab;
+
+        tabs.forEach((other) => {
+          const active = other.dataset.codeTab === index;
+          other.classList.remove(...activeClasses, ...inactiveClasses);
+          other.classList.add(...(active ? activeClasses : inactiveClasses));
+        });
+
+        panels.forEach((panel) => {
+          const active = panel.dataset.codePanel === index;
+          panel.classList.toggle("block", active);
+          panel.classList.toggle("hidden", !active);
+        });
+      });
+    });
+  }
+</script>

@@ -248,6 +248,7 @@ export function renderPopover(element: Element, step: DriveStep) {
   }
 
   repositionPopover(element, step);
+  repositionOnImagesLoad(popover, element, step);
   bringInView(popoverWrapper);
 
   // Focus on the first focusable element in active element or popover
@@ -256,6 +257,21 @@ export function renderPopover(element: Element, step: DriveStep) {
   if (focusableElement.length > 0) {
     focusableElement[0].focus();
   }
+}
+
+function repositionOnImagesLoad(popover: PopoverDOM, element: Element, step: DriveStep) {
+  const images = popover.wrapper.querySelectorAll("img");
+
+  images.forEach(image => {
+    if (image.complete) {
+      return;
+    }
+
+    const reposition = () => repositionPopover(element, step);
+
+    image.addEventListener("load", reposition, { once: true });
+    image.addEventListener("error", reposition, { once: true });
+  });
 }
 
 function createPopover(): PopoverDOM {

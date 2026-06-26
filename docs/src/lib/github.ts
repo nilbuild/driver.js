@@ -1,11 +1,12 @@
 const formatter = Intl.NumberFormat("en-US", {
   notation: "compact",
+  maximumFractionDigits: 1,
 });
 
-const defaultStarCount = 17000;
+const defaultStarCount = 25800;
 let starCount: number | undefined = undefined;
 
-export async function countStars(repo = "kamranahmedse/driver.js"): Promise<number> {
+export async function countStars(repo = "nilbuild/driver.js"): Promise<number> {
   if (starCount) {
     return starCount;
   }
@@ -23,7 +24,7 @@ export async function countStars(repo = "kamranahmedse/driver.js"): Promise<numb
   return starCount;
 }
 
-export async function getFormattedStars(repo = "kamranahmedse/driver.js"): Promise<string> {
+export async function getFormattedStars(repo = "nilbuild/driver.js"): Promise<string> {
   const stars = import.meta.env.DEV ? defaultStarCount : await countStars(repo);
 
   return formatter.format(stars);

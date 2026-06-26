@@ -1,53 +1,63 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import FeatureMarquee from "../components/FeatureMarquee.astro";
+import TrustedBy from "../components/TrustedBy.astro";
 import Container from "../components/Container.astro";
 import UsecaseItem from "../components/UsecaseItem.astro";
 import { ExampleButton } from "../components/ExampleButton";
 import HeroSection from "../components/HeroSection.astro";
 import Examples from "../components/Examples.astro";
 import UsecaseList from "../components/UsecaseList.astro";
-import OpenSourceLove from "../components/OpenSourceLove.astro";
+import CodeShowcase from "../components/CodeShowcase.astro";
+import Stats from "../components/Stats.astro";
+import License from "../components/License.astro";
+import CallToAction from "../components/CallToAction.astro";
 
 const currentYear = new Date().getFullYear();
 ---
 <BaseLayout
-  title="Driver.js — Product Tours & Highlights in Vanilla JS"
-  description="Driver.js is a lightweight, no-dependency JavaScript library for building product tours, feature highlights and contextual help — just ~5kb and MIT licensed."
+  title="Driver.js - Product Tours & Highlights in Vanilla JS"
+  description="Driver.js is a lightweight, no-dependency JavaScript library for building product tours, feature highlights and contextual help. It is just ~5kb and MIT licensed."
   permalink="/"
 >
   <HeroSection />
-  <div
-    class="bg-white overflow-x-hidden overflow-y-hidden relative h-[48px] md:h-[56px] lg:h-[64px] border-b-2 border-b-black"
-    data-feat-marquee>
-    <FeatureMarquee />
-  </div>
 
-  <div class="py-10 md:py-12 lg:py-24 bg-white text-black">
+  <FeatureMarquee />
+
+  <TrustedBy />
+
+  <div class="pt-10 md:pt-12 lg:pt-20 pb-12 md:pb-20 bg-white text-black">
     <Container>
       <Examples />
-      <UsecaseList />
     </Container>
   </div>
 
-  <OpenSourceLove />
+  <UsecaseList />
+
+  <CodeShowcase />
+
+  <Stats />
+
+  <License />
+
+  <CallToAction />
 
   <div class="py-8 bg-black text-white">
     <Container>
       <p class="text-lg text-white text-center">
         MIT Licensed &copy; {currentYear}
         <span class="hidden sm:inline">
-          <span class="mx-3">&middot;</span>
+          <span class="mx-7">&middot;</span>
           <a href="/docs/installation" class="">
             Docs
           </a>
-          <a href="https://github.com/kamranahmedse/driver.js" target="_blank" class="ml-5">
+          <a href="https://github.com/nilbuild/driver.js" target="_blank" class="ml-5">
             GitHub
-            <img src="/arrow.svg" class="h-3 inline-block ml-2" alt="GitHub" />
+            <img src="/arrow.svg" width="16" height="16" class="h-3 w-3 inline-block ml-2" alt="" />
           </a>
-          <a href="https://twitter.com/kamrify" target="_blank" class=" ml-5">
+          <a href="https://twitter.com/nilbuild" target="_blank" class=" ml-5">
             Twitter
-            <img src="/arrow.svg" class="h-3 inline-block ml-2" alt="GitHub" />
+            <img src="/arrow.svg" width="16" height="16" class="h-3 w-3 inline-block ml-2" alt="" />
           </a>
         </span>
       </p>

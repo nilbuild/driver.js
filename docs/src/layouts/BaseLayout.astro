@@ -29,7 +29,7 @@ const canonical = new URL(permalink, Astro.site ?? "https://driverjs.com").href;
 
     <meta content="Kamran Ahmed" name="author" />
     <meta content="summary_large_image" name="twitter:card" />
-    <meta content="@kamrify" name="twitter:creator" />
+    <meta content="@nilbuild" name="twitter:creator" />
     <meta content={title} name="twitter:title" />
     <meta content={description} name="twitter:description" />
     <meta content="https://driverjs.com/og-img.png" name="twitter:image" />
@@ -45,7 +45,10 @@ const canonical = new URL(permalink, Astro.site ?? "https://driverjs.com").href;
     <meta content={canonical} property="og:url" />
 
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <style is:global>
       .driver-popover.driverjs-theme {

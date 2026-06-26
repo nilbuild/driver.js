@@ -2,50 +2,54 @@
 import Container from "./Container.astro";
 ---
 
-<div class="bg-white border-b border-gray-100 select-none">
+<div class="bg-white border-b border-gray-200 select-none">
   <Container>
     <div class="flex items-center justify-between h-16">
       <a href="/" class="flex items-center justify-end text-xl font-bold text-gray-900 font-semibold gap-2.5">
-        <img src="/favicon.svg" alt="driver.js logo" class="h-10" />
+        <img src="/mascot-head.png" alt="driver.js logo" width="639" height="534" class="h-10 w-auto" />
         driver.js
       </a>
-      <span class="flex items-center gap-7">
-        <a href="/docs/installation" class="hover:underline underline-offset-4 text-lg font-medium text-gray-900">
+      <span class="flex items-center gap-3">
+        <a href="/docs/installation" class="rounded-lg px-3 py-1.5 text-base font-medium text-gray-900 transition-colors hover:bg-gray-100">
           <span class="hidden sm:inline">Documentation</span>
           <span class="inline sm:hidden">Docs</span>
         </a>
-        <a href="https://github.com/kamranahmedse/driver.js" target="_blank" class="hover:underline underline-offset-4 text-lg font-medium text-gray-900">GitHub</a>
+        <a href="https://github.com/nilbuild/driver.js" target="_blank" aria-label="GitHub" class="text-gray-900 hover:text-gray-600">
+          <svg viewBox="0 0 496 512" fill="currentColor" class="h-6 w-6" aria-hidden="true">
+            <path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path>
+          </svg>
+        </a>
       </span>
     </div>
   </Container>
 </div>
 <div class="bg-yellow-300/80 overflow-hidden via-transparent">
   <Container>
-    <div class="py-10 md:py-14 lg:py-20 flex justify-start items-center gap-4">
+    <div class="py-10 md:py-14 lg:py-25 flex justify-start items-center gap-4">
       <div class="flex-grow" data-hero-text>
         <h1 data-driver-name class="text-7xl md:text-8xl lg:text-9xl mb-2 md:mb-3 lg:mb-4 font-bold">driver.js</h1>
         <p data-driver-tagline class="text-base md:text-2xl lg:text-3xl !leading-normal">
-          Lightweight JavaScript library for product tours, highlights, and contextual help to guide users through your
+          Lightweight JavaScript library for product tours, highlights, and contextual help for your
           product.
         </p>
-        <div class="mt-4 md:mt-8 lg:mt-10 flex flex-col sm:flex-row gap-2 items-stretch">
+        <div class="mt-4 md:mt-8 lg:mt-10 flex flex-col sm:flex-row gap-4 items-stretch">
           <button
             data-demo-tour
-            class="bg-black rounded-xl py-2 md:py-3 px-6 font-medium text-white text-lg md:text-xl focus:outline-0 hover:bg-gray-800 focus:bg-gray-800"
+            class="cursor-pointer rounded-2xl border-2 border-black bg-gray-800 px-7 py-2.5 md:py-3 text-lg md:text-xl font-semibold text-white shadow-[5px_5px_0_0_#000] transition-all hover:bg-gray-700 active:translate-x-[3px] active:translate-y-[3px] active:shadow-[2px_2px_0_0_#000] focus:outline-none focus-visible:outline-none"
           >
             Show Demo
           </button>
           <a
             href="/docs/installation"
             data-docs-link
-            class="bg-white rounded-xl py-2 md:py-3 px-6 font-medium text-black text-lg md:text-xl focus:outline-0 border-2 border-black text-center hover:bg-gray-200 focus:bg-gray-200"
+            class="cursor-pointer rounded-2xl border-2 border-black bg-white px-7 py-2.5 md:py-3 text-center text-lg md:text-xl font-semibold text-black shadow-[5px_5px_0_0_#000] transition-all hover:bg-gray-100 active:translate-x-[3px] active:translate-y-[3px] active:shadow-[2px_2px_0_0_#000] focus:outline-none focus-visible:outline-none"
           >
             Get Started
           </a>
         </div>
       </div>
       <div class="flex-shrink-0 hidden sm:flex">
-        <img src="/driver.svg" alt="driver.js image" class="sm:h-48 md:h-60 lg:h-72" />
+        <img src="/fox-mascot.png" alt="driver.js mascot" width="672" height="916" class="w-auto sm:h-64 md:h-80 lg:h-[380px] relative top-[12px]" />
       </div>
     </div>
   </Container>

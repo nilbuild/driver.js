@@ -1,23 +1,40 @@
 ---
+import Container from "./Container.astro";
 import UsecaseItem from "./UsecaseItem.astro";
 ---
-<p class="text-base md:text-xl lg:text-2xl text-black">Due to its extensive API, driver.js can be used for a wide range of use
-  cases.</p>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 lg:gap-12 mt-10">
-  <UsecaseItem
-    title="Onboard Users"
-    description="Onboard your users by explaining how to use your product and answer common questions."
-  />
-  <UsecaseItem
-    title="Remove Distractions"
-    description="With highlight feature, you can remove distractions and focus your users attention on what matters."
-  />
-  <UsecaseItem
-    title="Contextual Help"
-    description="Provide contextual help for your users, explain how to use your product and answer common questions."
-  />
-  <UsecaseItem
-    title="Feature Adoption"
-    description="Highlight new features, explain how to use them and make sure your users don't miss them."
-  />
+
+<div class="bg-white border-t border-gray-200 py-12 md:py-20">
+  <Container>
+    <h2 class="text-3xl md:text-4xl font-bold mb-2 md:mb-3">Use Cases</h2>
+    <p class="text-base text-black/70 md:text-lg mb-14">
+      Due to its extensive API, driver.js can be used for a wide range of use cases.
+    </p>
+
+    <div class="mt-8 grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-10">
+      <UsecaseItem
+        title="Onboard Users"
+        description="Explain how to use your product and answer common questions."
+      />
+      <UsecaseItem
+        title="Interactive Tutorials"
+        description="Walk users through tasks step by step, letting them act as they learn."
+      />
+      <UsecaseItem
+        title="Feature Adoption"
+        description="Spotlight new features so your users don't miss them."
+      />
+      <UsecaseItem
+        title="Contextual Help"
+        description="Provide in-context guidance right where your users need it."
+      />
+      <UsecaseItem
+        title="Form Guidance"
+        description="Guide users field by field and point straight to inputs that need fixing."
+      />
+      <UsecaseItem
+        title="Remove Distractions"
+        description="Highlight what matters and focus your users' attention."
+      />
+    </div>
+  </Container>
 </div>

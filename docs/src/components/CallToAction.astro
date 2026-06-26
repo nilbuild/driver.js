@@ -1,0 +1,45 @@
+---
+import Container from "./Container.astro";
+---
+
+<div class="bg-yellow-300/80">
+  <Container>
+    <div class="flex flex-col items-center text-center pb-14 md:pb-20">
+      <img
+        src="/rocket-fox.png"
+        alt="driver.js mascot riding a rocket"
+        width="901"
+        height="1189"
+        class="-mt-8 md:-mt-10 lg:-mt-7 h-48 w-auto md:h-60 lg:h-80"
+      />
+
+      <h2 class="mt-6 md:mt-8 text-3xl md:text-5xl font-bold text-black max-w-xl !leading-tight">
+        Ship your first tour today
+      </h2>
+      <p class="mt-3 md:mt-4 text-base md:text-xl text-black/70 max-w-lg">
+        A few lines of code and ~5kb is all it takes. No dependencies, no build step, just driver.js.
+      </p>
+
+      <div class="mt-7 md:mt-9 flex flex-col sm:flex-row gap-4 items-stretch">
+        <a
+          href="/docs/installation"
+          class="cursor-pointer rounded-2xl border-2 border-black bg-white px-7 py-2.5 md:py-3 text-center text-lg md:text-xl font-semibold text-black shadow-[5px_5px_0_0_#000] transition-all hover:bg-gray-100 active:translate-x-[3px] active:translate-y-[3px] active:shadow-[2px_2px_0_0_#000] focus:outline-none focus-visible:outline-none"
+        >
+          Get Started
+        </a>
+        <a
+          href="https://github.com/nilbuild/driver.js"
+          target="_blank"
+          class="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-black bg-gray-800 px-7 py-2.5 md:py-3 text-center text-lg md:text-xl font-semibold text-white shadow-[5px_5px_0_0_#000] transition-all hover:bg-gray-700 active:translate-x-[3px] active:translate-y-[3px] active:shadow-[2px_2px_0_0_#000] focus:outline-none focus-visible:outline-none"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" class="h-3.5 w-3.5 md:h-4 md:w-4">
+            <path
+              d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.785 1.401 8.166L12 18.896l-7.335 3.866 1.401-8.166L.132 9.21l8.2-1.192z"
+            ></path>
+          </svg>
+          Star on GitHub
+        </a>
+      </div>
+    </div>
+  </Container>
+</div>

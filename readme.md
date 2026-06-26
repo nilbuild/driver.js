@@ -1,7 +1,7 @@
-<h1 align="center"><img height="150" src="https://driverjs.com/driver.svg" /><br> Driver.js</h1>
+<h1 align="center"><img height="150" src="https://driverjs.com/mascot-head.png" /><br> Driver.js</h1>
 
 <p align="center">
-  <a href="https://github.com/kamranahmedse/driver.js/blob/master/license">
+  <a href="https://github.com/nilbuild/driver.js/blob/master/license">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
   <a href="https://www.jsdelivr.com/package/npm/driver.js">
@@ -53,9 +53,9 @@ Driver.js is written in Vanilla TypeScript, has zero dependencies and is highly 
 The library lives in `src/`. To try your changes against a set of live examples, run the playground — an Astro app in `playground/` that imports the library straight from source, so edits hot-reload instantly:
 
 ```sh
-pnpm install                 # install the library's dev dependencies
-pnpm run playground:install  # one-time install of the playground's dependencies
-pnpm dev                     # start the playground
+pnpm install
+pnpm run playground:install
+pnpm dev
 ```
 
 Each example lives in its own file under `playground/src/examples/` and shows up as a page in the sidebar. To add one, drop an entry into the relevant group (`highlight.ts`, `popover.ts`, `tour.ts`, `api.ts`).
@@ -63,8 +63,8 @@ Each example lives in its own file under `playground/src/examples/` and shows up
 Other useful scripts:
 
 ```sh
-pnpm build   # type-check and build the distributable library into dist/
-pnpm test    # run the unit tests (Vitest)
+pnpm build
+pnpm test
 ```
 
 ## Contributions

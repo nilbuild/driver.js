@@ -15,7 +15,7 @@ export function DocsHeader(props: DocsHeaderProps) {
       <div className="border-b border-gray-200 flex items-center justify-between">
         <div className="text-right flex justify-end py-3 px-6">
           <a href="/" className="flex items-center justify-end text-xl font-bold">
-            <img src="/driver-head.svg" alt="Astro" className="w-10 h-10 mr-2" />
+            <img src="/mascot-head.png" alt="driver.js logo" width={639} height={534} className="h-10 w-auto mr-2" />
             driver.js
           </a>
         </div>

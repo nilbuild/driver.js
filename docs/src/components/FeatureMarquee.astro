@@ -1,5 +1,5 @@
 ---
-const featureList = [
+const features = [
   "Supports all Major Browsers",
   "Works on Mobile Devices",
   "Highly Customizable",
@@ -15,25 +15,26 @@ const featureList = [
 ];
 ---
 
-<div class="marquee-track flex h-full w-max items-center">
-  {
-    // The list is rendered twice so the animation can loop seamlessly.
-    [0, 1].map(copy => (
-      <p class="flex items-center text-lg whitespace-nowrap md:text-xl lg:text-2xl" aria-hidden={copy === 1}>
-        {featureList.map(feature => (
-          <span class="flex items-center">
-            {feature}
-            <span class="mx-2 md:mx-3">&middot;</span>
-          </span>
-        ))}
-      </p>
-    ))
-  }
+<div class="bg-black overflow-hidden">
+  <div class="marquee-track flex h-12 w-max items-center md:h-14">
+    {
+      [0, 1].map(copy => (
+        <div class="flex items-center" aria-hidden={copy === 1}>
+          {features.map(feature => (
+            <span class="flex items-center">
+              <span class="whitespace-nowrap px-5 text-sm font-medium text-white md:text-base">{feature}</span>
+              <span class="h-1.5 w-1.5 rounded-full bg-yellow-400" />
+            </span>
+          ))}
+        </div>
+      ))
+    }
+  </div>
 </div>
 
 <style>
   .marquee-track {
-    animation: marquee-scroll 30s linear infinite;
+    animation: marquee-scroll 32s linear infinite;
     will-change: transform;
   }
 

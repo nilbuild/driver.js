@@ -7,12 +7,12 @@ export interface Props {
 const { title, description } = Astro.props;
 ---
 
-<div class="flex flex-col gap-2 md:gap-2 lg:gap-4 pt-2">
-  <span class="border-b-2 border-b-black block w-[30px] md:w-[40px] lg:w-[50px]"></span>
-  <h3 class="text-xl md:text-2xl lg:text-3xl mt-2 md:mt-3 lg:mt-0 font-bold text-black">
-    { title }
+<div>
+  <span class="block h-1 w-8 rounded-full bg-yellow-400"></span>
+  <h3 class="mt-3 text-lg md:text-xl font-semibold text-black">
+    {title}
   </h3>
-  <p class="md:text-lg lg:text-xl text-black">
-    { description }
+  <p class="mt-1.5 text-sm md:text-base text-black/60">
+    {description}
   </p>
 </div>

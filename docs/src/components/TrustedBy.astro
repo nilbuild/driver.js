@@ -1,0 +1,51 @@
+---
+import Container from "./Container.astro";
+
+const companies = [
+  { name: "Red Hat", logo: "/companies/redhat.svg", ratio: "1 / 1" },
+  { name: "Alibaba", logo: "/companies/alibaba.svg", ratio: "1 / 1" },
+  { name: "MIT", logo: "/companies/mit.svg", wordmark: true, ratio: "52 / 24" },
+  { name: "Ethereum", logo: "/companies/ethereum.svg", ratio: "1 / 1" },
+  { name: "GitKraken", logo: "/companies/gitkraken.svg", ratio: "1 / 1" },
+  { name: "Apache", logo: "/companies/apache.svg", ratio: "1 / 1" },
+  { name: "Intel", logo: "/companies/intel.svg", ratio: "1 / 1" },
+  { name: "Fiverr", logo: "/companies/fiverr.svg", ratio: "1 / 1" },
+];
+---
+
+<div class="bg-white border-b border-gray-200">
+  <Container>
+    <div class="py-7 md:py-9">
+      <div class="flex flex-wrap items-center justify-center gap-2.5">
+        {
+          companies.map(c => (
+            <span class="group flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200">
+              <img
+                src={c.logo}
+                alt={c.name}
+                style={`aspect-ratio: ${c.ratio}`}
+                class={`w-auto opacity-70 grayscale transition duration-200 group-hover:opacity-100 group-hover:grayscale-0 ${c.wordmark ? "h-3.5" : "h-4"}`}
+              />
+              {!c.wordmark && c.name}
+            </span>
+          ))
+        }
+      </div>
+      <p class="mx-auto mt-5 max-w-2xl text-center text-sm text-gray-500">
+        <span class="marker">4M+</span> monthly downloads, used by <span class="marker">tens of thousands of projects</span>.
+      </p>
+    </div>
+  </Container>
+</div>
+
+<style>
+  .marker {
+    color: #111827;
+    font-weight: 600;
+    padding: 0.06em 0.4em;
+    background-color: #fef08a;
+    border-radius: 0.4em 0.7em 0.45em 0.65em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+</style>
