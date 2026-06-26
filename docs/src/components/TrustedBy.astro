@@ -2,36 +2,38 @@
 import Container from "./Container.astro";
 
 const companies = [
-  { name: "Red Hat", logo: "/companies/redhat.svg", ratio: "1 / 1" },
-  { name: "Alibaba", logo: "/companies/alibaba.svg", ratio: "1 / 1" },
-  { name: "MIT", logo: "/companies/mit.svg", wordmark: true, ratio: "52 / 24" },
-  { name: "Ethereum", logo: "/companies/ethereum.svg", ratio: "1 / 1" },
-  { name: "GitKraken", logo: "/companies/gitkraken.svg", ratio: "1 / 1" },
-  { name: "Apache", logo: "/companies/apache.svg", ratio: "1 / 1" },
-  { name: "Intel", logo: "/companies/intel.svg", ratio: "1 / 1" },
-  { name: "Fiverr", logo: "/companies/fiverr.svg", ratio: "1 / 1" },
+  { name: "Red Hat", logo: "/companies/redhat.svg", h: "h-10" },
+  { name: "Alibaba", logo: "/companies/alibaba.svg", h: "h-8" },
+  { name: "MIT", logo: "/companies/mit.svg", h: "h-8" },
+  { name: "Ethereum", logo: "/companies/ethereum.svg", h: "h-9" },
+  { name: "GitKraken", logo: "/companies/gitkraken.svg", h: "h-11" },
+  { name: "Apache", logo: "/companies/apache.svg", h: "h-10" },
+  { name: "Intel", logo: "/companies/intel.svg", h: "h-16" },
+  { name: "Fiverr", logo: "/companies/fiverr.svg", h: "h-[5.5rem]" },
 ];
 ---
 
 <div class="bg-white border-b border-gray-200">
   <Container>
     <div class="py-7 md:py-9">
-      <div class="flex flex-wrap items-center justify-center gap-2.5">
+      <div class="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 md:gap-x-14">
         {
           companies.map(c => (
-            <span class="group flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200">
+            <div class="group relative flex items-center justify-center">
               <img
                 src={c.logo}
                 alt={c.name}
-                style={`aspect-ratio: ${c.ratio}`}
-                class={`w-auto opacity-70 grayscale transition duration-200 group-hover:opacity-100 group-hover:grayscale-0 ${c.wordmark ? "h-3.5" : "h-4"}`}
+                class={`w-auto opacity-60 grayscale transition duration-200 group-hover:opacity-100 group-hover:grayscale-0 ${c.h}`}
               />
-              {!c.wordmark && c.name}
-            </span>
+              <span class="pointer-events-none absolute bottom-1/2 left-1/2 mb-8 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded-md bg-gray-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+                {c.name}
+                <span class="absolute left-1/2 top-full -mt-px h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-gray-900" />
+              </span>
+            </div>
           ))
         }
       </div>
-      <p class="mx-auto mt-5 max-w-2xl text-center text-sm text-gray-500">
+      <p class="mx-auto mt-6 max-w-2xl text-center text-base text-gray-500 md:text-lg">
         <span class="marker">4M+</span> monthly downloads, used by <span class="marker">tens of thousands of projects</span>.
       </p>
     </div>
