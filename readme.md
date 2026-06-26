@@ -1,3 +1,5 @@
+<br /><br />
+
 <h1 align="center"><img height="150" src="https://driverjs.com/mascot-head.png" /><br> Driver.js</h1>
 
 <p align="center">
