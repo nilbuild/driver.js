@@ -1,6 +1,6 @@
 <br /><br />
 
-<h1 align="center"><img height="150" src="https://driverjs.com/mascot-head.png" /><br> Driver.js</h1>
+<h1 align="center"><img height="150" src="https://driverjs.com/mascot-head.png?v=1" /><br> Driver.js</h1>
 
 <p align="center">
   <a href="https://github.com/nilbuild/driver.js/blob/master/license">
