@@ -43,23 +43,6 @@ driverObj.highlight({
   },
 });`,
   },
-  {
-    name: "Customize",
-    code: `import { driver } from "driver.js";
-
-const driverObj = driver({
-  animate: true,
-  smoothScroll: true,
-  allowClose: true,
-  stagePadding: 4,
-  popoverClass: "my-popover",
-  nextBtnText: "Next →",
-  prevBtnText: "← Back",
-  doneBtnText: "Finish",
-});
-
-driverObj.drive();`,
-  },
 ];
 ---
 
@@ -70,7 +53,7 @@ driverObj.drive();`,
       Import driver.js, describe your steps, and call <code class="rounded bg-gray-100 px-1.5 py-0.5 text-sm text-black">drive()</code>. That's the whole setup.
     </p>
 
-    <div id="code-showcase" class="overflow-hidden rounded-2xl bg-[#272822] shadow-[6px_6px_0_0_#000]">
+    <div id="code-showcase" class="overflow-hidden rounded-2xl bg-[#101010] shadow-[6px_6px_0_0_#000]">
       <div class="flex flex-wrap gap-2 p-3 pb-5 md:gap-3 md:p-4 md:pb-6">
         {
           tabs.map((tab, i) => (
@@ -81,7 +64,7 @@ driverObj.drive();`,
                 "code-tab cursor-pointer rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors md:px-5 md:py-2 md:text-base",
                 i === 0
                   ? "border-black bg-yellow-300 text-black"
-                  : "border-transparent bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200",
+                  : "border-transparent bg-white/15 text-gray-200 hover:bg-white/25 hover:text-white",
               ]}
             >
               {tab.name}
@@ -123,7 +106,7 @@ driverObj.drive();`,
 
   if (root) {
     const activeClasses = ["border-black", "bg-yellow-300", "text-black"];
-    const inactiveClasses = ["border-transparent", "bg-white/5", "text-gray-400", "hover:bg-white/10", "hover:text-gray-200"];
+    const inactiveClasses = ["border-transparent", "bg-white/15", "text-gray-200", "hover:bg-white/25", "hover:text-white"];
 
     const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-code-tab]"));
     const panels = Array.from(root.querySelectorAll<HTMLElement>("[data-code-panel]"));
