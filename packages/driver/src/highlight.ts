@@ -200,7 +200,9 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
   }
 
   toElement.classList.add("driver-active-element");
-  setPopoverAria(toElement);
+  if (toElement.id !== "driver-dummy-element") {
+    setPopoverAria(toElement);
+  }
 }
 
 export function destroyHighlight() {

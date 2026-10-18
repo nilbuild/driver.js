@@ -667,3 +667,14 @@ describe("popover click target", () => {
     expect(errors).toEqual([]);
   });
 });
+
+describe("popover landmarks", () => {
+  it("renders the title and footer without header or footer landmarks", () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+
+    expect(popoverEl()?.querySelector("header, footer")).toBeNull();
+    expect(popoverEl()?.querySelector(".driver-popover-title")?.tagName).toBe("DIV");
+    expect(popoverEl()?.querySelector(".driver-popover-footer")?.tagName).toBe("DIV");
+  });
+});

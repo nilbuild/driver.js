@@ -308,3 +308,16 @@ describe("aria attributes on the highlighted element", () => {
     expect(document.getElementById("menu-btn")?.getAttribute("aria-controls")).toBe("menu");
   });
 });
+
+describe("aria attributes on the dummy element", () => {
+  it("leaves the dummy element of an element-less step without aria", () => {
+    const d = createDriver({ animate: false, steps: [{ popover: { title: "Centered" } }] });
+    d.drive();
+
+    const dummy = document.getElementById("driver-dummy-element");
+    expect(dummy).not.toBeNull();
+    expect(dummy?.hasAttribute("aria-controls")).toBe(false);
+    expect(dummy?.hasAttribute("aria-expanded")).toBe(false);
+    expect(dummy?.hasAttribute("aria-haspopup")).toBe(false);
+  });
+});

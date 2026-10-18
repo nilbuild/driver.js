@@ -248,7 +248,7 @@ function createPopover(): PopoverDOM {
   const arrow = document.createElement("div");
   arrow.classList.add("driver-popover-arrow");
 
-  const title = document.createElement("header");
+  const title = document.createElement("div");
   title.id = "driver-popover-title";
   title.classList.add("driver-popover-title");
   title.style.display = "none";
@@ -265,7 +265,7 @@ function createPopover(): PopoverDOM {
   closeButton.classList.add("driver-popover-close-btn");
   closeButton.innerHTML = "&times;";
 
-  const footer = document.createElement("footer");
+  const footer = document.createElement("div");
   footer.classList.add("driver-popover-footer");
 
   const progress = document.createElement("span");
