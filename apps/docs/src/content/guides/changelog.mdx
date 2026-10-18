@@ -12,11 +12,12 @@ ships, these entries move under a versioned heading.
 
 ### Fixed
 
-- Hints and popovers inside an open `<dialog>` now stay next to their
-  element when the dialog is styled with a `transform`, `filter` or
-  similar, instead of rendering far outside it. They also come back above
-  the dialog when it is closed and reopened.
+- Hints and popovers in an open `<dialog>` with a `transform` or `filter`
+  now stay next to their element, also after the dialog reopens.
   ([#627](https://github.com/nilbuild/driver.js/issues/627))
+- Tour steps scrolled out of a visible scrollable container are now
+  scrolled into view.
+  ([#577](https://github.com/nilbuild/driver.js/issues/577))
 
 ## 1.10.1
 

@@ -32,5 +32,23 @@ export const scrollGroup: ExampleGroup = {
         tourWithScroll(false);
       },
     },
+    {
+      id: "scroll-inside-container",
+      title: "Steps Inside a Scroll Box",
+      description:
+        "LOOK: every step is a paragraph inside the scrollable box. The box scrolls each one into view, down to the ninth and back up to the second.",
+      run() {
+        driver({
+          showProgress: true,
+          steps: [1, 5, 9, 2].map(index => ({
+            element: `#scrollable-area p:nth-child(${index})`,
+            popover: {
+              title: `Paragraph ${index}`,
+              description: "This paragraph should be fully visible inside the box.",
+            },
+          })),
+        }).drive();
+      },
+    },
   ],
 };

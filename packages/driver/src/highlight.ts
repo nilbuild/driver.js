@@ -171,14 +171,14 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
 
   window.requestAnimationFrame(animate);
 
+  document.querySelectorAll(".driver-active-element-parent").forEach(element => {
+    element.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
+  });
+
   bringInView(toElement, ctx.getConfig("smoothScroll"));
   if (!hasDelayedPopover && toStep.popover) {
     renderStepPopover(ctx, toElement, toStep);
   }
-
-  document.querySelectorAll(".driver-active-element-parent").forEach(element => {
-    element.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
-  });
 
   document.querySelectorAll(".driver-active-element").forEach(element => {
     element.classList.remove("driver-active-element", "driver-no-interaction");

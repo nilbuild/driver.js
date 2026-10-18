@@ -71,12 +71,48 @@ function hasScrollableParent(e: Element) {
 function isElementInView(element: Element) {
   const rect = element.getBoundingClientRect();
 
-  return (
+  const isInViewport =
     rect.top >= 0 &&
     rect.left >= 0 &&
     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-  );
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+
+  return isInViewport && !isClippedByScrollContainer(element, rect);
+}
+
+function isClippedByScrollContainer(element: Element, rect: DOMRect) {
+  let current: Element | null = element;
+
+  while (current) {
+    if (getComputedStyle(current).position === "fixed") {
+      return false;
+    }
+
+    const parent: HTMLElement | null = current.parentElement;
+    if (!parent || parent === document.body || parent === document.documentElement) {
+      return false;
+    }
+
+    if (isScrollable(parent)) {
+      const box = parent.getBoundingClientRect();
+      const top = box.top + parent.clientTop;
+      const left = box.left + parent.clientLeft;
+
+      const isClipped =
+        rect.top < top ||
+        rect.left < left ||
+        rect.bottom > top + (parent.clientHeight || box.height) ||
+        rect.right > left + (parent.clientWidth || box.width);
+
+      if (isClipped) {
+        return true;
+      }
+    }
+
+    current = parent;
+  }
+
+  return false;
 }
 
 export function isElementVisible(el: HTMLElement) {

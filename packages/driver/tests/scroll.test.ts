@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { bringInView } from "../src/utils";
 import { createDriver, SAMPLE_STEPS, useDriverHarness } from "./utils";
 
 useDriverHarness();
@@ -66,5 +67,88 @@ describe("smoothScroll", () => {
 
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
     expect(scrollIntoView.mock.calls[0][0]).toMatchObject({ behavior: "smooth" });
+  });
+});
+
+describe("scroll containers", () => {
+  const rect = (top: number, height: number) =>
+    ({ top, bottom: top + height, left: 0, right: 100, width: 100, height, x: 0, y: top, toJSON() {} }) as DOMRect;
+
+  function mountBox(itemTop: number, itemStyle = "") {
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<div id="box" style="overflow: auto"><div id="item" style="${itemStyle}">Item</div></div>`
+    );
+    const box = document.querySelector<HTMLElement>("#box")!;
+    const item = document.querySelector<HTMLElement>("#item")!;
+    box.getBoundingClientRect = () => rect(200, 300);
+    item.getBoundingClientRect = () => rect(itemTop, 50);
+    const scrollIntoView = vi.fn();
+    item.scrollIntoView = scrollIntoView;
+    return { item, scrollIntoView };
+  }
+
+  it("scrolls an element clipped by its scroll container, though it is inside the viewport", () => {
+    const { item, scrollIntoView } = mountBox(550);
+
+    bringInView(item);
+
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it("scrolls an element scrolled above its scroll container", () => {
+    const { item, scrollIntoView } = mountBox(100);
+
+    bringInView(item);
+
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves an element alone when it is visible inside its scroll container", () => {
+    const { item, scrollIntoView } = mountBox(300);
+
+    bringInView(item);
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("ignores scroll containers above a fixed element, which they do not clip", () => {
+    const { item, scrollIntoView } = mountBox(550, "position: fixed");
+
+    bringInView(item);
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("scrolls the next step clipped by the container the previous step locked", () => {
+    document.head.insertAdjacentHTML(
+      "beforeend",
+      `<style id="lock">.driver-active-element-parent-no-scroll { overflow: hidden !important; }</style>`
+    );
+    const { item, scrollIntoView } = mountBox(300);
+    item.insertAdjacentHTML("afterend", `<div id="next">Next</div>`);
+    const next = document.querySelector<HTMLElement>("#next")!;
+    next.getBoundingClientRect = () => rect(550, 50);
+    const nextScrollIntoView = vi.fn();
+    next.scrollIntoView = nextScrollIntoView;
+
+    const d = createDriver({ animate: false, steps: [{ element: "#item" }, { element: "#next" }] });
+    d.drive();
+    expect(document.querySelector("#box")!.classList.contains("driver-active-element-parent-no-scroll")).toBe(true);
+    expect(getComputedStyle(document.querySelector("#box")!).overflow).toBe("hidden");
+    d.moveNext();
+    document.querySelector("#lock")!.remove();
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(nextScrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it("scrolls a tour step clipped by its scroll container", () => {
+    const { scrollIntoView } = mountBox(550);
+
+    const d = createDriver({ animate: false });
+    d.highlight({ element: "#item", popover: { title: "Item" } });
+
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 });
