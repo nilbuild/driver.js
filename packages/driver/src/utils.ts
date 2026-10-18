@@ -83,8 +83,47 @@ export function isElementVisible(el: HTMLElement) {
   return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
 }
 
+const dialogsWithLayer = new WeakSet<Element>();
+
 // A modal <dialog> renders in the top layer, above everything in <body>, so
 // UI for an element inside one has to live in that dialog to be visible.
 export function layerFor(element: Element): Element {
-  return element.closest("dialog[open]") ?? document.body;
+  const dialog = element.closest("dialog[open]");
+  if (!dialog) {
+    return document.body;
+  }
+
+  if (!("showPopover" in dialog)) {
+    return dialog;
+  }
+
+  let layer = dialog.querySelector<HTMLElement>(":scope > .driver-layer");
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.className = "driver-layer";
+    layer.setAttribute("popover", "manual");
+    dialog.appendChild(layer);
+  }
+
+  if (!dialogsWithLayer.has(dialog)) {
+    dialogsWithLayer.add(dialog);
+    dialog.addEventListener("close", () => {
+      dialog.querySelector<HTMLElement>(":scope > .driver-layer:popover-open")?.hidePopover();
+    });
+  }
+
+  if (!layer.matches(":popover-open")) {
+    layer.showPopover();
+  }
+
+  return layer;
+}
+
+export function removeFromLayer(node: Element) {
+  const layer = node.parentElement;
+  node.remove();
+
+  if (layer?.classList.contains("driver-layer") && !layer.childElementCount) {
+    layer.remove();
+  }
 }

@@ -1,7 +1,7 @@
 import type { DriverHook, HookOpts } from "./context";
 import { destroyDriverClick, onDriverClick } from "./click";
 import { PositionOptions, repositionPopover } from "./position";
-import { bringInView, getFocusableElements, layerFor } from "./utils";
+import { bringInView, getFocusableElements, layerFor, removeFromLayer } from "./utils";
 
 export type Side = "top" | "right" | "bottom" | "left";
 export type Alignment = "start" | "center" | "end";
@@ -316,5 +316,5 @@ export function destroyPopover(popover: PopoverDOM | undefined) {
   }
 
   destroyDriverClick(popover.wrapper);
-  popover.wrapper.parentElement?.removeChild(popover.wrapper);
+  removeFromLayer(popover.wrapper);
 }

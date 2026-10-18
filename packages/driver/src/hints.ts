@@ -9,7 +9,7 @@ import {
 } from "./popover";
 import { generateStageSvgPathString } from "./stage";
 import { ARROW_CORNER_INSET, PositionOptions, repositionPopover } from "./position";
-import { layerFor, resolveElement } from "./utils";
+import { layerFor, removeFromLayer, resolveElement } from "./utils";
 import "./hints.css";
 
 // The cutout around the active hint's element, mirroring the tour's defaults.
@@ -208,6 +208,10 @@ export function hints(config: HintsConfig = {}): Hints {
     entry.observer = new IntersectionObserver(([intersection]) => {
       entry.beacon.classList.toggle("driver-hint-hidden", !intersection.isIntersecting);
 
+      if (intersection.isIntersecting) {
+        layerFor(entry.element);
+      }
+
       if (!intersection.isIntersecting && activeId === entry.id) {
         close();
       }
@@ -249,7 +253,7 @@ export function hints(config: HintsConfig = {}): Hints {
   function unmountHints() {
     mounted.forEach(entry => {
       entry.observer?.disconnect();
-      entry.beacon.remove();
+      removeFromLayer(entry.beacon);
     });
 
     mounted = [];
@@ -403,7 +407,9 @@ export function hints(config: HintsConfig = {}): Hints {
   }
 
   function removeOverlay() {
-    overlay?.remove();
+    if (overlay) {
+      removeFromLayer(overlay);
+    }
     overlay = undefined;
   }
 
@@ -508,7 +514,7 @@ export function hints(config: HintsConfig = {}): Hints {
     dismissed.add(entry.id);
 
     entry.observer?.disconnect();
-    entry.beacon.remove();
+    removeFromLayer(entry.beacon);
     mounted = mounted.filter(mountedEntry => mountedEntry !== entry);
 
     const onDismiss = entry.hint.onDismiss || currentConfig.onDismiss;

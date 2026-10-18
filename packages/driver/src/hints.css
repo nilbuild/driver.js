@@ -16,6 +16,10 @@
   transform: translate(-50%, -50%);
 }
 
+.driver-layer .driver-hint {
+  pointer-events: auto;
+}
+
 /* The open hint's beacon rises above the overlay, next to its popover. */
 .driver-hint[aria-expanded="true"] {
   z-index: 999999998;

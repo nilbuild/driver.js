@@ -3,6 +3,30 @@
    opened by a tour step or a hint. Keep tour-only rules (overlay, stage, body
    classes) out of here. */
 
+.driver-layer {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.driver-layer::backdrop {
+  display: none;
+}
+
+.driver-layer .driver-popover {
+  pointer-events: auto;
+}
+
 .driver-popover {
   all: unset;
   font-family: var(

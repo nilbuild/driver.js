@@ -984,18 +984,64 @@ describe("multiple instances", () => {
 });
 
 describe("modal dialogs", () => {
+  const DIALOG_HTML = `<dialog open><button id="in-dialog">Save</button></dialog>`;
+  const DIALOG_HINT: DriverHint = { element: "#in-dialog", id: "d", popover: { title: "In dialog" } };
+
   // A modal dialog renders in the top layer, above anything left in <body>.
-  it("mounts the beacon, overlay and popover inside the target's open dialog", () => {
-    document.body.insertAdjacentHTML("beforeend", `<dialog open><button id="in-dialog">Save</button></dialog>`);
+  describe("with the popover API", () => {
+    let showPopover: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      showPopover = vi.fn();
+      Object.assign(HTMLElement.prototype, { showPopover, hidePopover: vi.fn() });
+    });
+
+    afterEach(() => {
+      delete (HTMLElement.prototype as Partial<HTMLElement>).showPopover;
+      delete (HTMLElement.prototype as Partial<HTMLElement>).hidePopover;
+    });
+
+    it("mounts the beacon, overlay and popover in a top-layer host inside the dialog", () => {
+      document.body.insertAdjacentHTML("beforeend", DIALOG_HTML);
+      const dialog = document.querySelector("dialog")!;
+
+      const h = createHints({ overlay: true, hints: [DIALOG_HINT] });
+      h.show();
+      h.open("d");
+
+      const layer = dialog.querySelector(":scope > .driver-layer")!;
+      expect(layer.getAttribute("popover")).toBe("manual");
+      expect(showPopover).toHaveBeenCalled();
+      expect(beacons()[0].parentElement).toBe(layer);
+      expect(document.querySelector(".driver-hint-overlay")!.parentElement).toBe(layer);
+      expect(popoverEl()!.parentElement).toBe(layer);
+      expect(dialog.querySelectorAll(".driver-layer")).toHaveLength(1);
+    });
+
+    it("removes the host once its UI is gone", () => {
+      document.body.insertAdjacentHTML("beforeend", DIALOG_HTML);
+      const dialog = document.querySelector("dialog")!;
+
+      const h = createHints({ hints: [DIALOG_HINT] });
+      h.show();
+      h.open("d");
+      h.hide();
+
+      expect(dialog.querySelector(".driver-layer")).toBeNull();
+    });
+  });
+
+  it("mounts inside the dialog itself without the popover API", () => {
+    document.body.insertAdjacentHTML("beforeend", DIALOG_HTML);
     const dialog = document.querySelector("dialog")!;
 
-    const h = createHints({ overlay: true, hints: [{ element: "#in-dialog", id: "d", popover: { title: "In dialog" } }] });
+    const h = createHints({ overlay: true, hints: [DIALOG_HINT] });
     h.show();
     h.open("d");
 
-    expect(dialog.contains(beacons()[0])).toBe(true);
-    expect(dialog.contains(document.querySelector(".driver-hint-overlay"))).toBe(true);
-    expect(dialog.contains(popoverEl())).toBe(true);
+    expect(beacons()[0].parentElement).toBe(dialog);
+    expect(document.querySelector(".driver-hint-overlay")!.parentElement).toBe(dialog);
+    expect(popoverEl()!.parentElement).toBe(dialog);
   });
 
   it("keeps mounting in <body> outside a dialog", () => {
