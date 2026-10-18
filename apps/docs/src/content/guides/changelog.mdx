@@ -10,6 +10,14 @@ ships, these entries move under a versioned heading.
 
 ## Unreleased
 
+### Fixed
+
+- Hints and popovers inside an open `<dialog>` now stay next to their
+  element when the dialog is styled with a `transform`, `filter` or
+  similar, instead of rendering far outside it. They also come back above
+  the dialog when it is closed and reopened.
+  ([#627](https://github.com/nilbuild/driver.js/issues/627))
+
 ## 1.10.1
 
 ### Added
