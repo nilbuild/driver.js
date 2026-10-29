@@ -1,3 +1,5 @@
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { driver, type Driver } from "../src/driver";
 import { hints, type DriverHint, type Hints } from "../src/hints";
@@ -1016,6 +1018,26 @@ describe("modal dialogs", () => {
       expect(document.querySelector(".driver-hint-overlay")!.parentElement).toBe(layer);
       expect(popoverEl()!.parentElement).toBe(layer);
       expect(dialog.querySelectorAll(".driver-layer")).toHaveLength(1);
+    });
+
+    it("keeps the host unstyled when the page styles every popover", () => {
+      const style = document.createElement("style");
+      style.textContent = `${readFileSync(resolve(process.cwd(), "src/popover.css"), "utf8")}
+        html [popover] { background-color: rgb(1, 2, 3); padding: 12px; top: 40px; }`;
+      document.head.appendChild(style);
+      document.body.insertAdjacentHTML("beforeend", DIALOG_HTML);
+
+      const h = createHints({ hints: [DIALOG_HINT] });
+      h.show();
+
+      const layer = document.querySelector(".driver-layer")!;
+      const computed = getComputedStyle(layer);
+      expect(computed.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+      expect(computed.paddingTop).toBe("0px");
+      expect(computed.top).toBe("0px");
+
+      h.hide();
+      style.remove();
     });
 
     it("removes the host once its UI is gone", () => {
