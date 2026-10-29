@@ -1,0 +1,44 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Driver.js",
+    "identifier": "driverjs.com"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:driverjs.com:skills:driver-js",
+      "displayName": "Driver.js agent skill",
+      "description": "Teaches agents to add product tours, highlights, hints and checklists with Driver.js.",
+      "type": "text/markdown",
+      "url": "https://driverjs.com/.well-known/agent-skills/driver-js/SKILL.md",
+      "representativeQueries": [
+        "add a product tour to my web app",
+        "highlight an element with a popover",
+        "show onboarding hints on a page",
+        "build a getting-started checklist"
+      ]
+    },
+    {
+      "identifier": "urn:air:driverjs.com:docs:llms-txt",
+      "displayName": "Driver.js documentation index",
+      "description": "llms.txt index of every Driver.js docs page as Markdown.",
+      "type": "text/plain",
+      "url": "https://driverjs.com/llms.txt",
+      "representativeQueries": [
+        "driver.js documentation",
+        "driver.js configuration options",
+        "driver.js API reference"
+      ]
+    },
+    {
+      "identifier": "urn:air:driverjs.com:docs:api-catalog",
+      "displayName": "Driver.js API catalog",
+      "type": "application/linkset+json",
+      "url": "https://driverjs.com/.well-known/api-catalog",
+      "representativeQueries": [
+        "driver.js JavaScript API",
+        "driver.js methods and hooks"
+      ]
+    }
+  ]
+}

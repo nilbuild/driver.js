@@ -1,5 +1,6 @@
 ---
 import Analytics from "../components/Analytics/Analytics.astro";
+import WebMcpTools from "../components/WebMcpTools.astro";
 import "../styles/tailwind.css";
 import "../styles/checklist-themes/brutalist.css";
 export interface Props {
@@ -52,6 +53,7 @@ const canonical = new URL(permalink, Astro.site ?? "https://driverjs.com").href;
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
     <link rel="alternate" type="text/plain" href="/llms-full.txt" title="Full docs for LLMs" />
+    <link rel="ai-catalog" href="/.well-known/ai-catalog.json" />
     <slot name="head" />
 
     <style is:global>
@@ -151,5 +153,6 @@ const canonical = new URL(permalink, Astro.site ?? "https://driverjs.com").href;
   <body>
     <slot />
     <Analytics />
+    <WebMcpTools />
   </body>
 </html>

@@ -1,4 +1,5 @@
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 
 Sitemap: https://driverjs.com/sitemap-index.xml

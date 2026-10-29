@@ -1,0 +1,14 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://driverjs.com/docs/api",
+      "service-doc": [
+        { "href": "https://driverjs.com/docs/api", "type": "text/html", "title": "Driver.js API reference" },
+        { "href": "https://driverjs.com/docs/api.md", "type": "text/markdown", "title": "Driver.js API reference as Markdown" }
+      ],
+      "describedby": [
+        { "href": "https://driverjs.com/llms.txt", "type": "text/plain", "title": "llms.txt" }
+      ]
+    }
+  ]
+}

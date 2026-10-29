@@ -3,3 +3,12 @@
 
 /llms-full.txt
   Content-Type: text/plain; charset=utf-8
+
+/
+  Link: </.well-known/api-catalog>; rel="api-catalog", </docs/installation>; rel="service-doc", </llms.txt>; rel="describedby"; type="text/plain", </.well-known/agent-skills/index.json>; rel="describedby"; type="application/json"
+
+/.well-known/api-catalog
+  Content-Type: application/linkset+json
+
+/.well-known/ai-catalog.json
+  Content-Type: application/json

@@ -1,0 +1,36 @@
+<script>
+  type ModelContext = {
+    registerTool: (tool: {
+      name: string;
+      description: string;
+      inputSchema: object;
+      execute: (input: Record<string, string>) => Promise<string>;
+    }) => Promise<void>;
+  };
+
+  const modelContext: ModelContext | undefined =
+    (document as unknown as { modelContext?: ModelContext }).modelContext ??
+    (navigator as unknown as { modelContext?: ModelContext }).modelContext;
+
+  if (modelContext) {
+    const read = (path: string) => fetch(path).then(response => response.text());
+
+    modelContext.registerTool({
+      name: "list_docs",
+      description: "List every Driver.js documentation page with its Markdown URL.",
+      inputSchema: { type: "object", properties: {} },
+      execute: () => read("/llms.txt"),
+    });
+
+    modelContext.registerTool({
+      name: "read_doc",
+      description: "Read one Driver.js documentation page as Markdown, for example tour-basics, hints or configuration.",
+      inputSchema: {
+        type: "object",
+        properties: { page: { type: "string", description: "Page id from list_docs, such as hints" } },
+        required: ["page"],
+      },
+      execute: input => read(`/docs/${encodeURIComponent(input.page)}.md`),
+    });
+  }
+</script>
