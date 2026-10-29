@@ -1,0 +1,48 @@
+---
+import { SITE_URL } from "../lib/agent-markdown";
+
+export interface Props {
+  guideId: string;
+  title: string;
+}
+
+const { guideId, title } = Astro.props;
+
+const markdownPath = `/docs/${guideId}.md`;
+const prompt = encodeURIComponent(`Read ${SITE_URL}${markdownPath} and help me use Driver.js (${title}) in this project.`);
+const buttonClass =
+  "px-2.5 py-1 rounded-md border border-gray-200 text-gray-600 no-underline hover:border-gray-400 hover:text-black";
+---
+
+<div class="not-prose flex flex-wrap gap-2 text-sm mb-6">
+  <button type="button" data-copy-page={markdownPath} class={buttonClass}>Copy page</button>
+  <a href={`https://claude.ai/new?q=${prompt}`} target="_blank" rel="noopener" class={buttonClass}>Open in Claude</a>
+  <a href={`https://chatgpt.com/?q=${prompt}`} target="_blank" rel="noopener" class={buttonClass}>Open in ChatGPT</a>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>("[data-copy-page]").forEach(button => {
+    button.addEventListener("click", () => {
+      const markdown = fetch(button.dataset.copyPage!).then(response => response.text());
+      const copied =
+        typeof ClipboardItem === "undefined"
+          ? markdown.then(text => navigator.clipboard.writeText(text))
+          : navigator.clipboard.write([
+              new ClipboardItem({ "text/plain": markdown.then(text => new Blob([text], { type: "text/plain" })) }),
+            ]);
+
+      copied.then(
+        () => {
+          button.textContent = "Copied";
+        },
+        () => {
+          button.textContent = "Copy failed";
+        },
+      );
+
+      setTimeout(() => {
+        button.textContent = "Copy page";
+      }, 1500);
+    });
+  });
+</script>

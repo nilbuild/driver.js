@@ -5,6 +5,7 @@ import Container from "../components/Container.astro";
 import { getFormattedStars } from "../lib/github";
 import Sidebar from "../components/Sidebar.astro";
 import TableOfContents from "../components/TableOfContents.astro";
+import PageActions from "../components/PageActions.astro";
 import type { CollectionEntry } from "astro:content";
 import type { MarkdownHeading } from "astro";
 import { getAllGuides } from "../lib/guide";
@@ -27,6 +28,7 @@ const metaDescription =
 ---
 
 <BaseLayout title={`${title} - Driver.js`} description={metaDescription} permalink={`/docs/${guide.id}`}>
+  <link slot="head" rel="alternate" type="text/markdown" href={`/docs/${guide.id}.md`} title="This page as Markdown" />
   <div class="block md:hidden">
     <DocsHeader activeGuideTitle={title} groupedGuides={groupedGuides} client:load />
   </div>
@@ -37,6 +39,7 @@ const metaDescription =
         "min-w-0 max-w-[800px] py-6 md:py-12 prose px-6 md:px-14 prose-base md:proxe-xl mb-24 prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:text-gray-500 prose-p:before:content-['']",
         { "changelog-page": guide.id === "changelog" },
       ]}>
+      <PageActions guideId={guide.id} title={title} />
       <slot />
     </div>
     <TableOfContents headings={headings} maxDepth={guide.id === "changelog" ? 2 : 3} />
