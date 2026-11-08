@@ -126,7 +126,7 @@ export function driver(options: Config = {}): Driver {
   }
 
   function handleEscape() {
-    const step = ctx.getState("__activeStep");
+    const step = currentPopoverStep();
     const { disableButtons } = resolveStepButtons(ctx, step ? withPopoverPatch(ctx, step) : step);
     if (disableButtons.includes("close")) {
       return;
@@ -135,12 +135,16 @@ export function driver(options: Config = {}): Driver {
     handleClose("escape");
   }
 
+  function currentPopoverStep(): DriveStep | undefined {
+    return ctx.getState("__initialWait")?.step ?? ctx.getState("__activeStep");
+  }
+
   function canUseButton(button: AllowedButtons) {
     if (button !== "close" && isPopoverWaiting(ctx)) {
       return false;
     }
 
-    const step = ctx.getState("__activeStep");
+    const step = currentPopoverStep();
     const { showButtons, disableButtons } = resolveStepButtons(ctx, step ? withPopoverPatch(ctx, step) : step);
 
     return showButtons.includes(button) && !disableButtons.includes(button);
@@ -639,7 +643,7 @@ export function driver(options: Config = {}): Driver {
 
     const element = mountDummyElement();
     ctx.setState("activeIndex", stepIndex);
-    ctx.setState("__initialWait", { element, step });
+    ctx.setState("__initialWait", { element, step, index: stepIndex });
     beginActivation(step);
     renderStepPopover(ctx, element, step);
     markStepPopoverWaiting(ctx);
@@ -690,9 +694,13 @@ export function driver(options: Config = {}): Driver {
 
     const waitTimeout = currentStep.waitForElement ?? ctx.getConfig("waitForElement") ?? 0;
     if (!hasWaitedForElement && waitTimeout > 0 && currentStep.element && !resolveElement(currentStep.element)) {
+      const initialWait = ctx.getState("__initialWait");
       if (ctx.getState("activeStep")) {
         markStepPopoverWaiting(ctx);
-      } else if (!ctx.getState("__initialWait")) {
+      } else if (initialWait?.index === stepIndex) {
+        markStepPopoverWaiting(ctx);
+      } else {
+        endInitialWait();
         showInitialWait(stepIndex);
       }
 
