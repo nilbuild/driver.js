@@ -3,7 +3,7 @@ import { DriveStep } from "./driver";
 import { refreshOverlay, trackActiveElement, transitionStage } from "./overlay";
 import { hidePopover } from "./popover";
 import { renderStepPopover, repositionStepPopover } from "./step";
-import { bringInView, isScrollable, resolveElement } from "./utils";
+import { bringInView, isScrollable, layerFor, resolveElement } from "./utils";
 
 const POPOVER_ARIA: Record<string, string> = {
   "aria-haspopup": "dialog",
@@ -245,6 +245,13 @@ export function rebindActiveElement(ctx: Context, element: Element) {
 
   ctx.setState("activeElement", element);
   ctx.setState("__activeElement", element);
+
+  const wrapper = ctx.getState("popover")?.wrapper;
+  const layer = layerFor(element);
+  if (wrapper && wrapper.parentElement !== layer) {
+    layer.appendChild(wrapper);
+  }
+
   trackActiveElement(ctx, element);
   repositionStepPopover(ctx, element, step);
 }

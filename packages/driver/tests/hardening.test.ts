@@ -487,3 +487,83 @@ describe("fifth review", () => {
     expect(d.getState("__activeStagePosition")).toMatchObject({ x: 120, y: 240, width: 40, height: 20 });
   });
 });
+
+describe("seventh review", () => {
+  it("re-binds a function advanceOn to a re-rendered element", async () => {
+    const input = append("field", "input");
+    const d = createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [
+        {
+          element: "#field",
+          advanceOn: (el, _step, opts) => {
+            el?.addEventListener("keydown", e => (e as KeyboardEvent).key === "Enter" && opts.next(), { signal: opts.signal });
+          },
+        },
+        SAMPLE_STEPS[1],
+      ],
+    });
+    d.drive();
+    await nextFrame();
+
+    input.remove();
+    const replacement = append("field", "input");
+    await nextFrame();
+    await nextFrame();
+
+    key("keydown", { key: "Enter", code: "Enter" }, replacement);
+    expect(d.getActiveIndex()).toBe(1);
+  });
+
+  it("moves the popover into a replacement dialog", async () => {
+    const makeDialog = () => {
+      const dialog = document.createElement("dialog");
+      dialog.innerHTML = `<button id="in-dialog">Go</button>`;
+      document.body.appendChild(dialog);
+      dialog.setAttribute("open", "");
+      return dialog;
+    };
+    const first = makeDialog();
+    createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [{ element: "#in-dialog", popover: { title: "In dialog" } }],
+    }).drive();
+    await nextFrame();
+    const popover = document.querySelector(".driver-popover")!;
+    expect(first.contains(popover)).toBe(true);
+
+    first.remove();
+    const second = makeDialog();
+    await nextFrame();
+    await nextFrame();
+
+    expect(second.contains(popover)).toBe(true);
+  });
+
+  it("applies updatePopover from an initial-wait timeout hook", async () => {
+    createDriver({
+      animate: false,
+      onElementMissing: (_el, _step, opts) => opts.driver.updatePopover({ description: "Load failed; retry" }),
+      steps: [{ element: "#never", waitForElement: 30, popover: { title: "First", description: "Waiting" } }],
+    }).drive();
+    await tick(70);
+
+    expect(document.querySelector(".driver-popover-description")?.textContent).toBe("Load failed; retry");
+  });
+
+  it("keeps focus in the popover when the focused content is replaced", async () => {
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#intro", popover: { title: "T", description: `<input id="answer">` } }],
+    });
+    d.drive();
+    await nextFrame();
+
+    document.querySelector<HTMLInputElement>("#answer")?.focus();
+    d.updatePopover({ description: "Wrong answer, try again." });
+
+    expect(document.activeElement).toBe(document.querySelector(".driver-popover"));
+  });
+});
