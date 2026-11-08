@@ -661,11 +661,7 @@ export function driver(options: Config = {}): Driver {
     }
 
     const element = mountDummyElement();
-    if (!ctx.getState("__keepReturnFocus")) {
-      ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
-    }
-    ctx.setState("__keepReturnFocus", true);
-    ctx.setState("activeIndex", stepIndex);
+    enterStep(stepIndex, true);
     ctx.setState("__initialWait", { element, step, index: stepIndex });
     beginActivation(step);
     renderStepPopover(ctx, element, step);
@@ -717,10 +713,7 @@ export function driver(options: Config = {}): Driver {
 
     const waitTimeout = currentStep.waitForElement ?? ctx.getConfig("waitForElement") ?? 0;
     if (!hasWaitedForElement && waitTimeout > 0 && currentStep.element && !resolveElement(currentStep.element)) {
-      const initialWait = ctx.getState("__initialWait");
-      if (ctx.getState("activeStep")) {
-        markStepPopoverWaiting(ctx);
-      } else if (initialWait?.index === stepIndex) {
+      if (ctx.getState("activeStep") || ctx.getState("__initialWait")?.index === stepIndex) {
         markStepPopoverWaiting(ctx);
       } else {
         endInitialWait();
@@ -752,13 +745,19 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
+    enterStep(stepIndex, false);
+    highlightStep(resolveStepAt(stepIndex));
+  }
+
+  function enterStep(stepIndex: number, keepReturnFocus: boolean) {
     if (!ctx.getState("__keepReturnFocus")) {
       ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
     }
-    ctx.setState("__keepReturnFocus", false);
+    ctx.setState("__keepReturnFocus", keepReturnFocus);
     ctx.setState("activeIndex", stepIndex);
+  }
 
-    const step = resolveStepAt(stepIndex);
+  function highlightStep(step: DriveStep) {
     const activation = beginActivation(step);
     ctx.setState("__isWaiting", false);
     highlight(ctx, step);
@@ -904,7 +903,7 @@ export function driver(options: Config = {}): Driver {
       endInitialWait();
       ctx.setState("__destroyReason", undefined);
 
-      const highlightStep: DriveStep = {
+      highlightStep({
         ...step,
         popover: step.popover
           ? {
@@ -914,11 +913,7 @@ export function driver(options: Config = {}): Driver {
               ...step.popover!,
             }
           : undefined,
-      };
-      const activation = beginActivation(highlightStep);
-      ctx.setState("__isWaiting", false);
-      highlight(ctx, highlightStep);
-      armActivation(activation);
+      });
     },
     updatePopover,
     nudge: () => nudge(ctx),
