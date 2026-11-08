@@ -1,6 +1,13 @@
 import type { Context, DriverHook } from "./context";
 import type { DriveStep } from "./driver";
-import { AllowedButtons, destroyPopover, PopoverRenderOptions, renderPopover, updatePopoverContent } from "./popover";
+import {
+  AllowedButtons,
+  destroyPopover,
+  PopoverDOM,
+  PopoverRenderOptions,
+  renderPopover,
+  updatePopoverContent,
+} from "./popover";
 import { PositionOptions, repositionPopover } from "./position";
 import { resolveElement } from "./utils";
 import { isFocusWithinStep } from "./allowed";
@@ -277,11 +284,14 @@ export function renderStepPopover(ctx: Context, element: Element, step: DriveSte
   }
 
   if (keepFocus) {
-    const text = [popover.title, popover.description]
-      .filter(part => part.style.display !== "none")
-      .map(part => part.textContent || "");
-    announce(ctx, text.filter(Boolean).join(". "));
+    announce(ctx, popoverText(popover).filter(Boolean).join(". "));
   }
+}
+
+export function popoverText(popover: PopoverDOM): string[] {
+  return [popover.title, popover.description].map(part =>
+    part.style.display === "none" ? "" : part.textContent || ""
+  );
 }
 
 export function updateStepPopover(ctx: Context, element: Element, step: DriveStep) {
