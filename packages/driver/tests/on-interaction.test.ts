@@ -337,6 +337,45 @@ describe("keyboard ownership", () => {
     document.body.removeEventListener("keydown", appEscape);
   });
 
+  it("advances with ArrowRight while a plain button in the highlighted element has focus", async () => {
+    const button = document.createElement("button");
+    document.querySelector("#intro")?.appendChild(button);
+    const d = await start();
+
+    button.focus();
+    keyEvent("keydown", { key: "ArrowRight", code: "ArrowRight" }, button);
+    keyEvent("keyup", { key: "ArrowRight", code: "ArrowRight" }, button);
+
+    expect(d.getActiveIndex()).toBe(1);
+  });
+
+  it("closes on Escape while a plain button in the highlighted element has focus", async () => {
+    const button = document.createElement("button");
+    document.querySelector("#intro")?.appendChild(button);
+    const d = await start();
+
+    button.focus();
+    keyEvent("keydown", { key: "Escape", code: "Escape" }, button);
+    keyEvent("keyup", { key: "Escape", code: "Escape" }, button);
+
+    expect(d.isActive()).toBe(false);
+  });
+
+  it("lets arrows inside a menu in the highlighted element belong to the app", async () => {
+    const menu = document.createElement("div");
+    menu.setAttribute("role", "menu");
+    menu.innerHTML = `<button role="menuitem">Rename</button>`;
+    document.querySelector("#intro")?.appendChild(menu);
+    const item = menu.querySelector("button") as HTMLButtonElement;
+    const d = await start();
+
+    item.focus();
+    keyEvent("keydown", { key: "ArrowRight", code: "ArrowRight" }, item);
+    keyEvent("keyup", { key: "ArrowRight", code: "ArrowRight" }, item);
+
+    expect(d.getActiveIndex()).toBe(0);
+  });
+
   it("still closes on Escape when focus is outside", async () => {
     const d = await start();
 

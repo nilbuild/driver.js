@@ -1,7 +1,7 @@
 import { Context } from "./context";
 import { refreshActiveHighlight } from "./highlight";
 import { getFocusableElements } from "./utils";
-import { initGate, isFocusInPlay, isInPlay, keyId, keySet } from "./gate";
+import { initGate, isFocusInPlay, isKeyInPlay, keyId, keySet } from "./gate";
 import { ALLOWED_CLASS } from "./allowed";
 
 export function requireRefresh(ctx: Context) {
@@ -59,7 +59,7 @@ function trapFocus(ctx: Context, e: KeyboardEvent) {
 function onKeydownCapture(ctx: Context, e: KeyboardEvent) {
   keySet(ctx, "__handledKeys").add(keyId(e));
 
-  if (isInPlay(ctx, e.composedPath()) || isFocusInPlay(ctx)) {
+  if (isKeyInPlay(ctx, e.composedPath()) || isFocusInPlay(ctx)) {
     ctx.setState("__widgetKey", keyId(e));
   }
 }

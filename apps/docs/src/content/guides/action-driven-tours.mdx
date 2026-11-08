@@ -196,7 +196,7 @@ While a step waits for its element, the current popover stays on screen with the
 
 ## Keyboard and Focus
 
-- When focus is inside the highlighted element or an allowed element, Escape and the arrow keys belong to your widget. They close your menu or move through it, not the tour. The same goes for keys your app already handled with `preventDefault()`.
+- When focus is on a text field, a select or an ARIA widget such as a menu, listbox, grid or tab list inside the highlighted element or an allowed element, Escape and the arrow keys belong to your widget. They close your menu or move through it, not the tour. On anything else, like a plain button, they still drive the tour. Keys your app already handled with `preventDefault()` also belong to your app.
 - When a step starts while focus is inside its element or an allowed element, the popover leaves focus alone so your menu stays open, and the new instructions are announced to screen readers.
 - Users who can't right-click can open a context menu with Shift+F10 or the menu key, which fires `contextmenu`. Mention it in your hint text.
 
