@@ -75,6 +75,14 @@ export function highlight(ctx: Context, step: DriveStep) {
   transferHighlight(ctx, elemObj, step);
 }
 
+function observeSize(ctx: Context, element?: Element) {
+  const observer = ctx.getState("__resizeObserver");
+  observer?.disconnect();
+  if (element) {
+    observer?.observe(element);
+  }
+}
+
 export function refreshActiveHighlight(ctx: Context) {
   const activeHighlight = ctx.getState("__activeElement");
   const activeStep = ctx.getState("__activeStep")!;
@@ -90,6 +98,7 @@ export function refreshActiveHighlight(ctx: Context) {
 }
 
 function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) {
+  observeSize(ctx);
   const duration = ctx.getConfig("duration") || 400;
   const start = Date.now();
 
@@ -166,6 +175,7 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
       ctx.setState("__previousElement", fromElement);
       ctx.setState("__activeStep", toStep);
       ctx.setState("__activeElement", targetElement);
+      observeSize(ctx, targetElement);
     }
 
     window.requestAnimationFrame(animate);
@@ -248,6 +258,7 @@ export function rebindActiveElement(ctx: Context, element: Element) {
 
   ctx.setState("activeElement", element);
   ctx.setState("__activeElement", element);
+  observeSize(ctx, element);
 
   const wrapper = ctx.getState("popover")?.wrapper;
   const layer = layerFor(element);

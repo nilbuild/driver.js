@@ -114,6 +114,10 @@ export function initEvents(ctx: Context) {
     onScroll: onWindowScroll,
   });
 
+  if (typeof ResizeObserver !== "undefined") {
+    ctx.setState("__resizeObserver", new ResizeObserver(() => requireRefresh(ctx)));
+  }
+
   ctx.setState("__teardownGate", initGate(ctx));
   window.addEventListener("keydown", onWindowKeydownCapture, true);
   window.addEventListener("keyup", onWindowKeyup, false);
@@ -132,6 +136,7 @@ export function destroyEvents(ctx: Context) {
   window.removeEventListener("keydown", events.onKeydown);
   window.removeEventListener("keydown", events.onKeydownCapture, true);
   ctx.getState("__teardownGate")?.();
+  ctx.getState("__resizeObserver")?.disconnect();
   window.removeEventListener("resize", events.onResize);
   window.removeEventListener("scroll", events.onScroll);
 }

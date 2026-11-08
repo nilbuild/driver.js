@@ -391,3 +391,35 @@ describe("aria attributes on the dummy element", () => {
     expect(dummy?.hasAttribute("aria-haspopup")).toBe(false);
   });
 });
+
+describe("element size changes", () => {
+  it("re-measures the highlight when the highlighted element changes size", async () => {
+    const observed: Element[] = [];
+    let onResize: (() => void) | undefined;
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          onResize = callback;
+        }
+        observe(element: Element) {
+          observed.push(element);
+        }
+        disconnect() {}
+      }
+    );
+
+    const intro = document.querySelector("#intro")!;
+    const d = createDriver({ animate: false });
+    d.highlight({ element: "#intro", popover: { title: "Hi" } });
+    await nextFrame();
+    expect(observed).toContain(intro);
+
+    vi.spyOn(intro, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 240, 40));
+    onResize?.();
+    await nextFrame();
+
+    expect(d.getState("__activeStagePosition").width).toBe(240);
+    vi.unstubAllGlobals();
+  });
+});

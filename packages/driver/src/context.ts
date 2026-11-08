@@ -215,6 +215,7 @@ export type State = {
 
   __activeOnDestroyed?: Element;
   __resizeTimeout?: number;
+  __resizeObserver?: ResizeObserver;
   __transitionCallback?: () => void;
   __pendingWaitCancel?: () => void;
   __activation?: Activation;
