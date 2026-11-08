@@ -10,11 +10,11 @@ export const advanceWaitGroup: ExampleGroup = {
       id: "advance-on-click",
       title: "Advance on Click",
       description:
-        "With advanceOnClick on, clicking the highlighted element acts like pressing Next. The element's own click behavior still runs.",
+        "With advanceOn set to click, clicking the highlighted element acts like pressing Next. The element's own click behavior still runs.",
       run() {
         driver({
           showProgress: true,
-          advanceOnClick: true,
+          advanceOn: "click",
           steps: [
             {
               element: "#card-1",
@@ -51,7 +51,7 @@ export const advanceWaitGroup: ExampleGroup = {
           steps: [
             {
               element: "#card-3",
-              advanceOnClick: true,
+              advanceOn: "click",
               popover: {
                 showButtons: ["close"],
                 title: "Click to Continue",
@@ -97,7 +97,7 @@ export const advanceWaitGroup: ExampleGroup = {
           steps: [
             {
               element: "#card-1",
-              advanceOnClick: true,
+              advanceOn: "click",
               popover: {
                 showButtons: ["close"],
                 title: "Open Something",

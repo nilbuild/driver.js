@@ -66,8 +66,9 @@ export type DriveStep = {
   onDeselected?: DriverHook;
   popover?: Popover;
   disableActiveInteraction?: boolean;
-  advanceOnClick?: boolean;
   advanceOn?: AdvanceOn;
+  /** @deprecated Use `advanceOn: "click"`. */
+  advanceOnClick?: boolean;
   onInteraction?: InteractionHook;
   allowedElements?: AllowedElements;
   onElementMissing?: ElementMissingHook;
