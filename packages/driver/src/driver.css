@@ -62,3 +62,81 @@
   opacity: 0.55;
   transition: opacity 150ms ease-in-out;
 }
+
+@keyframes driver-nudge-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(calc(-1 * var(--driver-nudge-distance, 6px)));
+  }
+
+  40% {
+    transform: translateX(var(--driver-nudge-distance, 6px));
+  }
+
+  60% {
+    transform: translateX(calc(-0.5 * var(--driver-nudge-distance, 6px)));
+  }
+
+  80% {
+    transform: translateX(calc(0.5 * var(--driver-nudge-distance, 6px)));
+  }
+}
+
+@keyframes driver-nudge-ring {
+  0% {
+    stroke-opacity: 1;
+    stroke-width: 2px;
+  }
+
+  100% {
+    stroke-opacity: 0;
+    stroke-width: 14px;
+  }
+}
+
+@keyframes driver-nudge-flash {
+  0% {
+    box-shadow: 0 0 0 3px var(--driver-nudge-color, #f59e0b);
+  }
+
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+
+@keyframes driver-nudge-ring-fade {
+  0% {
+    stroke-opacity: 1;
+  }
+
+  100% {
+    stroke-opacity: 0;
+  }
+}
+
+.driver-popover.driver-popover-nudge {
+  animation: driver-nudge-shake var(--driver-nudge-duration, 500ms) ease-in-out;
+}
+
+.driver-overlay .driver-nudge-ring {
+  fill: none;
+  stroke: var(--driver-nudge-color, #f59e0b);
+  stroke-width: 2px;
+  pointer-events: none;
+  animation: driver-nudge-ring var(--driver-nudge-duration, 500ms) ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .driver-popover.driver-popover-nudge {
+    animation: driver-nudge-flash var(--driver-nudge-duration, 500ms) ease-out;
+  }
+
+  .driver-overlay .driver-nudge-ring {
+    stroke-width: 3px;
+    animation: driver-nudge-ring-fade var(--driver-nudge-duration, 500ms) ease-out forwards;
+  }
+}
