@@ -20,6 +20,7 @@ import { trackAllowedElements } from "./allowed";
 import { destroyHighlight, highlight, mountDummyElement, rebindActiveElement } from "./highlight";
 import {
   findReachableIndex,
+  isEndStep,
   resolveNextHook,
   resolvePrevHook,
   resolveStepButtons,
@@ -115,15 +116,6 @@ export function driver(options: Config = {}): Driver {
     destroy(reason);
   }
 
-  // Before handing the next action to a user hook on the last step, so a
-  // destroy() from that hook still reports the tour as done.
-  function markDoneIfLastStep() {
-    const activeIndex = ctx.getState("activeIndex");
-    if (activeIndex !== undefined && findReachableIndex(ctx, activeIndex + 1, 1) === undefined) {
-      ctx.setState("__destroyReason", "done");
-    }
-  }
-
   function handleEscape() {
     if (currentButtons().disableButtons.includes("close")) {
       return;
@@ -179,7 +171,9 @@ export function driver(options: Config = {}): Driver {
   function goNext(element: Element | undefined, step: DriveStep | undefined) {
     const onNextClick = resolveNextHook(ctx, step);
     if (onNextClick) {
-      markDoneIfLastStep();
+      if (isEndStep(ctx, 1)) {
+        ctx.setState("__destroyReason", "done");
+      }
       onNextClick(element, step!, ctx.getHookOpts());
       return;
     }
@@ -882,16 +876,8 @@ export function driver(options: Config = {}): Driver {
     getConfig: ctx.getConfig,
     getState: ctx.getState,
     getActiveIndex: () => ctx.getState("activeIndex"),
-    isFirstStep: () => {
-      const activeIndex = ctx.getState("activeIndex");
-
-      return activeIndex !== undefined && findReachableIndex(ctx, activeIndex - 1, -1) === undefined;
-    },
-    isLastStep: () => {
-      const activeIndex = ctx.getState("activeIndex");
-
-      return activeIndex !== undefined && findReachableIndex(ctx, activeIndex + 1, 1) === undefined;
-    },
+    isFirstStep: () => isEndStep(ctx, -1),
+    isLastStep: () => isEndStep(ctx, 1),
     getActiveStep: () => ctx.getState("activeStep"),
     getActiveElement: () => ctx.getState("activeElement"),
     getPreviousElement: () => ctx.getState("previousElement"),
@@ -910,16 +896,8 @@ export function driver(options: Config = {}): Driver {
     moveNext,
     movePrevious,
     moveTo,
-    hasNextStep: () => {
-      const activeIndex = ctx.getState("activeIndex");
-
-      return activeIndex !== undefined && findReachableIndex(ctx, activeIndex + 1, 1) !== undefined;
-    },
-    hasPreviousStep: () => {
-      const activeIndex = ctx.getState("activeIndex");
-
-      return activeIndex !== undefined && findReachableIndex(ctx, activeIndex - 1, -1) !== undefined;
-    },
+    hasNextStep: () => ctx.getState("activeIndex") !== undefined && !isEndStep(ctx, 1),
+    hasPreviousStep: () => ctx.getState("activeIndex") !== undefined && !isEndStep(ctx, -1),
     highlight: (step: DriveStep) => {
       init();
       cancelElementWait();

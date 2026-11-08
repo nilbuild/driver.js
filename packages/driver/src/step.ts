@@ -38,12 +38,16 @@ export function findReachableIndex(ctx: Context, fromIndex: number, direction: 1
   return undefined;
 }
 
+export function isEndStep(ctx: Context, direction: 1 | -1): boolean {
+  const activeIndex = ctx.getState("activeIndex");
+
+  return activeIndex !== undefined && findReachableIndex(ctx, activeIndex + direction, direction) === undefined;
+}
+
 // On the final step the next button acts as the done button, so a dedicated
 // onDoneClick takes precedence over onNextClick when provided.
 export function resolveNextHook(ctx: Context, step?: DriveStep): DriverHook | undefined {
-  const activeIndex = ctx.getState("activeIndex");
-  const isLastStep = activeIndex !== undefined && findReachableIndex(ctx, activeIndex + 1, 1) === undefined;
-
+  const isLastStep = isEndStep(ctx, 1);
   const onDoneClick = step?.popover?.onDoneClick || ctx.getConfig("onDoneClick");
   if (isLastStep && onDoneClick) {
     return onDoneClick;
@@ -151,8 +155,7 @@ function resolveStepPosition(ctx: Context, element: Element, step: DriveStep): P
 function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): PopoverRenderOptions {
   const popover = step.popover || {};
 
-  const activeIndex = ctx.getState("activeIndex");
-  const isDoneStep = activeIndex !== undefined && findReachableIndex(ctx, activeIndex + 1, 1) === undefined;
+  const isDoneStep = isEndStep(ctx, 1);
 
   return {
     title: popover.title,
