@@ -6,6 +6,7 @@ import {
   PopoverDOM,
   PopoverRenderOptions,
   renderPopover,
+  toggleButton,
   updatePopoverContent,
 } from "./popover";
 import { PositionOptions, repositionPopover } from "./position";
@@ -317,10 +318,8 @@ export function markStepPopoverWaiting(ctx: Context) {
 
   popover.wrapper.classList.add("driver-popover-waiting");
   popover.wrapper.setAttribute("aria-busy", "true");
-  for (const button of [popover.nextButton, popover.previousButton]) {
-    button.disabled = true;
-    button.classList.add("driver-popover-btn-disabled");
-  }
+  toggleButton(popover.nextButton, true);
+  toggleButton(popover.previousButton, true);
 }
 
 export function clearStepPopoverWaiting(ctx: Context, element: Element | undefined, step: DriveStep | undefined) {
