@@ -256,3 +256,30 @@ export function repositionStepPopover(ctx: Context, element: Element, step: Driv
 
   repositionPopover(popover, element, resolveStepPosition(ctx, element, step));
 }
+
+export function markStepPopoverWaiting(ctx: Context) {
+  const popover = ctx.getState("popover");
+  if (!popover || popover.wrapper.style.display === "none") {
+    return;
+  }
+
+  popover.wrapper.classList.add("driver-popover-waiting");
+  popover.wrapper.setAttribute("aria-busy", "true");
+  for (const button of [popover.nextButton, popover.previousButton]) {
+    button.disabled = true;
+    button.classList.add("driver-popover-btn-disabled");
+  }
+}
+
+export function clearStepPopoverWaiting(ctx: Context, element: Element | undefined, step: DriveStep | undefined) {
+  const popover = ctx.getState("popover");
+  if (!popover || !popover.wrapper.classList.contains("driver-popover-waiting")) {
+    return;
+  }
+
+  popover.wrapper.classList.remove("driver-popover-waiting");
+  popover.wrapper.removeAttribute("aria-busy");
+  if (element && step) {
+    updateStepPopover(ctx, element, step);
+  }
+}

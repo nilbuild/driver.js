@@ -1,4 +1,4 @@
-import { AllowedButtons, destroyPopover, hidePopover, Popover } from "./popover";
+import { AllowedButtons, destroyPopover, Popover } from "./popover";
 import { destroyOverlay } from "./overlay";
 import { destroyEvents, initEvents, requireRefresh } from "./events";
 import {
@@ -9,18 +9,23 @@ import {
   createContext,
   DestroyReason,
   DriverHook,
+  ElementMissingHook,
   InteractionHook,
   PopoverPatch,
 } from "./context";
 import { announce, destroyLiveRegion, mountLiveRegion } from "./live-region";
 import { listenForAdvanceEvents, resolveAdvanceOn } from "./advance";
+import { isDummyElement } from "./gate";
 import { trackAllowedElements } from "./allowed";
-import { destroyHighlight, highlight } from "./highlight";
+import { destroyHighlight, highlight, mountDummyElement, rebindActiveElement } from "./highlight";
 import {
   findReachableIndex,
   resolveNextHook,
   resolvePrevHook,
   resolveStepButtons,
+  clearStepPopoverWaiting,
+  markStepPopoverWaiting,
+  renderStepPopover,
   resolveTourStep,
   shouldSkipStep,
   updateStepPopover,
@@ -38,6 +43,8 @@ export type {
   Config,
   DestroyReason,
   DriverHook,
+  ElementMissingHook,
+  ElementMissingOpts,
   HookOpts,
   InteractionHook,
   InteractionOpts,
@@ -59,6 +66,7 @@ export type DriveStep = {
   advanceOn?: AdvanceOn;
   onInteraction?: InteractionHook;
   allowedElements?: AllowedElements;
+  onElementMissing?: ElementMissingHook;
   skipMissingElement?: boolean;
   waitForElement?: number;
   data?: Record<string, any>;
@@ -227,9 +235,16 @@ export function driver(options: Config = {}): Driver {
     activation.latched = true;
     advance();
 
-    if (ctx.getState("__activation") === activation && !ctx.getState("__pendingWaitCancel")) {
-      activation.latched = false;
+    releaseLatch(activation);
+  }
+
+  function releaseLatch(activation: Activation) {
+    if (ctx.getState("__activation") !== activation || ctx.getState("__pendingWaitCancel")) {
+      return;
     }
+
+    activation.latched = false;
+    activation.recheck?.();
   }
 
   function endActivation() {
@@ -241,6 +256,93 @@ export function driver(options: Config = {}): Driver {
     ctx.setState("__activation", undefined);
     activation.controller.abort();
     activation.cleanup?.();
+  }
+
+  function resolveMissingHook(step: DriveStep): ElementMissingHook | undefined {
+    return step.onElementMissing || ctx.getConfig("onElementMissing");
+  }
+
+  function clearWaiting() {
+    const initialWait = ctx.getState("__initialWait");
+    const element = initialWait?.element ?? ctx.getState("activeElement");
+    const step = initialWait?.step ?? ctx.getState("activeStep");
+    clearStepPopoverWaiting(ctx, element, step);
+  }
+
+  function watchForRemoval(activation: Activation) {
+    const { step } = activation;
+    const { signal } = activation.controller;
+    if (!step.element || !resolveMissingHook(step)) {
+      return;
+    }
+
+    let frame: number | undefined;
+    let graceTimer: number | undefined;
+    let hasReported = false;
+
+    const recover = () => {
+      const replacement = resolveElement(step.element);
+      if (!replacement || !replacement.isConnected) {
+        return false;
+      }
+
+      window.clearTimeout(graceTimer);
+      graceTimer = undefined;
+      hasReported = false;
+      rebindActiveElement(ctx, replacement);
+      clearWaiting();
+      return true;
+    };
+
+    const report = (element: Element) => {
+      hasReported = true;
+      clearWaiting();
+      resolveMissingHook(step)?.(element, step, { ...ctx.getHookOpts(), cause: "removed" });
+    };
+
+    const check = () => {
+      frame = undefined;
+      const element = ctx.getState("activeElement");
+      if (signal.aborted || !element || isDummyElement(element) || element.isConnected) {
+        return;
+      }
+
+      if (activation.latched || activation.pendingCompletion || recover() || hasReported || graceTimer) {
+        return;
+      }
+
+      const grace = step.waitForElement ?? ctx.getConfig("waitForElement") ?? 0;
+      if (grace <= 0) {
+        report(element);
+        return;
+      }
+
+      markStepPopoverWaiting(ctx);
+      graceTimer = window.setTimeout(() => {
+        graceTimer = undefined;
+        if (!signal.aborted && !recover()) {
+          report(element);
+        }
+      }, grace);
+    };
+
+    const schedule = () => {
+      if (frame === undefined) {
+        frame = window.requestAnimationFrame(check);
+      }
+    };
+
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    activation.recheck = schedule;
+
+    signal.addEventListener("abort", () => {
+      observer.disconnect();
+      window.clearTimeout(graceTimer);
+      if (frame !== undefined) {
+        window.cancelAnimationFrame(frame);
+      }
+    });
   }
 
   function startActivation() {
@@ -255,6 +357,7 @@ export function driver(options: Config = {}): Driver {
     const activation: Activation = { id: activationCount, step, controller: new AbortController(), latched: false };
     ctx.setState("__activation", activation);
     trackAllowedElements(ctx, step, activation.controller.signal);
+    watchForRemoval(activation);
 
     const advanceOn = resolveAdvanceOn(ctx, step);
     if (!advanceOn) {
@@ -264,7 +367,7 @@ export function driver(options: Config = {}): Driver {
     const complete = () => requestCompletion(activation.id);
     if (typeof advanceOn !== "function") {
       const eventTypes = Array.isArray(advanceOn) ? advanceOn : [advanceOn];
-      listenForAdvanceEvents(ctx, eventTypes, activation.controller.signal, complete);
+      listenForAdvanceEvents(ctx, eventTypes, activation, complete);
       return;
     }
 
@@ -422,21 +525,27 @@ export function driver(options: Config = {}): Driver {
 
   // Re-resolves the step's element on every DOM mutation rather than polling;
   // this also covers function elements, since they query the mutated DOM.
-  function waitForStepElement(step: DriveStep, timeout: number, onSettled: () => void) {
-    const settle = () => {
+  function waitForStepElement(step: DriveStep, timeout: number, onSettled: (found: boolean) => void) {
+    const originating = ctx.getState("__activation");
+
+    const settle = (found: boolean) => {
       observer.disconnect();
       window.clearTimeout(timer);
       ctx.setState("__pendingWaitCancel", undefined);
-      onSettled();
+      onSettled(found);
+
+      if (originating) {
+        releaseLatch(originating);
+      }
     };
 
     const observer = new MutationObserver(() => {
       if (resolveElement(step.element)) {
-        settle();
+        settle(true);
       }
     });
 
-    const timer = window.setTimeout(settle, timeout);
+    const timer = window.setTimeout(() => settle(false), timeout);
 
     ctx.setState("__pendingWaitCancel", () => {
       observer.disconnect();
@@ -444,6 +553,63 @@ export function driver(options: Config = {}): Driver {
     });
 
     observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+  }
+
+  function resolveStepAt(stepIndex: number): DriveStep {
+    const steps = ctx.getConfig("steps") || [];
+    const hasNextStep = steps[stepIndex + 1];
+
+    return resolveTourStep(ctx, stepIndex, {
+      onNextClick: () => {
+        if (!hasNextStep) {
+          destroy("done");
+        } else {
+          drive(stepIndex + 1);
+        }
+      },
+      onPrevClick: () => {
+        drive(stepIndex - 1);
+      },
+      onCloseClick: () => {
+        destroy("close");
+      },
+    });
+  }
+
+  function showInitialWait(stepIndex: number) {
+    const step = resolveStepAt(stepIndex);
+    if (!step.popover) {
+      return;
+    }
+
+    const element = mountDummyElement();
+    ctx.setState("activeIndex", stepIndex);
+    ctx.setState("__initialWait", { element, step });
+    renderStepPopover(ctx, element, step);
+    markStepPopoverWaiting(ctx);
+  }
+
+  function endInitialWait() {
+    if (!ctx.getState("__initialWait")) {
+      return;
+    }
+
+    ctx.setState("__initialWait", undefined);
+    destroyPopover(ctx.getState("popover"));
+    ctx.setState("popover", undefined);
+    document.getElementById("driver-dummy-element")?.remove();
+  }
+
+  function handleWaitTimeout(stepIndex: number) {
+    const waitedStep = resolveStepAt(stepIndex);
+    const onElementMissing = resolveMissingHook(waitedStep);
+    if (!onElementMissing) {
+      drive(stepIndex, true);
+      return;
+    }
+
+    clearWaiting();
+    onElementMissing(undefined, waitedStep, { ...ctx.getHookOpts(), cause: "timeout" });
   }
 
   function drive(stepIndex: number = 0, hasWaitedForElement = false) {
@@ -466,14 +632,25 @@ export function driver(options: Config = {}): Driver {
 
     const currentStep = steps[stepIndex];
 
-    // The current step stays highlighted, with its popover hidden, while
-    // waiting; a timeout falls through to the usual missing-element handling below.
     const waitTimeout = currentStep.waitForElement ?? ctx.getConfig("waitForElement") ?? 0;
     if (!hasWaitedForElement && waitTimeout > 0 && currentStep.element && !resolveElement(currentStep.element)) {
-      hidePopover(ctx.getState("popover"));
-      waitForStepElement(currentStep, waitTimeout, () => drive(stepIndex, true));
+      if (ctx.getState("activeStep")) {
+        markStepPopoverWaiting(ctx);
+      } else if (!ctx.getState("__initialWait")) {
+        showInitialWait(stepIndex);
+      }
+
+      waitForStepElement(currentStep, waitTimeout, found => {
+        if (found) {
+          drive(stepIndex, true);
+        } else {
+          handleWaitTimeout(stepIndex);
+        }
+      });
       return;
     }
+
+    endInitialWait();
 
     if (shouldSkipStep(ctx, currentStep)) {
       const activeIndex = ctx.getState("activeIndex");
@@ -491,26 +668,7 @@ export function driver(options: Config = {}): Driver {
     ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
     ctx.setState("activeIndex", stepIndex);
 
-    const hasNextStep = steps[stepIndex + 1];
-
-    highlight(
-      ctx,
-      resolveTourStep(ctx, stepIndex, {
-        onNextClick: () => {
-          if (!hasNextStep) {
-            destroy("done");
-          } else {
-            drive(stepIndex + 1);
-          }
-        },
-        onPrevClick: () => {
-          drive(stepIndex - 1);
-        },
-        onCloseClick: () => {
-          destroy("close");
-        },
-      })
-    );
+    highlight(ctx, resolveStepAt(stepIndex));
 
     startActivation();
   }

@@ -55,3 +55,10 @@
 .driver-no-interaction * {
   pointer-events: none !important;
 }
+
+.driver-popover.driver-popover-waiting .driver-popover-title,
+.driver-popover.driver-popover-waiting .driver-popover-description,
+.driver-popover.driver-popover-waiting .driver-popover-footer {
+  opacity: 0.55;
+  transition: opacity 150ms ease-in-out;
+}

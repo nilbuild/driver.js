@@ -36,7 +36,7 @@ describe("waitForElement", () => {
     expect(d.getActiveElement()?.id).toBe("late");
   });
 
-  it("hides the current popover while waiting", async () => {
+  it("keeps the current popover visible in a waiting state", async () => {
     const d = createDriver({
       animate: false,
       steps: [
@@ -47,13 +47,16 @@ describe("waitForElement", () => {
     d.drive();
     d.moveNext();
 
-    expect(popoverEl()?.style.display).toBe("none");
+    expect(popoverEl()?.style.display).toBe("block");
+    expect(popoverEl()?.classList.contains("driver-popover-waiting")).toBe(true);
+    expect(popoverTitle()).toBe("Step 1");
     expect(document.getElementById("intro")?.classList.contains("driver-active-element")).toBe(true);
 
     appendElement("late");
     await tick();
 
     expect(popoverEl()?.style.display).toBe("block");
+    expect(popoverEl()?.classList.contains("driver-popover-waiting")).toBe(false);
     expect(popoverTitle()).toBe("Step 2");
   });
 
@@ -67,7 +70,7 @@ describe("waitForElement", () => {
     });
     d.drive();
     d.moveNext();
-    expect(popoverEl()?.style.display).toBe("none");
+    expect(popoverEl()?.classList.contains("driver-popover-waiting")).toBe(true);
 
     await tick(80);
 
@@ -81,7 +84,8 @@ describe("waitForElement", () => {
       steps: [{ element: "#late", waitForElement: 500, popover: { title: "Step 1" } }],
     });
     d.drive();
-    expect(popoverTitle()).toBeUndefined();
+    expect(popoverTitle()).toBe("Step 1");
+    expect(popoverEl()?.classList.contains("driver-popover-waiting")).toBe(true);
 
     appendElement("late");
     await tick();
