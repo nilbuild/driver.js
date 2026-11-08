@@ -4,6 +4,7 @@ import { destroyEvents, initEvents, requireRefresh } from "./events";
 import {
   Activation,
   AdvanceOn,
+  AllowedElements,
   Config,
   createContext,
   DestroyReason,
@@ -13,6 +14,7 @@ import {
 } from "./context";
 import { announce, destroyLiveRegion, mountLiveRegion } from "./live-region";
 import { listenForAdvanceEvents, resolveAdvanceOn } from "./advance";
+import { trackAllowedElements } from "./allowed";
 import { destroyHighlight, highlight } from "./highlight";
 import {
   findReachableIndex,
@@ -32,6 +34,7 @@ let teardownActive: (() => void) | undefined;
 export type {
   AdvanceOn,
   AdvanceOnOpts,
+  AllowedElements,
   Config,
   DestroyReason,
   DriverHook,
@@ -55,6 +58,7 @@ export type DriveStep = {
   advanceOnClick?: boolean;
   advanceOn?: AdvanceOn;
   onInteraction?: InteractionHook;
+  allowedElements?: AllowedElements;
   skipMissingElement?: boolean;
   waitForElement?: number;
   data?: Record<string, any>;
@@ -250,6 +254,7 @@ export function driver(options: Config = {}): Driver {
     activationCount += 1;
     const activation: Activation = { id: activationCount, step, controller: new AbortController(), latched: false };
     ctx.setState("__activation", activation);
+    trackAllowedElements(ctx, step, activation.controller.signal);
 
     const advanceOn = resolveAdvanceOn(ctx, step);
     if (!advanceOn) {

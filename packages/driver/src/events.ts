@@ -2,6 +2,7 @@ import { Context } from "./context";
 import { refreshActiveHighlight } from "./highlight";
 import { getFocusableElements } from "./utils";
 import { initGate, isFocusInPlay, keyId } from "./gate";
+import { ALLOWED_CLASS } from "./allowed";
 
 export function requireRefresh(ctx: Context) {
   const resizeTimeout = ctx.getState("__resizeTimeout");
@@ -32,6 +33,7 @@ function trapFocus(ctx: Context, e: KeyboardEvent) {
   const focusableEls = getFocusableElements([
     ...(popoverEl ? [popoverEl] : []),
     ...(activeElement ? [activeElement] : []),
+    ...Array.from(document.querySelectorAll(`.${ALLOWED_CLASS}`)),
   ]);
 
   const firstFocusableEl = focusableEls[0];

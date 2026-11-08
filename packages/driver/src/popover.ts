@@ -80,6 +80,8 @@ export type PopoverRenderOptions = {
   onPrevClick?: () => void;
   onCloseClick?: () => void;
 
+  keepFocus?: boolean;
+
   // Called once the popover is in the DOM, before it is positioned.
   onRender?: (popover: PopoverDOM) => void;
 
@@ -240,7 +242,7 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
   // Focus on the first focusable element in the popover or the anchor. The
   // anchor is always scanned: a 0x0 anchor (like the tour's dummy element for
   // anchor-less popovers) never yields a focusable element anyway.
-  const focusableElement = getFocusableElements([popoverWrapper, anchor]);
+  const focusableElement = options.keepFocus ? [] : getFocusableElements([popoverWrapper, anchor]);
   if (focusableElement.length > 0) {
     focusableElement[0].focus();
   }

@@ -87,6 +87,7 @@ export function refreshActiveHighlight(ctx: Context) {
 
   trackActiveElement(ctx, activeHighlight);
   refreshOverlay(ctx);
+  ctx.getState("__syncAllowedElements")?.();
   repositionStepPopover(ctx, activeHighlight, activeStep);
 }
 

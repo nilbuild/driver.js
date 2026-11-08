@@ -37,6 +37,12 @@ export type AdvanceOn =
   | string[]
   | ((element: Element | undefined, step: DriveStep, opts: AdvanceOnOpts) => void | (() => void));
 
+export type AllowedElements =
+  | string
+  | Element
+  | Array<string | Element>
+  | (() => Element[] | NodeListOf<Element> | null | undefined);
+
 export type InteractionRegion = "element" | "allowed" | "outside";
 
 export type InteractionOpts = HookOpts & {
@@ -92,6 +98,7 @@ export type Config = {
 
   advanceOn?: AdvanceOn;
   onInteraction?: InteractionHook;
+  allowedElements?: AllowedElements;
 
   // Skip a step whose target element is specified but missing from the DOM.
   // Element-less steps are intentional centered steps and never skipped. (default: false)
@@ -205,6 +212,7 @@ export type State = {
   __rejectedKeys?: Set<string>;
   __handledKeys?: Set<string>;
   __teardownGate?: () => void;
+  __syncAllowedElements?: () => void;
   __lastAnnouncement?: string;
 
   // User action a destroy() called from a hook reports instead of "api".

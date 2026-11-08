@@ -17,9 +17,15 @@
 
 .driver-active .driver-active-element,
 .driver-active .driver-active-element *,
+.driver-active .driver-allowed-element,
+.driver-active .driver-allowed-element *,
 .driver-popover,
 .driver-popover * {
   pointer-events: auto;
+}
+
+.driver-active .driver-allowed-element {
+  z-index: var(--driver-allowed-z-index, 10001);
 }
 
 @keyframes animate-fade-in {
