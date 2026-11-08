@@ -4,6 +4,30 @@ const title = (page: Page) => page.locator(".driver-popover-title");
 const description = (page: Page) => page.locator(".driver-popover-description");
 const popover = (page: Page) => page.locator(".driver-popover");
 
+async function expectNudgeWithoutFade(page: Page) {
+  await page.waitForFunction(() => document.querySelector(".driver-popover")?.getAnimations().length === 0);
+  await page.evaluate(() => {
+    const state = window as unknown as { minOpacity: number };
+    state.minOpacity = 1;
+    const sample = () => {
+      const wrapper = document.querySelector(".driver-popover");
+      if (wrapper) {
+        state.minOpacity = Math.min(state.minOpacity, parseFloat(getComputedStyle(wrapper).opacity));
+      }
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+
+  await page.locator("#demo-file").click();
+  await expect(popover(page)).toHaveClass(/driver-popover-nudge/);
+  await expect(popover(page)).not.toHaveClass(/driver-popover-nudge/, { timeout: 2000 });
+  await page.waitForTimeout(600);
+
+  const minOpacity = await page.evaluate(() => (window as unknown as { minOpacity: number }).minOpacity);
+  expect(minOpacity).toBe(1);
+}
+
 test.describe("guided rename", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/action-driven-rename");
@@ -41,12 +65,13 @@ test.describe("guided rename", () => {
     await expect(popover(page)).toHaveCount(1);
   });
 
-  test("nudges the popover and the element on a wrong action", async ({ page }) => {
-    await page.locator("#demo-file").click();
+  test("shakes the popover on a wrong action without fading it again", async ({ page }) => {
+    await expectNudgeWithoutFade(page);
+  });
 
-    await expect(popover(page)).toHaveClass(/driver-popover-nudge/);
-    await expect(page.locator(".driver-nudge-ring")).toHaveCount(1);
-    await expect(popover(page)).not.toHaveClass(/driver-popover-nudge/, { timeout: 2000 });
+  test("flashes the popover with reduced motion without fading it again", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expectNudgeWithoutFade(page);
   });
 
   test("keeps focus in the menu when the next step starts", async ({ page }) => {

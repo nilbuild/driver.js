@@ -1,7 +1,7 @@
 import { easeInOutQuad } from "./utils";
 import { destroyDriverClick, onDriverClick } from "./click";
 import { Context } from "./context";
-import { generateStageCutoutPath, generateStageSvgPathString, StageDefinition } from "./stage";
+import { generateStageSvgPathString, StageDefinition } from "./stage";
 
 // This method calculates the animated new position of the
 // stage (called for each frame by requestAnimationFrame)
@@ -97,26 +97,6 @@ function renderOverlay(ctx: Context, stagePosition: StageDefinition) {
   }
 
   pathElement.setAttribute("d", generateStageSvgPathString(stagePosition, stageOptions(ctx)));
-  overlaySvg
-    .querySelector(".driver-nudge-ring")
-    ?.setAttribute("d", generateStageCutoutPath(stagePosition, stageOptions(ctx)));
-}
-
-export function mountNudgeRing(ctx: Context): SVGPathElement | undefined {
-  const overlaySvg = ctx.getState("__overlaySvg");
-  const stagePosition = ctx.getState("__activeStagePosition");
-  if (!overlaySvg || !stagePosition) {
-    return undefined;
-  }
-
-  overlaySvg.querySelector(".driver-nudge-ring")?.remove();
-
-  const ring = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  ring.classList.add("driver-nudge-ring");
-  ring.setAttribute("d", generateStageCutoutPath(stagePosition, stageOptions(ctx)));
-  overlaySvg.appendChild(ring);
-
-  return ring;
 }
 
 function stageOptions(ctx: Context) {

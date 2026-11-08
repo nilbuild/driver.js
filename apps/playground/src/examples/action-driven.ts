@@ -295,7 +295,7 @@ export const actionDrivenGroup: ExampleGroup = {
           showButtons: ["close"],
           onElementMissing: (_element, _step, opts) => {
             opts.driver.updatePopover({ description: "Still loading. Click <b>Card Two</b> again." });
-            opts.driver.nudge("popover");
+            opts.driver.nudge();
           },
           onDestroyed: () => {
             button.removeEventListener("click", load);
