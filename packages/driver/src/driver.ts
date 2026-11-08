@@ -325,6 +325,7 @@ export function driver(options: Config = {}): Driver {
           window.clearTimeout(graceTimer);
           graceTimer = undefined;
           hasReported = false;
+          rebindActiveElement(ctx, element);
           if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
             clearWaiting();
           }

@@ -463,3 +463,27 @@ describe("fourth review", () => {
     expect(document.querySelector(".driver-popover")?.classList.contains("driver-popover-waiting")).toBe(false);
   });
 });
+
+describe("fifth review", () => {
+  it("moves the spotlight to where a reinserted node now sits", async () => {
+    const target = append("target");
+    const d = createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [{ element: "#target", waitForElement: 200, popover: { title: "T" } }],
+    });
+    d.drive();
+    await nextFrame();
+
+    target.remove();
+    await nextFrame();
+    await nextFrame();
+    target.getBoundingClientRect = () =>
+      ({ x: 120, y: 240, width: 40, height: 20, top: 240, left: 120, right: 160, bottom: 260, toJSON: () => ({}) }) as DOMRect;
+    document.body.appendChild(target);
+    await nextFrame();
+    await nextFrame();
+
+    expect(d.getState("__activeStagePosition")).toMatchObject({ x: 120, y: 240, width: 40, height: 20 });
+  });
+});
