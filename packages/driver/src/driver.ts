@@ -107,7 +107,6 @@ export interface Driver {
 export function driver(options: Config = {}): Driver {
   const ctx = createContext(options);
   const teardown = () => destroy("replaced", false);
-  let activationCount = 0;
 
   function handleClose(reason: DestroyReason = "close") {
     if (!ctx.getConfig("allowClose")) {
@@ -231,9 +230,8 @@ export function driver(options: Config = {}): Driver {
     goNext(ctx.getState("activeElement"), activeStep);
   }
 
-  function requestCompletion(activationId: number) {
-    const activation = ctx.getState("__activation");
-    if (!activation || activation.id !== activationId || activation.latched) {
+  function requestCompletion(activation: Activation) {
+    if (ctx.getState("__activation") !== activation || activation.latched) {
       return;
     }
 
@@ -379,8 +377,7 @@ export function driver(options: Config = {}): Driver {
   function beginActivation(step: DriveStep): Activation {
     endActivation();
 
-    activationCount += 1;
-    const activation: Activation = { id: activationCount, step, controller: new AbortController(), latched: false };
+    const activation: Activation = { step, controller: new AbortController(), latched: false };
     ctx.setState("__activation", activation);
     ctx.setState("__lastAnnouncement", undefined);
 
@@ -401,7 +398,7 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    const complete = () => requestCompletion(activation.id);
+    const complete = () => requestCompletion(activation);
     if (typeof advanceOn !== "function") {
       const eventTypes = Array.isArray(advanceOn) ? advanceOn : [advanceOn];
       listenForAdvanceEvents(ctx, eventTypes, activation, complete);
