@@ -3,6 +3,8 @@ import type { DriveStep } from "./driver";
 import { AllowedButtons, destroyPopover, PopoverRenderOptions, renderPopover, updatePopoverContent } from "./popover";
 import { PositionOptions, repositionPopover } from "./position";
 import { resolveElement } from "./utils";
+import { isFocusWithinStep } from "./allowed";
+import { announce } from "./live-region";
 
 // Bridges the tour and the popover primitive: a step's popover resolves here
 // against the instance config (step value first, then the global default, then
@@ -223,7 +225,18 @@ export function withPopoverPatch(ctx: Context, step: DriveStep): DriveStep {
 export function renderStepPopover(ctx: Context, element: Element, step: DriveStep) {
   destroyPopover(ctx.getState("popover"));
 
-  renderPopover(element, resolveStepPopover(ctx, element, withPopoverPatch(ctx, step)));
+  const keepFocus = isFocusWithinStep(ctx, element, step);
+  const popover = renderPopover(element, {
+    ...resolveStepPopover(ctx, element, withPopoverPatch(ctx, step)),
+    keepFocus,
+  });
+
+  if (keepFocus) {
+    const text = [popover.title, popover.description]
+      .filter(part => part.style.display !== "none")
+      .map(part => part.textContent || "");
+    announce(ctx, text.filter(Boolean).join(". "));
+  }
 }
 
 export function updateStepPopover(ctx: Context, element: Element, step: DriveStep) {
