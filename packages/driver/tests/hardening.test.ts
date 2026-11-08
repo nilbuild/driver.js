@@ -567,3 +567,42 @@ describe("seventh review", () => {
     expect(document.activeElement).toBe(document.querySelector(".driver-popover"));
   });
 });
+
+describe("eighth review", () => {
+  it("moves on to the next missing step after an initial timeout", async () => {
+    const d = createDriver({
+      animate: false,
+      onElementMissing: (_el, _step, opts) => opts.driver.updatePopover({ description: "Unavailable; click Next to skip." }),
+      steps: [
+        { element: "#missing-1", waitForElement: 30, popover: { title: "One" } },
+        { element: "#missing-2", waitForElement: 30, popover: { title: "Two" } },
+        { element: "#intro", popover: { title: "Three" } },
+      ],
+    });
+    d.drive();
+    await tick(70);
+
+    navButton("next")?.click();
+    expect(popoverTitle()).toBe("Two");
+    expect(d.getActiveIndex()).toBe(1);
+    expect(navButton("next")?.disabled).toBe(true);
+
+    await tick(70);
+    navButton("next")?.click();
+    await nextFrame();
+    expect(popoverTitle()).toBe("Three");
+  });
+
+  it("honours a close-button patch on Escape during an initial wait", async () => {
+    const d = createDriver({
+      animate: false,
+      onElementMissing: (_el, _step, opts) => opts.driver.updatePopover({ disableButtons: ["close"] }),
+      steps: [{ element: "#missing", waitForElement: 30, popover: { title: "One" } }],
+    });
+    d.drive();
+    await tick(70);
+
+    key("keyup", { key: "Escape", code: "Escape" }, document.body);
+    expect(d.isActive()).toBe(true);
+  });
+});

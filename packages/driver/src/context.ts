@@ -224,7 +224,7 @@ export type State = {
   __widgetKey?: string;
   __teardownGate?: () => void;
   __syncAllowedElements?: () => void;
-  __initialWait?: { element: Element; step: DriveStep };
+  __initialWait?: { element: Element; step: DriveStep; index: number };
   __isWaiting?: boolean;
   __lastAnnouncement?: string;
 
