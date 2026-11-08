@@ -1,13 +1,13 @@
 ---
 title: "Action-Driven Tours"
-description: "Build Driver.js tours that only move on when the user performs the real action: right-click, double-click, type, pick a menu item. Block everything else, give feedback on wrong actions and recover when the UI changes."
+description: "Build Driver.js tours that only move on when the user performs the real action: type a value, pick an option, click, right-click. Block clicks elsewhere, give feedback on wrong actions and recover when the UI changes."
 groupTitle: "Examples"
 sort: 3.5
 ---
 
 import { ActionDrivenSample } from "../../components/ActionDrivenSample.tsx";
 
-Training flows teach by doing. Each step waits for the user to perform the action it describes, everything else is blocked, and a wrong action gets a hint. Driver.js gives you the building blocks; your app decides what counts as right or wrong.
+Training flows teach by doing. Each step waits for the user to perform the action it describes, clicks elsewhere can be blocked, and a wrong action gets a hint. Driver.js gives you the building blocks; your app decides what counts as right or wrong.
 
 ## Try It
 
@@ -20,42 +20,47 @@ The tour below walks through inviting a teammate. Each step waits for you to do 
 
   const driverObj = driver({
     showButtons: ["close"],
-    allowKeyboardControl: false,
-    overlayClickBehavior: "none",
-    onInteraction: (element, step, { event, region, driver }) => {
-      if (event.type === "keydown" || region !== "outside") {
+    onInteraction: (element, step, { region, driver }) => {
+      if (region !== "outside") {
         return;
       }
 
-      driver.updatePopover({ description: step.data.hint });
-      driver.nudge();
+      driver.nudge({ description: step.data.hint });
       return false;
     },
     steps: [
       {
         element: "#invite-email",
-        advanceOn: (element, step, { next, signal }) => {
-          element.addEventListener("keydown", event => {
-            if (event.key === "Enter" && element.checkValidity() && element.value) {
-              next();
+        advanceOn: {
+          event: "keydown",
+          when: (element, step, { event, driver }) => {
+            if (event.key !== "Enter") {
+              return false;
             }
-          }, { signal });
+
+            if (element.checkValidity() && element.value) {
+              return true;
+            }
+
+            driver.nudge({ description: "That doesn't look like an email address yet." });
+            return false;
+          },
         },
         data: { hint: "Click the email field and type an address first." },
         popover: { title: "Who are you inviting?", description: "Type an email and press Enter." },
       },
       {
         element: "#invite-role",
-        advanceOn: (element, step, { next, signal, driver }) => {
-          element.addEventListener("change", () => {
+        advanceOn: {
+          event: "change",
+          when: (element, step, { driver }) => {
             if (element.value === "editor") {
-              next();
-              return;
+              return true;
             }
 
-            driver.updatePopover({ description: "Viewers can only look around. Choose Editor." });
-            driver.nudge();
-          }, { signal });
+            driver.nudge({ description: "Only editors can make changes. Choose Editor." });
+            return false;
+          },
         },
         data: { hint: "Pick a role from the dropdown first." },
         popover: { title: "Pick a role", description: "Choose Editor." },
@@ -80,42 +85,49 @@ The tour below walks through inviting a teammate. Each step waits for you to do 
 
 ## Complete a Step with `advanceOn`
 
-Give `advanceOn` an event name and the step completes when that event happens on the highlighted element. It behaves like pressing Next, and your own handlers still run.
+Give `advanceOn` an event name and the step completes when that event happens on the highlighted element. It behaves like pressing Next, and your own handlers still run first.
 
 ```js
 { element: "#invite-send", advanceOn: "click" }
 { element: "#file", advanceOn: ["dblclick", "contextmenu"] } // either one
 ```
 
-An event only means the action happened, not that it succeeded. When completion depends on your app, pass a function and call `next()` yourself. Listeners using `signal` are removed when the step is left.
+An event only means the action happened, not that it succeeded. Add `when` to check the result. It runs after your app has handled the event, and the step only completes when it returns `true`.
 
 ```js
 {
-  element: "#invite-email",
-  advanceOn: (element, step, { next, signal }) => {
-    element.addEventListener("keydown", event => {
-      if (event.key === "Enter" && element.checkValidity() && element.value) {
-        next();
-      }
-    }, { signal });
+  element: "#invite-role",
+  advanceOn: {
+    event: "change",
+    when: (element, step, { event }) => element.value === "editor",
   },
 }
 ```
 
-## Block Wrong Actions with `onInteraction`
-
-`onInteraction` sees every click, right-click, double-click and key press during a step, before your app does. `region` says where it happened: `"element"`, `"allowed"` or `"outside"`. Return `false` to block it.
+Only events on the highlighted element count, not on `allowedElements`. When completion depends on something else, like a save finishing or a route change, call `driverObj.moveNext()` from your app. `onHighlighted` gets a `signal` that aborts when the step is left, so listeners clean themselves up:
 
 ```js
-onInteraction: (element, step, { event, region }) => {
-  if (region === "outside" && event.type !== "keydown") {
+onHighlighted: (element, step, { signal }) => {
+  window.addEventListener("invite-saved", () => driverObj.moveNext(), { signal });
+},
+```
+
+## Block Clicks with `onInteraction`
+
+`onInteraction` sees every click, right-click and double-click during a step, before your app does. `region` says where it happened: `"element"`, `"allowed"` or `"outside"`. Return `false` to block it.
+
+```js
+onInteraction: (element, step, { region }) => {
+  if (region === "outside") {
     return false;
   }
 },
 ```
 
+- A blocked click on the overlay keeps the tour open.
 - A double-click is reported as click, click, dblclick, so a double-click step must not reject clicks.
-- Don't block keys. That also blocks browser and screen reader shortcuts.
+- Blocking a click can't undo what your app already did on `pointerdown`, like closing a menu.
+- Key presses are not reported, so typing always works.
 
 ## Allow a Menu with `allowedElements`
 
@@ -130,18 +142,17 @@ When the action opens something outside the highlighted element, like a context 
 
 If the menu still sits below the overlay, target its positioned wrapper or set `--driver-allowed-z-index`.
 
-## Give Feedback with `updatePopover` and `nudge`
+## Give Feedback with `nudge`
 
-`driverObj.updatePopover()` changes the visible popover in place, and calling it without arguments restores the original. `driverObj.nudge()` shakes the popover.
+`driverObj.nudge()` shakes the popover. Pass it a change to update the popover at the same time. `driverObj.updatePopover()` changes the popover without the shake, and calling it without arguments restores the original.
 
 ```js
-driverObj.updatePopover({ description: "Viewers can only look around. Choose Editor." });
-driverObj.nudge();
+driverObj.nudge({ description: "Only editors can make changes. Choose Editor." });
 ```
 
 ## Recover with `onElementMissing`
 
-Sometimes the target goes away, like a menu closed with Escape. `onElementMissing` runs with `cause: "removed"` when the highlighted element leaves the page, or `cause: "timeout"` when the next step's `waitForElement` runs out.
+Sometimes the target goes away, like a menu closed with Escape. `onElementMissing` runs with `cause: "removed"` when the highlighted element leaves the page.
 
 ```js
 onElementMissing: (element, step, { cause, driver }) => {
@@ -152,4 +163,6 @@ onElementMissing: (element, step, { cause, driver }) => {
 },
 ```
 
-> **Tip**: Always leave a way out, like the close button. iOS Safari never fires `contextmenu`, so if a step waits for a right-click, accept another event too or use a function `advanceOn`.
+It also runs with `cause: "timeout"` when a step's `waitForElement` runs out, before the usual fallback. Return `false` to keep the user on the current step instead. While the hook is set, the tour also follows a highlighted element that your framework re-renders.
+
+> **Tip**: Always leave a way out, like the close button. iOS Safari never fires `contextmenu`, so if a step waits for a right-click, accept another event too.

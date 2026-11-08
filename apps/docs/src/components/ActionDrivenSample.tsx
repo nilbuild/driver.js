@@ -10,25 +10,21 @@ type ActionDrivenSampleProps = {
 const steps: DriveStep[] = [
   {
     element: "#invite-email",
-    advanceOn: (element, step, opts) => {
-      const input = element as HTMLInputElement;
-      input.addEventListener(
-        "keydown",
-        event => {
-          if (event.key !== "Enter") {
-            return;
-          }
+    advanceOn: {
+      event: "keydown",
+      when: (element, step, opts) => {
+        const input = element as HTMLInputElement;
+        if ((opts.event as KeyboardEvent).key !== "Enter") {
+          return false;
+        }
 
-          if (input.checkValidity() && input.value) {
-            opts.next();
-            return;
-          }
+        if (input.checkValidity() && input.value) {
+          return true;
+        }
 
-          opts.driver.updatePopover({ description: "That doesn't look like an email address yet." });
-          opts.driver.nudge();
-        },
-        { signal: opts.signal }
-      );
+        opts.driver.nudge({ description: "That doesn't look like an email address yet." });
+        return false;
+      },
     },
     data: { hint: "Click the email field and type an address first." },
     popover: {
@@ -40,21 +36,16 @@ const steps: DriveStep[] = [
   },
   {
     element: "#invite-role",
-    advanceOn: (element, step, opts) => {
-      const select = element as HTMLSelectElement;
-      select.addEventListener(
-        "change",
-        () => {
-          if (select.value === "editor") {
-            opts.next();
-            return;
-          }
+    advanceOn: {
+      event: "change",
+      when: (element, step, opts) => {
+        if ((element as HTMLSelectElement).value === "editor") {
+          return true;
+        }
 
-          opts.driver.updatePopover({ description: "Viewers can only look around. Choose <b>Editor</b>." });
-          opts.driver.nudge();
-        },
-        { signal: opts.signal }
-      );
+        opts.driver.nudge({ description: "Only editors can make changes. Choose <b>Editor</b>." });
+        return false;
+      },
     },
     data: { hint: "Pick a role from the dropdown first." },
     popover: {
@@ -109,15 +100,12 @@ export function ActionDrivenSample(props: ActionDrivenSampleProps) {
     tour.current = driver({
       animate: true,
       showButtons: ["close"],
-      allowKeyboardControl: false,
-      overlayClickBehavior: "none",
       onInteraction: (element, step, opts) => {
-        if (opts.event.type === "keydown" || opts.region !== "outside") {
+        if (opts.region !== "outside") {
           return;
         }
 
-        opts.driver.updatePopover({ description: step.data?.hint });
-        opts.driver.nudge();
+        opts.driver.nudge({ description: step.data?.hint });
         return false;
       },
       steps,

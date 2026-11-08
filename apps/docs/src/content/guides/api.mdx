@@ -75,11 +75,13 @@ driverObj.highlight({
 // merge and only last while the current step is shown; call it without
 // arguments to restore the step's original popover. Changed text is
 // announced to screen readers.
-driverObj.updatePopover({ description: "Not quite. Right-click the file." });
+driverObj.updatePopover({ description: "Not quite. Choose Editor." });
 driverObj.updatePopover();
 
-// Draw attention to the popover with a short shake.
+// Draw attention to the popover with a short shake. Pass a change to
+// update the popover at the same time.
 driverObj.nudge();
+driverObj.nudge({ description: "Not quite. Choose Editor." });
 
 // Destroy the tour. The destroy hooks receive `options.reason` "api",
 // or the reason of the user action when called from inside a hook.

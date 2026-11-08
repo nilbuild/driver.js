@@ -117,29 +117,22 @@ function mountFileManager(): Cleanup {
 
 const actionTourConfig: Config = {
   showButtons: ["close"],
-  allowKeyboardControl: false,
-  overlayClickBehavior: "none",
 
   onInteraction: (_element, step, opts) => {
     const { event, region } = opts;
-    if (event.type === "keydown") {
-      return;
-    }
-
     const isWrongHere = region === "element" && step.data?.reject?.includes(event.type);
     if (region !== "outside" && !isWrongHere) {
       return;
     }
 
-    opts.driver.updatePopover({ description: step.data?.hint });
-    opts.driver.nudge();
+    opts.driver.nudge({ description: step.data?.hint });
     return false;
   },
 
   onElementMissing: (_element, step, opts) => {
     if (opts.cause === "timeout") {
       opts.driver.updatePopover({ description: "That is taking longer than expected. Try again." });
-      return;
+      return false;
     }
 
     opts.driver.moveTo(step.data?.backTo ?? 0);
@@ -174,17 +167,12 @@ const renameSteps: DriveStep[] = [
   {
     element: "#demo-rename-input",
     waitForElement: 1500,
-    advanceOn: (element, _step, opts) => {
-      element?.addEventListener(
-        "keydown",
-        event => {
-          const input = element as HTMLInputElement;
-          if ((event as KeyboardEvent).key === "Enter" && input.value.trim() && input.value !== "report.pdf") {
-            opts.next();
-          }
-        },
-        { signal: opts.signal }
-      );
+    advanceOn: {
+      event: "keydown",
+      when: (element, _step, opts) => {
+        const input = element as HTMLInputElement;
+        return (opts.event as KeyboardEvent).key === "Enter" && !!input.value.trim() && input.value !== "report.pdf";
+      },
     },
     data: {
       hint: "Type a new name, then press Enter.",
@@ -245,11 +233,10 @@ export const actionDrivenGroup: ExampleGroup = {
                 }
 
                 attempts += 1;
-                d.updatePopover({
+                d.nudge({
                   title: `Not that (${attempts})`,
                   description: isRightClick ? "That was a right-click. Double-click instead." : "Stay on Card One.",
                 });
-                d.nudge();
                 return false;
               },
             },
@@ -294,8 +281,8 @@ export const actionDrivenGroup: ExampleGroup = {
         driver({
           showButtons: ["close"],
           onElementMissing: (_element, _step, opts) => {
-            opts.driver.updatePopover({ description: "Still loading. Click <b>Card Two</b> again." });
-            opts.driver.nudge();
+            opts.driver.nudge({ description: "Still loading. Click <b>Card Two</b> again." });
+            return false;
           },
           onDestroyed: () => {
             button.removeEventListener("click", load);
