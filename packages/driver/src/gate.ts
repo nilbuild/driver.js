@@ -33,10 +33,14 @@ export function pathOf(node: Node | null): EventTarget[] {
   return path;
 }
 
-export function isFocusInPlay(ctx: Context): boolean {
-  const region = regionOf(ctx, pathOf(document.activeElement));
+export function isInPlay(ctx: Context, path: EventTarget[]): boolean {
+  const region = regionOf(ctx, path);
 
   return region === "element" || region === "allowed";
+}
+
+export function isFocusInPlay(ctx: Context): boolean {
+  return isInPlay(ctx, pathOf(document.activeElement));
 }
 
 export function keyId(event: KeyboardEvent): string {
@@ -49,11 +53,11 @@ function consume(ctx: Context, event: Event) {
   ctx.consume(event);
 }
 
-function rejectedKeys(ctx: Context): Set<string> {
-  let keys = ctx.getState("__rejectedKeys");
+export function keySet(ctx: Context, name: "__rejectedKeys" | "__handledKeys"): Set<string> {
+  let keys = ctx.getState(name);
   if (!keys) {
     keys = new Set();
-    ctx.setState("__rejectedKeys", keys);
+    ctx.setState(name, keys);
   }
 
   return keys;
@@ -74,7 +78,7 @@ function onGatedEvent(ctx: Context, event: Event) {
     return;
   }
 
-  const rejected = rejectedKeys(ctx);
+  const rejected = keySet(ctx, "__rejectedKeys");
   if (event instanceof KeyboardEvent) {
     const id = keyId(event);
     if (event.type === "keyup") {
@@ -138,8 +142,7 @@ export function initGate(ctx: Context): () => void {
   window.addEventListener(
     "keydown",
     event => {
-      const region = regionOf(ctx, event.composedPath());
-      if (region === "element" || region === "allowed") {
+      if (isInPlay(ctx, event.composedPath())) {
         ctx.setState("__widgetKey", keyId(event));
       }
     },
@@ -153,7 +156,7 @@ export function initGate(ctx: Context): () => void {
   window.addEventListener(
     "blur",
     () => {
-      rejectedKeys(ctx).clear();
+      keySet(ctx, "__rejectedKeys").clear();
       ctx.setState("__widgetKey", undefined);
     },
     { signal: controller.signal }

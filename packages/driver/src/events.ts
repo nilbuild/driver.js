@@ -1,7 +1,7 @@
 import { Context } from "./context";
 import { refreshActiveHighlight } from "./highlight";
 import { getFocusableElements } from "./utils";
-import { initGate, isFocusInPlay, keyId, regionOf } from "./gate";
+import { initGate, isFocusInPlay, isInPlay, keyId, keySet } from "./gate";
 import { ALLOWED_CLASS } from "./allowed";
 
 export function requireRefresh(ctx: Context) {
@@ -56,21 +56,10 @@ function trapFocus(ctx: Context, e: KeyboardEvent) {
   }
 }
 
-function handledKeys(ctx: Context): Set<string> {
-  let keys = ctx.getState("__handledKeys");
-  if (!keys) {
-    keys = new Set();
-    ctx.setState("__handledKeys", keys);
-  }
-
-  return keys;
-}
-
 function onKeydownCapture(ctx: Context, e: KeyboardEvent) {
-  handledKeys(ctx).add(keyId(e));
+  keySet(ctx, "__handledKeys").add(keyId(e));
 
-  const region = regionOf(ctx, e.composedPath());
-  if (region === "element" || region === "allowed" || isFocusInPlay(ctx)) {
+  if (isInPlay(ctx, e.composedPath()) || isFocusInPlay(ctx)) {
     ctx.setState("__widgetKey", keyId(e));
   }
 }
@@ -78,13 +67,13 @@ function onKeydownCapture(ctx: Context, e: KeyboardEvent) {
 function onKeydownBubble(ctx: Context, e: KeyboardEvent) {
   const id = keyId(e);
   if (!e.defaultPrevented && ctx.getState("__widgetKey") !== id) {
-    handledKeys(ctx).delete(id);
+    keySet(ctx, "__handledKeys").delete(id);
   }
 }
 
 function onKeyup(ctx: Context, e: KeyboardEvent) {
   const allowKeyboardControl = ctx.getConfig("allowKeyboardControl") ?? true;
-  const wasHandledByApp = handledKeys(ctx).delete(keyId(e));
+  const wasHandledByApp = keySet(ctx, "__handledKeys").delete(keyId(e));
   if (ctx.getState("__widgetKey") === keyId(e)) {
     ctx.setState("__widgetKey", undefined);
   }
