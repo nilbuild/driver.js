@@ -11,34 +11,32 @@ const POPOVER_ARIA: Record<string, string> = {
   "aria-controls": "driver-popover-content",
 };
 
-const originalAria = new WeakMap<Element, Record<string, string | null>>();
+const driverAria = new WeakSet<Element>();
 
 function setPopoverAria(element: Element) {
-  if (!originalAria.has(element)) {
-    const original = Object.fromEntries(Object.keys(POPOVER_ARIA).map(name => [name, element.getAttribute(name)]));
-    originalAria.set(element, original);
+  const isAppOwned = Object.keys(POPOVER_ARIA).some(name => element.hasAttribute(name));
+  if (isAppOwned && !driverAria.has(element)) {
+    return;
   }
 
   for (const [name, value] of Object.entries(POPOVER_ARIA)) {
     element.setAttribute(name, value);
   }
+  driverAria.add(element);
 }
 
 function restoreAria(element: Element) {
-  const original = originalAria.get(element);
-  if (!original) {
+  if (!driverAria.has(element)) {
     return;
   }
 
-  for (const [name, value] of Object.entries(original)) {
-    if (value === null) {
+  for (const [name, value] of Object.entries(POPOVER_ARIA)) {
+    if (element.getAttribute(name) === value) {
       element.removeAttribute(name);
-    } else {
-      element.setAttribute(name, value);
     }
   }
 
-  originalAria.delete(element);
+  driverAria.delete(element);
 }
 
 export function mountDummyElement(): Element {
