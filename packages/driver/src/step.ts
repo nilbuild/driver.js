@@ -1,6 +1,6 @@
 import type { Context, DriverHook } from "./context";
 import type { DriveStep } from "./driver";
-import { AllowedButtons, destroyPopover, PopoverRenderOptions, renderPopover } from "./popover";
+import { AllowedButtons, destroyPopover, PopoverRenderOptions, renderPopover, updatePopoverContent } from "./popover";
 import { PositionOptions, repositionPopover } from "./position";
 import { resolveElement } from "./utils";
 
@@ -211,10 +211,28 @@ function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): Po
   };
 }
 
+export function withPopoverPatch(ctx: Context, step: DriveStep): DriveStep {
+  const activation = ctx.getState("__activation");
+  if (!activation?.popoverPatch || activation.step !== step) {
+    return step;
+  }
+
+  return { ...step, popover: { ...step.popover, ...activation.popoverPatch } };
+}
+
 export function renderStepPopover(ctx: Context, element: Element, step: DriveStep) {
   destroyPopover(ctx.getState("popover"));
 
-  renderPopover(element, resolveStepPopover(ctx, element, step));
+  renderPopover(element, resolveStepPopover(ctx, element, withPopoverPatch(ctx, step)));
+}
+
+export function updateStepPopover(ctx: Context, element: Element, step: DriveStep) {
+  const popover = ctx.getState("popover");
+  if (!popover) {
+    return;
+  }
+
+  updatePopoverContent(popover, element, resolveStepPopover(ctx, element, withPopoverPatch(ctx, step)));
 }
 
 export function repositionStepPopover(ctx: Context, element: Element, step: DriveStep) {

@@ -1,5 +1,5 @@
 import type { Driver, DriveStep } from "./driver";
-import type { AllowedButtons, PopoverDOM } from "./popover";
+import type { AllowedButtons, Popover, PopoverDOM } from "./popover";
 import type { StageDefinition } from "./stage";
 
 // Per-instance config, state and emitter, threaded through the helpers so
@@ -37,11 +37,27 @@ export type AdvanceOn =
   | string[]
   | ((element: Element | undefined, step: DriveStep, opts: AdvanceOnOpts) => void | (() => void));
 
+export type PopoverPatch = Pick<
+  Popover,
+  | "title"
+  | "description"
+  | "showButtons"
+  | "disableButtons"
+  | "showProgress"
+  | "progressText"
+  | "nextBtnText"
+  | "prevBtnText"
+  | "closeBtnLabel"
+  | "popoverClass"
+>;
+
 export type Activation = {
   id: number;
+  step: DriveStep;
   controller: AbortController;
   cleanup?: () => void;
   latched: boolean;
+  popoverPatch?: PopoverPatch;
 };
 
 export type Config = {
@@ -175,6 +191,8 @@ export type State = {
   __transitionCallback?: () => void;
   __pendingWaitCancel?: () => void;
   __activation?: Activation;
+  __liveRegion?: HTMLElement;
+  __lastAnnouncement?: string;
 
   // User action a destroy() called from a hook reports instead of "api".
   __destroyReason?: DestroyReason;
