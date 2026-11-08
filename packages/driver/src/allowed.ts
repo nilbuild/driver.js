@@ -1,5 +1,6 @@
 import type { AllowedElements, Context } from "./context";
 import type { DriveStep } from "./driver";
+import { isDummyElement } from "./utils";
 
 export const ALLOWED_CLASS = "driver-allowed-element";
 
@@ -91,9 +92,8 @@ export function isFocusWithinStep(ctx: Context, element: Element, step: DriveSte
     return false;
   }
 
-  const isRealElement = element.id !== "driver-dummy-element";
   const isInteractive = !(step.disableActiveInteraction ?? ctx.getConfig("disableActiveInteraction"));
-  if (isRealElement && isInteractive && element.contains(focused)) {
+  if (!isDummyElement(element) && isInteractive && element.contains(focused)) {
     return true;
   }
 

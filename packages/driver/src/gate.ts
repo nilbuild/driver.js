@@ -1,13 +1,11 @@
 import type { Context, InteractionRegion } from "./context";
+import { ALLOWED_CLASS } from "./allowed";
+import { isDummyElement } from "./utils";
 
 const GATED_EVENTS = ["click", "auxclick", "contextmenu", "dblclick", "keydown", "keyup"] as const;
 const DRIVER_KEYS = ["Escape", "ArrowLeft", "ArrowRight"];
 
 type Region = InteractionRegion | "popover";
-
-export function isDummyElement(element: Element | undefined): boolean {
-  return !element || element.id === "driver-dummy-element";
-}
 
 export function regionOf(ctx: Context, path: EventTarget[]): Region {
   const popover = ctx.getState("popover")?.wrapper;
@@ -20,7 +18,7 @@ export function regionOf(ctx: Context, path: EventTarget[]): Region {
     return "element";
   }
 
-  const isAllowed = path.some(node => node instanceof Element && node.classList.contains("driver-allowed-element"));
+  const isAllowed = path.some(node => node instanceof Element && node.classList.contains(ALLOWED_CLASS));
 
   return isAllowed ? "allowed" : "outside";
 }

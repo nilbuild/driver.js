@@ -15,7 +15,6 @@ import {
 } from "./context";
 import { announce, destroyLiveRegion, mountLiveRegion } from "./live-region";
 import { listenForAdvanceEvents, resolveAdvanceOn } from "./advance";
-import { isDummyElement } from "./gate";
 import { nudge, NudgeTarget } from "./nudge";
 import { trackAllowedElements } from "./allowed";
 import { destroyHighlight, highlight, mountDummyElement, rebindActiveElement } from "./highlight";
@@ -33,7 +32,7 @@ import {
   shouldSkipStep,
   updateStepPopover,
 } from "./step";
-import { resolveElement } from "./utils";
+import { isDummyElement, resolveElement } from "./utils";
 import "./driver.css";
 
 let teardownActive: (() => void) | undefined;

@@ -12,6 +12,10 @@ export function resolveElement(element: DriveStep["element"]): Element | null | 
   return element;
 }
 
+export function isDummyElement(element: Element | undefined): boolean {
+  return !element || element.id === "driver-dummy-element";
+}
+
 export function isScrollable(element: Element) {
   const style = window.getComputedStyle(element);
   return [style.overflow, style.overflowX, style.overflowY].some(value => {

@@ -1,5 +1,5 @@
 import type { Context } from "./context";
-import { isDummyElement } from "./gate";
+import { isDummyElement } from "./utils";
 import { mountNudgeRing } from "./overlay";
 
 export type NudgeTarget = "popover" | "element" | "both";
