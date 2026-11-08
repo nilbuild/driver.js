@@ -407,13 +407,10 @@ export function driver(options: Config = {}): Driver {
 
     let unbind: (() => void) | undefined;
     const bind = () => {
-      const previous = unbind;
-      unbind = undefined;
-      previous?.();
+      unbind?.();
 
       const binding = new AbortController();
-      const stop = () => binding.abort();
-      activation.controller.signal.addEventListener("abort", stop);
+      activation.controller.signal.addEventListener("abort", () => binding.abort(), { signal: binding.signal });
 
       let isReleased = false;
       let cleanup: void | (() => void);
@@ -423,7 +420,6 @@ export function driver(options: Config = {}): Driver {
         }
 
         isReleased = true;
-        activation.controller.signal.removeEventListener("abort", stop);
         binding.abort();
         if (typeof cleanup === "function") {
           cleanup();
