@@ -26,6 +26,24 @@ export type HookOpts = {
 
 export type DriverHook = (element: Element | undefined, step: DriveStep, opts: HookOpts) => void;
 
+export type AdvanceOnOpts = HookOpts & {
+  next: () => void;
+  signal: AbortSignal;
+};
+
+export type AdvanceOn =
+  | false
+  | string
+  | string[]
+  | ((element: Element | undefined, step: DriveStep, opts: AdvanceOnOpts) => void | (() => void));
+
+export type Activation = {
+  id: number;
+  controller: AbortController;
+  cleanup?: () => void;
+  latched: boolean;
+};
+
 export type Config = {
   steps?: DriveStep[];
 
@@ -46,6 +64,8 @@ export type Config = {
   // hook resolution as the next button. The element's own click behaviour
   // still runs; nothing is prevented. (default: false)
   advanceOnClick?: boolean;
+
+  advanceOn?: AdvanceOn;
 
   // Skip a step whose target element is specified but missing from the DOM.
   // Element-less steps are intentional centered steps and never skipped. (default: false)
@@ -154,6 +174,7 @@ export type State = {
   __resizeTimeout?: number;
   __transitionCallback?: () => void;
   __pendingWaitCancel?: () => void;
+  __activation?: Activation;
 
   // User action a destroy() called from a hook reports instead of "api".
   __destroyReason?: DestroyReason;
@@ -165,7 +186,6 @@ export type State = {
     onKeydown: (e: KeyboardEvent) => void;
     onResize: () => void;
     onScroll: () => void;
-    onClick: (e: MouseEvent) => void;
   };
 };
 
@@ -196,7 +216,6 @@ function createStateStore() {
 
 type allowedEvents =
   | "overlayClick"
-  | "activeElementClick"
   | "escapePress"
   | "nextClick"
   | "prevClick"
@@ -238,6 +257,9 @@ export type Context = {
   setDriver: (driver: Driver) => void;
 
   getHookOpts: (stateOverride?: State, reason?: DestroyReason) => HookOpts;
+
+  consume: (event: Event) => void;
+  isConsumed: (event: Event) => boolean;
 };
 
 export function createContext(options: Config = {}): Context {
@@ -248,6 +270,7 @@ export function createContext(options: Config = {}): Context {
   const emitter = createEmitter();
 
   let driver: Driver;
+  const consumedEvents = new WeakSet<Event>();
 
   return {
     getConfig: config.getConfig,
@@ -277,5 +300,10 @@ export function createContext(options: Config = {}): Context {
         ...(reason ? { reason } : {}),
       };
     },
+
+    consume: (event: Event) => {
+      consumedEvents.add(event);
+    },
+    isConsumed: (event: Event) => consumedEvents.has(event),
   };
 }
