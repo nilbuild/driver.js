@@ -220,6 +220,7 @@ export type State = {
   __liveRegion?: HTMLElement;
   __rejectedKeys?: Set<string>;
   __handledKeys?: Set<string>;
+  __widgetKey?: string;
   __teardownGate?: () => void;
   __syncAllowedElements?: () => void;
   __initialWait?: { element: Element; step: DriveStep };

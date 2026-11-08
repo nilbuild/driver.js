@@ -126,6 +126,10 @@ export function resolveStepButtons(ctx: Context, step?: DriveStep) {
   };
 }
 
+export function isPopoverWaiting(ctx: Context): boolean {
+  return !!ctx.getState("popover")?.wrapper.classList.contains("driver-popover-waiting");
+}
+
 function resolveStepPosition(ctx: Context, element: Element, step: DriveStep): PositionOptions {
   const stagePadding = ctx.getConfig("stagePadding") || 0;
 

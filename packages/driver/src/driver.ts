@@ -25,7 +25,9 @@ import {
   resolvePrevHook,
   resolveStepButtons,
   clearStepPopoverWaiting,
+  isPopoverWaiting,
   markStepPopoverWaiting,
+  withPopoverPatch,
   renderStepPopover,
   resolveTourStep,
   shouldSkipStep,
@@ -124,7 +126,8 @@ export function driver(options: Config = {}): Driver {
   }
 
   function handleEscape() {
-    const { disableButtons } = resolveStepButtons(ctx, ctx.getState("__activeStep"));
+    const step = ctx.getState("__activeStep");
+    const { disableButtons } = resolveStepButtons(ctx, step ? withPopoverPatch(ctx, step) : step);
     if (disableButtons.includes("close")) {
       return;
     }
@@ -133,7 +136,12 @@ export function driver(options: Config = {}): Driver {
   }
 
   function canUseButton(button: AllowedButtons) {
-    const { showButtons, disableButtons } = resolveStepButtons(ctx, ctx.getState("__activeStep"));
+    if (button !== "close" && isPopoverWaiting(ctx)) {
+      return false;
+    }
+
+    const step = ctx.getState("__activeStep");
+    const { showButtons, disableButtons } = resolveStepButtons(ctx, step ? withPopoverPatch(ctx, step) : step);
 
     return showButtons.includes(button) && !disableButtons.includes(button);
   }
@@ -323,9 +331,15 @@ export function driver(options: Config = {}): Driver {
       markStepPopoverWaiting(ctx);
       graceTimer = window.setTimeout(() => {
         graceTimer = undefined;
-        if (!signal.aborted && !recover()) {
-          report(element);
+        if (signal.aborted || recover()) {
+          return;
         }
+
+        if (activation.latched || activation.pendingCompletion) {
+          return;
+        }
+
+        report(element);
       }, grace);
     };
 
@@ -348,17 +362,22 @@ export function driver(options: Config = {}): Driver {
     });
   }
 
-  function startActivation() {
+  function beginActivation(step: DriveStep): Activation {
     endActivation();
-
-    const step = ctx.getState("activeStep");
-    if (!step) {
-      return;
-    }
 
     activationCount += 1;
     const activation: Activation = { id: activationCount, step, controller: new AbortController(), latched: false };
     ctx.setState("__activation", activation);
+
+    return activation;
+  }
+
+  function armActivation(activation: Activation) {
+    if (ctx.getState("__activation") !== activation) {
+      return;
+    }
+
+    const { step } = activation;
     trackAllowedElements(ctx, step, activation.controller.signal);
     watchForRemoval(activation);
 
@@ -478,8 +497,12 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
+    const wasWaiting = isPopoverWaiting(ctx);
     const before = popoverText();
     updateStepPopover(ctx, element, activation.step);
+    if (wasWaiting) {
+      markStepPopoverWaiting(ctx);
+    }
     const after = popoverText();
 
     const changed = [
@@ -671,13 +694,19 @@ export function driver(options: Config = {}): Driver {
     ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
     ctx.setState("activeIndex", stepIndex);
 
-    highlight(ctx, resolveStepAt(stepIndex));
-
-    startActivation();
+    const step = resolveStepAt(stepIndex);
+    const activation = beginActivation(step);
+    highlight(ctx, step);
+    armActivation(activation);
   }
 
   function destroy(reason: DestroyReason, withOnDestroyStartedHook = true) {
     if (!ctx.getState("isInitialized")) {
+      destroyEvents(ctx);
+      destroyLiveRegion(ctx);
+      ctx.setState("__events", undefined);
+      ctx.setState("__teardownGate", undefined);
+      ctx.setState("__liveRegion", undefined);
       return;
     }
 
@@ -764,7 +793,11 @@ export function driver(options: Config = {}): Driver {
     setSteps: (steps: DriveStep[]) => {
       cancelElementWait();
       endActivation();
+      const { __events, __teardownGate, __liveRegion } = ctx.getState();
       ctx.resetState();
+      ctx.setState("__events", __events);
+      ctx.setState("__teardownGate", __teardownGate);
+      ctx.setState("__liveRegion", __liveRegion);
       ctx.setConfig({
         ...ctx.getConfig(),
         steps,
@@ -813,8 +846,11 @@ export function driver(options: Config = {}): Driver {
     },
     highlight: (step: DriveStep) => {
       init();
+      cancelElementWait();
+      endInitialWait();
       ctx.setState("__destroyReason", undefined);
-      highlight(ctx, {
+
+      const highlightStep: DriveStep = {
         ...step,
         popover: step.popover
           ? {
@@ -824,8 +860,10 @@ export function driver(options: Config = {}): Driver {
               ...step.popover!,
             }
           : undefined,
-      });
-      startActivation();
+      };
+      const activation = beginActivation(highlightStep);
+      highlight(ctx, highlightStep);
+      armActivation(activation);
     },
     updatePopover,
     nudge: (target?: NudgeTarget) => nudge(ctx, target),
