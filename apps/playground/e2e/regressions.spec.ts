@@ -6,7 +6,7 @@ const title = (page: Page) => page.locator(".driver-popover-title");
 const settle = (page: Page) =>
   page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 
-test("advanceOnClick still advances on a click", async ({ page }) => {
+test("advanceOn click advances on a click", async ({ page }) => {
   await page.goto("/advance-on-click");
   await expect(title(page)).toHaveText("Click the Button");
 

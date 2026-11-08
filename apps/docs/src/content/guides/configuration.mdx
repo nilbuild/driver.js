@@ -69,25 +69,22 @@ type Config = {
   // Can be configured at the step level as well
   disableActiveInteraction?: boolean;
 
-  // Advance the tour when the highlighted element is clicked, as if the next
-  // button was pressed; onNextClick and onDoneClick still apply. The element's
-  // own click behavior runs normally. Has no effect on steps where
-  // disableActiveInteraction blocks clicks. Can be configured at the step
-  // level. (default: false)
-  advanceOnClick?: boolean;
-
   // What completes a step, as if the next button was pressed: a DOM event
   // name or list of names fired on the highlighted element ("contextmenu",
   // ["dblclick", "contextmenu"]), or a function that calls options.next().
   // The function also gets options.signal, aborted when the step is left,
   // and may return a cleanup function. false switches it off for a step.
-  // Takes over from advanceOnClick. Can be configured at the step level.
+  // Can be configured at the step level.
   // See the Action-Driven Tours guide. (default: undefined, off)
   advanceOn?:
     | false
     | string
     | string[]
     | ((element: Element | undefined, step: DriveStep, options: HookOptions & { next: () => void; signal: AbortSignal }) => void | (() => void));
+
+  // Deprecated: use advanceOn: "click" instead. Still works and means the
+  // same thing; advanceOn wins when both are set. (default: false)
+  advanceOnClick?: boolean;
 
   // Called for every click, auxclick, contextmenu, dblclick and keydown
   // during a step, before your app's handlers. options.region is "element",
@@ -399,16 +396,15 @@ type DriveStep = {
   // Whether to disable interaction with the highlighted element. (default: false)
   disableActiveInteraction?: boolean;
 
-  // Advance the tour when this step's highlighted element is clicked.
-  // Overrides the driver-level option for this step. (default: false)
-  advanceOnClick?: boolean;
-
   // Step-level versions of the driver options with the same name.
   // Each overrides the driver-level value for this step.
   advanceOn?: false | string | string[] | Function;
   onInteraction?: Function;
   allowedElements?: string | Element | Array<string | Element> | (() => Element[] | NodeListOf<Element>);
   onElementMissing?: Function;
+
+  // Deprecated: use advanceOn: "click" instead. (default: false)
+  advanceOnClick?: boolean;
 
   // Skip this step when its target element is specified but missing from the
   // DOM. Overrides the driver-level option for this step. (default: false)

@@ -100,12 +100,9 @@ export type Config = {
 
   disableActiveInteraction?: boolean;
 
-  // Advance the tour when the highlighted element is clicked, through the same
-  // hook resolution as the next button. The element's own click behaviour
-  // still runs; nothing is prevented. (default: false)
-  advanceOnClick?: boolean;
-
   advanceOn?: AdvanceOn;
+  /** @deprecated Use `advanceOn: "click"`. */
+  advanceOnClick?: boolean;
   onInteraction?: InteractionHook;
   allowedElements?: AllowedElements;
   onElementMissing?: ElementMissingHook;

@@ -9,24 +9,24 @@ import { CodeSample } from "../../components/CodeSample.tsx";
 
 Sometimes the best way forward in a tour is the product itself: click the button you are pointing at, not a "Next" in the popover. Two options make this work without any custom hooks:
 
-- `advanceOnClick` advances the tour when the highlighted element is clicked, exactly as if the next button was pressed. The element's own click behavior still runs.
+- `advanceOn: "click"` advances the tour when the highlighted element is clicked, exactly as if the next button was pressed. The element's own click behavior still runs.
 - `waitForElement` makes a step wait up to the given number of milliseconds for its element to appear, staying on the current step in the meantime. The current popover stays visible in a waiting state, with its close button usable.
 
-Both can be set for the whole tour or per step. For tours where every step waits for a specific action, like a right-click or typing, and wrong actions get feedback, see [Action-Driven Tours](/docs/action-driven-tours).
+Both can be set for the whole tour or per step. `advanceOnClick: true` from earlier versions still works but is deprecated. For tours where every step waits for a specific action, like a right-click or typing, and wrong actions get feedback, see [Action-Driven Tours](/docs/action-driven-tours).
 
 ## Advance on Click
 
-The tour below has `advanceOnClick` enabled, so you can click the highlighted lines to walk through it.
+The tour below has `advanceOn: "click"` set, so you can click the highlighted lines to walk through it.
 
 <CodeSample
   heading={'Advance on Click'}
   config={{
     animate: true,
     showProgress: true,
-    advanceOnClick: true,
+    advanceOn: "click",
   }}
   tour={[
-    { element: '.line:nth-child(5)', popover: { title: 'Click to Advance', description: 'This tour has advanceOnClick on. Click this highlighted line to move on; the next button works too.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(5)', popover: { title: 'Click to Advance', description: 'This tour advances on click. Click this highlighted line to move on; the next button works too.', side: "bottom", align: 'start' }},
     { element: '.line:nth-child(8)', popover: { title: 'Also per Step', description: 'Like most options, it can be set for the whole tour or per step. Click this line to continue.', side: "bottom", align: 'start' }},
     { element: '.line:nth-child(14)', popover: { title: 'Last Step', description: 'On the last step, clicking the highlighted element ends the tour, like the done button.', side: "top", align: 'start' }},
   ]}
@@ -37,7 +37,7 @@ The tour below has `advanceOnClick` enabled, so you can click the highlighted li
   import "driver.js/dist/driver.css";
 
   const driverObj = driver({
-    advanceOnClick: true,
+    advanceOn: "click",
     showProgress: true,
     steps: [
       { element: '#pick-plan', popover: { title: 'Pick a Plan', description: 'Click the highlighted card to continue.' } },
@@ -50,7 +50,7 @@ The tour below has `advanceOnClick` enabled, so you can click the highlighted li
   ```
 </CodeSample>
 
-> **Tip**: For truly click-driven steps, hide the next button with `showButtons: ['close']` on the step's popover so the highlighted element is the only way forward. Note that `advanceOnClick` has no effect on steps where `disableActiveInteraction` blocks clicks on the element.
+> **Tip**: For truly click-driven steps, hide the next button with `showButtons: ['close']` on the step's popover so the highlighted element is the only way forward. Note that clicks can't advance the tour on steps where `disableActiveInteraction` blocks clicks on the element.
 
 ## Wait for Elements
 
@@ -76,7 +76,7 @@ Click-driven tours usually lead somewhere new: the click opens a modal or a drop
     steps: [
       {
         element: '#open-modal-btn',
-        advanceOnClick: true,
+        advanceOn: "click",
         popover: {
           title: 'Open the Modal',
           description: 'Clicking this button opens the modal and moves the tour on.',
@@ -188,7 +188,7 @@ A driver instance lives within a single page: a full page load destroys it, and 
 
 ### Saving Progress Before Navigating
 
-Define the tour in a function so every page can create it. On the step whose click navigates away, use `advanceOnClick` together with an `onNextClick` override: instead of moving to a step that lives on another page, save where to resume and tear the tour down. The link's own click keeps working, so navigation happens naturally.
+Define the tour in a function so every page can create it. On the step whose click navigates away, use `advanceOn: "click"` together with an `onNextClick` override: instead of moving to a step that lives on another page, save where to resume and tear the tour down. The link's own click keeps working, so navigation happens naturally.
 
 ```js
 import { driver } from "driver.js";
@@ -208,7 +208,7 @@ export function createTour() {
       {
         element: "#settings-link",
         // Clicking the highlighted link continues the tour and navigates.
-        advanceOnClick: true,
+        advanceOn: "click",
         popover: {
           title: "Open Settings",
           description: "Click this link to continue on the settings page.",

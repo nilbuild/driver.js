@@ -98,7 +98,7 @@ An event name means "the event happened", not "the action succeeded". When compl
 }
 ```
 
-A step completes once. Repeated events while the next step is still waiting for its element are ignored. Set `advanceOn: false` on a step to switch off a value inherited from the config. `advanceOnClick: true` still works and means `advanceOn: "click"`.
+A step completes once. Repeated events while the next step is still waiting for its element are ignored. Set `advanceOn: false` on a step to switch off a value inherited from the config. `advanceOnClick: true` is deprecated but still works and means `advanceOn: "click"`.
 
 ## Block Everything Else with `onInteraction`
 
