@@ -226,6 +226,7 @@ export type State = {
   __syncAllowedElements?: () => void;
   __initialWait?: { element: Element; step: DriveStep; index: number };
   __isWaiting?: boolean;
+  __keepReturnFocus?: boolean;
   __lastAnnouncement?: string;
 
   // User action a destroy() called from a hook reports instead of "api".
