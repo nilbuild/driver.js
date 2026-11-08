@@ -67,7 +67,6 @@ export type PopoverPatch = Pick<
 >;
 
 export type Activation = {
-  id: number;
   step: DriveStep;
   controller: AbortController;
   cleanup?: () => void;
