@@ -764,9 +764,9 @@ export function driver(options: Config = {}): Driver {
       reason = ctx.getState("__destroyReason") ?? "api";
     }
 
-    const initialWait = ctx.getState("__initialWait");
     const activeElement = ctx.getState("__activeElement");
-    const activeStep = ctx.getState("__activeStep") ?? initialWait?.step;
+    const activeStep = ctx.getState("__activeStep") ?? ctx.getState("__initialWait")?.step;
+    const hookElement = isDummyElement(activeElement) ? undefined : activeElement;
 
     const activeOnDestroyed = ctx.getState("__activeOnDestroyed");
 
@@ -776,13 +776,7 @@ export function driver(options: Config = {}): Driver {
     // not causing tour to be destroyed.
     if (withOnDestroyStartedHook && onDestroyStarted) {
       ctx.setState("__destroyReason", reason);
-
-      const isActiveDummyElement = !activeElement || activeElement?.id === "driver-dummy-element";
-      onDestroyStarted(
-        isActiveDummyElement ? undefined : activeElement,
-        activeStep!,
-        ctx.getHookOpts(undefined, reason)
-      );
+      onDestroyStarted(hookElement, activeStep!, ctx.getHookOpts(undefined, reason));
       return;
     }
 
@@ -809,27 +803,12 @@ export function driver(options: Config = {}): Driver {
 
     ctx.resetState();
 
-    if (!activeElement && activeStep && onDestroyed) {
-      onDestroyed(undefined, activeStep, ctx.getHookOpts(stateBeforeDestroy, reason));
-    }
-
-    if (activeElement && activeStep) {
-      const isActiveDummyElement = activeElement.id === "driver-dummy-element";
-      if (onDeselected) {
-        onDeselected(
-          isActiveDummyElement ? undefined : activeElement,
-          activeStep,
-          ctx.getHookOpts(stateBeforeDestroy, reason)
-        );
+    if (activeStep) {
+      if (activeElement && onDeselected) {
+        onDeselected(hookElement, activeStep, ctx.getHookOpts(stateBeforeDestroy, reason));
       }
 
-      if (onDestroyed) {
-        onDestroyed(
-          isActiveDummyElement ? undefined : activeElement,
-          activeStep,
-          ctx.getHookOpts(stateBeforeDestroy, reason)
-        );
-      }
+      onDestroyed?.(hookElement, activeStep, ctx.getHookOpts(stateBeforeDestroy, reason));
     }
 
     if (activeOnDestroyed) {
