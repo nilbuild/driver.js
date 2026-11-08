@@ -108,6 +108,10 @@ function setHtml(element: HTMLElement, html: string) {
   appliedHtml.set(element, html);
 }
 
+function setDisplay(element: HTMLElement, isVisible: boolean, display = "block") {
+  element.style.display = isVisible ? display : "none";
+}
+
 function toggleButton(button: HTMLButtonElement, isDisabled: boolean) {
   button.disabled = isDisabled;
   button.classList.toggle("driver-popover-btn-disabled", isDisabled);
@@ -125,26 +129,21 @@ function applyPopoverContent(popover: PopoverDOM, options: PopoverRenderOptions)
 
   if (title) {
     setHtml(popover.title, title);
-    popover.title.style.display = "block";
-  } else {
-    popover.title.style.display = "none";
   }
+  setDisplay(popover.title, !!title);
 
   if (description) {
     setHtml(popover.description, description);
-    popover.description.style.display = "block";
-  } else {
-    popover.description.style.display = "none";
   }
+  setDisplay(popover.description, !!description);
 
   const showFooter = showButtons.includes("next") || showButtons.includes("previous") || showProgress;
 
-  popover.closeButton.style.display = showButtons.includes("close") ? "block" : "none";
-
-  popover.footer.style.display = showFooter ? "flex" : "none";
-  popover.progress.style.display = showProgress ? "block" : "none";
-  popover.nextButton.style.display = showButtons.includes("next") ? "block" : "none";
-  popover.previousButton.style.display = showButtons.includes("previous") ? "block" : "none";
+  setDisplay(popover.closeButton, showButtons.includes("close"));
+  setDisplay(popover.footer, showFooter, "flex");
+  setDisplay(popover.progress, showProgress);
+  setDisplay(popover.nextButton, showButtons.includes("next"));
+  setDisplay(popover.previousButton, showButtons.includes("previous"));
 
   toggleButton(popover.nextButton, disableButtons.includes("next"));
   toggleButton(popover.previousButton, disableButtons.includes("previous"));
