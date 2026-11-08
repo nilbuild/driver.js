@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createDriver, navButton, nextFrame, SAMPLE_STEPS, useDriverHarness } from "./utils";
+import { append, createDriver, navButton, nextFrame, SAMPLE_STEPS, useDriverHarness } from "./utils";
 
 useDriverHarness();
 
@@ -160,6 +160,31 @@ describe("keyboard focus trap", () => {
     window.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(false);
+  });
+
+  it("does not loop when the highlighted element sits inside an allowed element", async () => {
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(10);
+    const menu = append("menu", "div");
+    const [a, b, c] = ["a", "b", "c"].map(id => {
+      const button = document.createElement("button");
+      button.id = id;
+      menu.appendChild(button);
+      return button;
+    });
+
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#b", allowedElements: "#menu", popover: { title: "B", showButtons: [] } }],
+    });
+    d.drive();
+    await nextFrame();
+
+    b.focus();
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", cancelable: true }));
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", cancelable: true }));
+
+    expect(document.activeElement).toBe(c);
+    expect(a).toBeTruthy();
   });
 });
 

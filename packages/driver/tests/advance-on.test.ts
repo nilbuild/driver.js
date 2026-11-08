@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createDriver, nextFrame, popoverTitle, SAMPLE_STEPS, useDriverHarness } from "./utils";
+import { append, createDriver, keyEvent, nextFrame, popoverTitle, SAMPLE_STEPS, useDriverHarness } from "./utils";
 
 useDriverHarness();
 
@@ -467,5 +467,68 @@ describe("advanceOn", () => {
       fire("#intro", "contextmenu");
       expect(onNextClick).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe("advanceOn on re-rendered elements", () => {
+  it("re-binds a function advanceOn to a re-rendered element", async () => {
+    const input = append("field", "input");
+    const d = createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [
+        {
+          element: "#field",
+          advanceOn: (el, _step, opts) => {
+            el?.addEventListener("keydown", e => (e as KeyboardEvent).key === "Enter" && opts.next(), {
+              signal: opts.signal,
+            });
+          },
+        },
+        SAMPLE_STEPS[1],
+      ],
+    });
+    d.drive();
+    await nextFrame();
+
+    input.remove();
+    const replacement = append("field", "input");
+    await nextFrame();
+    await nextFrame();
+
+    keyEvent("keydown", { key: "Enter", code: "Enter" }, replacement);
+    expect(d.getActiveIndex()).toBe(1);
+  });
+
+  it("runs each advanceOn cleanup once across a re-render and completion", async () => {
+    const input = append("field", "input") as HTMLInputElement;
+    const cleanups: string[] = [];
+    createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [
+        {
+          element: "#field",
+          advanceOn: (el, _step, opts) => {
+            const name = (el as HTMLInputElement).dataset.name || "old";
+            if ((el as HTMLInputElement).value === "done") {
+              opts.next();
+            }
+            return () => cleanups.push(name);
+          },
+        },
+        SAMPLE_STEPS[1],
+      ],
+    }).drive();
+    await nextFrame();
+
+    input.remove();
+    const replacement = append("field", "input") as HTMLInputElement;
+    replacement.value = "done";
+    replacement.dataset.name = "new";
+    await nextFrame();
+    await nextFrame();
+
+    expect(cleanups).toEqual(["old", "new"]);
   });
 });

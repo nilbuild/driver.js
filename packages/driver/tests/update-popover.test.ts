@@ -225,6 +225,35 @@ describe("updatePopover", () => {
       expect(liveRegion()).toBeNull();
     });
   });
+
+  it("keeps focus in the popover when the focused content is replaced", async () => {
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#intro", popover: { title: "T", description: `<input id="answer">` } }],
+    });
+    d.drive();
+    await nextFrame();
+
+    document.querySelector<HTMLInputElement>("#answer")?.focus();
+    d.updatePopover({ description: "Wrong answer, try again." });
+
+    expect(document.activeElement).toBe(document.querySelector(".driver-popover"));
+  });
+
+  it("announces the same feedback again on a later step", async () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+    d.updatePopover({ description: "Right-click instead." });
+
+    d.moveNext();
+    await nextFrame();
+    const region = document.querySelector(".driver-live-region")!;
+    region.textContent = "";
+    d.updatePopover({ description: "Right-click instead." });
+
+    expect(region.textContent).toBe("Right-click instead.");
+  });
 });
 
 describe("updatePopover precision", () => {
@@ -272,5 +301,30 @@ describe("updatePopover precision", () => {
     d.updatePopover({ progressText: "Step {{current}} / {{total}}" });
 
     expect(document.querySelector(".driver-popover-progress-text")?.textContent).toBe("Step 2 / 3");
+  });
+});
+
+describe("updatePopover from hooks", () => {
+  it("applies updatePopover called from onPopoverRender", async () => {
+    const d = createDriver({
+      animate: false,
+      steps: SAMPLE_STEPS,
+      onPopoverRender: (_popover, opts) => opts.driver.updatePopover({ title: "From render" }),
+    });
+    d.drive();
+    await nextFrame();
+
+    expect(popoverTitle()).toBe("From render");
+  });
+
+  it("applies updatePopover from an initial-wait timeout hook", async () => {
+    createDriver({
+      animate: false,
+      onElementMissing: (_el, _step, opts) => opts.driver.updatePopover({ description: "Load failed; retry" }),
+      steps: [{ element: "#never", waitForElement: 30, popover: { title: "First", description: "Waiting" } }],
+    }).drive();
+    await wait(70);
+
+    expect(document.querySelector(".driver-popover-description")?.textContent).toBe("Load failed; retry");
   });
 });
