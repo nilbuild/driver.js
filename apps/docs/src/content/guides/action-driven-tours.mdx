@@ -5,29 +5,15 @@ groupTitle: "Examples"
 sort: 3.5
 ---
 
-import { CodeSample } from "../../components/CodeSample.tsx";
+import { ActionDrivenSample } from "../../components/ActionDrivenSample.tsx";
 
 Training flows teach by doing. Each step waits for the user to perform the action it describes, everything else is blocked, and a wrong action gets a hint. Driver.js gives you the building blocks; your app decides what counts as right or wrong.
 
 ## Try It
 
-Right-click the first highlighted line, then double-click the second. Click anywhere else, or use the wrong mouse button, and the tour tells you.
+The tour below walks through inviting a teammate. Each step waits for you to do it: type an email, pick a role, send. Click anywhere else, or pick the wrong role, and the tour tells you.
 
-<CodeSample
-  heading={'Action-Driven Tour'}
-  config={{
-    animate: true,
-    showButtons: ['close'],
-    allowKeyboardControl: false,
-    overlayClickBehavior: 'none',
-  }}
-  tour={[
-    { element: '.line:nth-child(4)', advanceOn: 'contextmenu', data: { reject: ['click', 'dblclick'], hint: 'Not quite. <b>Right-click</b> this line.' }, popover: { title: 'Right-click', description: 'Right-click this highlighted line to continue.', side: 'bottom', align: 'start' }},
-    { element: '.line:nth-child(7)', advanceOn: 'dblclick', data: { reject: ['contextmenu'], hint: 'Use a <b>double-click</b> here.' }, popover: { title: 'Double-click', description: 'Now double-click this line.', side: 'bottom', align: 'start' }},
-    { element: '.line:nth-child(12)', popover: { title: 'Done', description: 'Each step only moved on when you did the real thing.', showButtons: ['next'], side: 'top', align: 'start' }},
-  ]}
-  id={"action-driven"}
-  client:load>
+<ActionDrivenSample client:load>
   ```js
   import { driver } from "driver.js";
   import "driver.js/dist/driver.css";
@@ -37,8 +23,7 @@ Right-click the first highlighted line, then double-click the second. Click anyw
     allowKeyboardControl: false,
     overlayClickBehavior: "none",
     onInteraction: (element, step, { event, region, driver }) => {
-      const isWrongHere = region === "element" && step.data?.reject?.includes(event.type);
-      if (event.type === "keydown" || (region !== "outside" && !isWrongHere)) {
+      if (event.type === "keydown" || region !== "outside") {
         return;
       }
 
@@ -47,21 +32,58 @@ Right-click the first highlighted line, then double-click the second. Click anyw
       return false;
     },
     steps: [
-      { element: "#file", advanceOn: "contextmenu", data: { reject: ["click"], hint: "Right-click the file." } },
-      { element: "#file", advanceOn: "dblclick", data: { reject: ["contextmenu"], hint: "Double-click it." } },
+      {
+        element: "#invite-email",
+        advanceOn: (element, step, { next, signal }) => {
+          element.addEventListener("keydown", event => {
+            if (event.key === "Enter" && element.checkValidity() && element.value) {
+              next();
+            }
+          }, { signal });
+        },
+        data: { hint: "Click the email field and type an address first." },
+        popover: { title: "Who are you inviting?", description: "Type an email and press Enter." },
+      },
+      {
+        element: "#invite-role",
+        advanceOn: (element, step, { next, signal, driver }) => {
+          element.addEventListener("change", () => {
+            if (element.value === "editor") {
+              next();
+              return;
+            }
+
+            driver.updatePopover({ description: "Viewers can only look around. Choose Editor." });
+            driver.nudge();
+          }, { signal });
+        },
+        data: { hint: "Pick a role from the dropdown first." },
+        popover: { title: "Pick a role", description: "Choose Editor." },
+      },
+      {
+        element: "#invite-send",
+        advanceOn: "click",
+        data: { hint: "Click Send invite to finish." },
+        popover: { title: "Send it", description: "Click Send invite." },
+      },
+      {
+        element: "#invite-sent",
+        waitForElement: 3000,
+        popover: { title: "Invite sent", showButtons: ["next"] },
+      },
     ],
   });
 
   driverObj.drive();
   ```
-</CodeSample>
+</ActionDrivenSample>
 
 ## Complete a Step with `advanceOn`
 
 Give `advanceOn` an event name and the step completes when that event happens on the highlighted element. It behaves like pressing Next, and your own handlers still run.
 
 ```js
-{ element: "#file", advanceOn: "contextmenu" }
+{ element: "#invite-send", advanceOn: "click" }
 { element: "#file", advanceOn: ["dblclick", "contextmenu"] } // either one
 ```
 
@@ -69,10 +91,10 @@ An event only means the action happened, not that it succeeded. When completion 
 
 ```js
 {
-  element: "#rename-input",
+  element: "#invite-email",
   advanceOn: (element, step, { next, signal }) => {
     element.addEventListener("keydown", event => {
-      if (event.key === "Enter" && element.value.trim()) {
+      if (event.key === "Enter" && element.checkValidity() && element.value) {
         next();
       }
     }, { signal });
@@ -113,7 +135,7 @@ If the menu still sits below the overlay, target its positioned wrapper or set `
 `driverObj.updatePopover()` changes the visible popover in place, and calling it without arguments restores the original. `driverObj.nudge()` shakes the popover.
 
 ```js
-driverObj.updatePopover({ description: "Not quite. Right-click the file." });
+driverObj.updatePopover({ description: "Viewers can only look around. Choose Editor." });
 driverObj.nudge();
 ```
 
@@ -130,56 +152,4 @@ onElementMissing: (element, step, { cause, driver }) => {
 },
 ```
 
-## Complete Example
-
-```js
-const tour = driver({
-  showButtons: ["close"],
-  allowKeyboardControl: false,
-  overlayClickBehavior: "none",
-
-  onInteraction: (element, step, { event, region, driver }) => {
-    if (event.type === "keydown") {
-      return;
-    }
-
-    const isWrongHere = region === "element" && step.data?.reject?.includes(event.type);
-    if (region !== "outside" && !isWrongHere) {
-      return;
-    }
-
-    driver.updatePopover({ description: step.data?.hint });
-    driver.nudge();
-    return false;
-  },
-
-  onElementMissing: (element, step, { cause, driver }) => {
-    if (cause === "removed") {
-      driver.movePrevious();
-      driver.updatePopover({ description: "The menu closed. Right-click the file again." });
-    }
-  },
-
-  steps: [
-    {
-      element: "#file",
-      advanceOn: "contextmenu",
-      allowedElements: ".context-menu",
-      data: { reject: ["click", "dblclick"], hint: "Not quite. Right-click the file, or press Shift+F10." },
-      popover: { title: "Open the menu", description: "Right-click the file." },
-    },
-    {
-      element: ".context-menu [data-action=rename]",
-      waitForElement: 2000,
-      advanceOn: "click",
-      allowedElements: [".context-menu", "#file"],
-      data: { reject: ["contextmenu"], hint: "Choose Rename from the menu." },
-      popover: { title: "Rename", description: "Choose Rename." },
-    },
-  ],
-});
-
-tour.drive();
-```
-
-> **Tip**: Always leave a way out, like the close button. iOS Safari never fires `contextmenu`, so on iPhones accept another event too or use a function `advanceOn`.
+> **Tip**: Always leave a way out, like the close button. iOS Safari never fires `contextmenu`, so if a step waits for a right-click, accept another event too or use a function `advanceOn`.
