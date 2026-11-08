@@ -127,7 +127,7 @@ export function resolveStepButtons(ctx: Context, step?: DriveStep) {
 }
 
 export function isPopoverWaiting(ctx: Context): boolean {
-  return !!ctx.getState("popover")?.wrapper.classList.contains("driver-popover-waiting");
+  return !!ctx.getState("__isWaiting") || !!ctx.getState("popover")?.wrapper.classList.contains("driver-popover-waiting");
 }
 
 function resolveStepPosition(ctx: Context, element: Element, step: DriveStep): PositionOptions {
@@ -178,7 +178,7 @@ function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): Po
 
       const onNextClick = resolveNextHook(ctx, step);
       if (onNextClick) {
-        return onNextClick(element, step, ctx.getHookOpts());
+        return onNextClick(ctx.getState("activeElement") ?? element, step, ctx.getHookOpts());
       }
 
       return ctx.emit("nextClick");
@@ -187,7 +187,7 @@ function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): Po
     onPrevClick: () => {
       const onPrevClick = resolvePrevHook(ctx, step);
       if (onPrevClick) {
-        return onPrevClick(element, step, ctx.getHookOpts());
+        return onPrevClick(ctx.getState("activeElement") ?? element, step, ctx.getHookOpts());
       }
 
       return ctx.emit("prevClick");
@@ -198,7 +198,7 @@ function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): Po
 
       const onCloseClick = resolveCloseHook(ctx, step);
       if (onCloseClick) {
-        return onCloseClick(element, step, ctx.getHookOpts());
+        return onCloseClick(ctx.getState("activeElement") ?? element, step, ctx.getHookOpts());
       }
 
       return ctx.emit("closeClick");
@@ -235,6 +235,10 @@ export function renderStepPopover(ctx: Context, element: Element, step: DriveSte
     keepFocus,
   });
 
+  if (ctx.getState("__isWaiting")) {
+    markStepPopoverWaiting(ctx);
+  }
+
   if (keepFocus) {
     const text = [popover.title, popover.description]
       .filter(part => part.style.display !== "none")
@@ -262,6 +266,8 @@ export function repositionStepPopover(ctx: Context, element: Element, step: Driv
 }
 
 export function markStepPopoverWaiting(ctx: Context) {
+  ctx.setState("__isWaiting", true);
+
   const popover = ctx.getState("popover");
   if (!popover || popover.wrapper.style.display === "none") {
     return;
@@ -276,6 +282,8 @@ export function markStepPopoverWaiting(ctx: Context) {
 }
 
 export function clearStepPopoverWaiting(ctx: Context, element: Element | undefined, step: DriveStep | undefined) {
+  ctx.setState("__isWaiting", false);
+
   const popover = ctx.getState("popover");
   if (!popover || !popover.wrapper.classList.contains("driver-popover-waiting")) {
     return;
