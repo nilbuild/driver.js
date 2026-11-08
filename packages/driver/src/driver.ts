@@ -301,7 +301,9 @@ export function driver(options: Config = {}): Driver {
       graceTimer = undefined;
       hasReported = false;
       rebindActiveElement(ctx, replacement);
-      clearWaiting();
+      if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
+        clearWaiting();
+      }
       return true;
     };
 
@@ -331,11 +333,7 @@ export function driver(options: Config = {}): Driver {
       markStepPopoverWaiting(ctx);
       graceTimer = window.setTimeout(() => {
         graceTimer = undefined;
-        if (signal.aborted || recover()) {
-          return;
-        }
-
-        if (activation.latched || activation.pendingCompletion) {
+        if (signal.aborted || activation.latched || activation.pendingCompletion || recover()) {
           return;
         }
 

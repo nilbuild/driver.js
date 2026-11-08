@@ -133,11 +133,29 @@ export function initGate(ctx: Context): () => void {
   const controller = new AbortController();
   const listener = (event: Event) => onGatedEvent(ctx, event);
 
+  window.addEventListener(
+    "keydown",
+    event => {
+      const region = regionOf(ctx, event.composedPath());
+      if (region === "element" || region === "allowed") {
+        ctx.setState("__widgetKey", keyId(event));
+      }
+    },
+    { capture: true, signal: controller.signal }
+  );
+
   for (const type of GATED_EVENTS) {
     window.addEventListener(type, listener, { capture: true, signal: controller.signal });
   }
 
-  window.addEventListener("blur", () => rejectedKeys(ctx).clear(), { signal: controller.signal });
+  window.addEventListener(
+    "blur",
+    () => {
+      rejectedKeys(ctx).clear();
+      ctx.setState("__widgetKey", undefined);
+    },
+    { signal: controller.signal }
+  );
 
   return () => controller.abort();
 }

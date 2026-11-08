@@ -264,3 +264,84 @@ describe("hooks during render", () => {
     expect(popoverTitle()).toBe("From render");
   });
 });
+
+describe("second review", () => {
+  it("keeps Escape with the widget when a capture handler moves focus outside", async () => {
+    const trigger = append("trigger");
+    const menu = append("menu", "div");
+    const item = document.createElement("button");
+    menu.appendChild(item);
+
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#menu", popover: { title: "Menu" } }],
+      onInteraction: (_el, _step, opts) => {
+        if ((opts.event as KeyboardEvent).key === "Escape") {
+          trigger.focus();
+        }
+      },
+    });
+    d.drive();
+    await nextFrame();
+
+    item.focus();
+    key("keydown", { key: "Escape", code: "Escape" }, item);
+    key("keyup", { key: "Escape", code: "Escape" }, trigger);
+
+    expect(d.isActive()).toBe(true);
+  });
+
+  it("keeps the waiting state when the target returns during a pending navigation", async () => {
+    const target = append("target");
+    let next: (() => void) | undefined;
+    const d = createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [
+        {
+          element: "#target",
+          waitForElement: 200,
+          popover: { title: "Target" },
+          advanceOn: (_el, _step, opts) => {
+            next = opts.next;
+          },
+        },
+        { element: "#later", waitForElement: 1000, popover: { title: "Later" } },
+      ],
+    });
+    d.drive();
+    await nextFrame();
+
+    target.remove();
+    await nextFrame();
+    await nextFrame();
+    next?.();
+    document.body.appendChild(target);
+    await tick(260);
+
+    expect(navButton("next")?.disabled).toBe(true);
+    expect(document.querySelector(".driver-popover")?.classList.contains("driver-popover-waiting")).toBe(true);
+  });
+
+  it("renders a delayed popover against the rebound element", async () => {
+    append("target");
+    const onNextClick = vi.fn();
+    const d = createDriver({
+      animate: true,
+      duration: 200,
+      onElementMissing: vi.fn(),
+      steps: [SAMPLE_STEPS[0], { element: "#target", popover: { title: "T", onNextClick } }],
+    });
+    d.drive();
+    await tick(250);
+    d.moveNext();
+    await nextFrame();
+
+    document.querySelector("#target")?.remove();
+    const replacement = append("target");
+    await tick(300);
+
+    navButton("next")?.click();
+    expect(onNextClick.mock.calls[0][0]).toBe(replacement);
+  });
+});
