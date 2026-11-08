@@ -12,12 +12,13 @@ ships, these entries move under a versioned heading.
 
 ### Added
 
-- `advanceOn` completes a step on any event, like `"contextmenu"`, or when your function calls `next()`.
-- `onInteraction` sees clicks, right-clicks and keys during a step and can block them with `return false`.
+- `advanceOn` completes a step on any event, like `"contextmenu"`, and `{ event, when }` only completes it when your check passes.
+- `onInteraction` sees clicks, right-clicks and double-clicks during a step and can block them with `return false`.
 - `allowedElements` keeps menus and popups opened by a step usable above the overlay.
-- `onElementMissing` lets you recover when a step's element disappears or a wait times out.
+- `onElementMissing` lets you recover when a step's element disappears or a wait times out. Return `false` on a timeout to stay on the current step.
 - `driverObj.updatePopover()` changes the popover text in place and announces it to screen readers.
-- `driverObj.nudge()` shakes the popover to draw attention.
+- `driverObj.nudge()` shakes the popover to draw attention, and `nudge({ description })` changes its text at the same time.
+- `onHighlighted` gets a `signal` that aborts when the step is left.
 
 ### Changed
 
