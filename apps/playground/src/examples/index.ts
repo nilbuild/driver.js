@@ -9,6 +9,7 @@ import { scrollGroup } from "./scroll";
 import { instancesGroup } from "./instances";
 import { skipMissingGroup } from "./skip-missing";
 import { advanceWaitGroup } from "./advance-wait";
+import { actionDrivenGroup } from "./action-driven";
 import { hintsGroup } from "./hints";
 import { checklistGroup } from "./checklist";
 import { destroyReasonGroup } from "./destroy-reason";
@@ -21,6 +22,7 @@ export const exampleGroups: ExampleGroup[] = [
   hintsGroup,
   checklistGroup,
   advanceWaitGroup,
+  actionDrivenGroup,
   skipMissingGroup,
   instancesGroup,
   destroyReasonGroup,

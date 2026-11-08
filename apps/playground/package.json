@@ -7,13 +7,15 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "driver.js": "workspace:*",
     "@astrojs/check": "^0.9.9",
+    "@playwright/test": "^1.65.0",
     "@tailwindcss/vite": "^4.3.1",
     "astro": "^7.0.0",
+    "driver.js": "workspace:*",
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3"
   }
