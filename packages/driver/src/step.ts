@@ -127,7 +127,9 @@ export function resolveStepButtons(ctx: Context, step?: DriveStep) {
 }
 
 export function isPopoverWaiting(ctx: Context): boolean {
-  return !!ctx.getState("__isWaiting") || !!ctx.getState("popover")?.wrapper.classList.contains("driver-popover-waiting");
+  return (
+    !!ctx.getState("__isWaiting") || !!ctx.getState("popover")?.wrapper.classList.contains("driver-popover-waiting")
+  );
 }
 
 function resolveStepPosition(ctx: Context, element: Element, step: DriveStep): PositionOptions {

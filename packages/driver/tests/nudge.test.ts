@@ -97,7 +97,17 @@ describe("nudge", () => {
 
     Object.defineProperty(window, "innerWidth", { value: window.innerWidth + 100, configurable: true });
     const element = document.querySelector("#intro") as HTMLElement;
-    element.getBoundingClientRect = () => ({ x: 50, y: 60, width: 30, height: 20, top: 60, left: 50, right: 80, bottom: 80, toJSON: () => ({}) });
+    element.getBoundingClientRect = () => ({
+      x: 50,
+      y: 60,
+      width: 30,
+      height: 20,
+      top: 60,
+      left: 50,
+      right: 80,
+      bottom: 80,
+      toJSON: () => ({}),
+    });
     d.refresh();
     await nextFrame();
 

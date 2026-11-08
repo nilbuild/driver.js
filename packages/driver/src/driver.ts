@@ -340,7 +340,14 @@ export function driver(options: Config = {}): Driver {
         return;
       }
 
-      if (activation.latched || activation.pendingCompletion || recover() || hasReported || graceTimer) {
+      if (
+        activation.latched ||
+        activation.pendingCompletion ||
+        ctx.getState("__pendingWaitCancel") ||
+        recover() ||
+        hasReported ||
+        graceTimer
+      ) {
         return;
       }
 
@@ -353,7 +360,13 @@ export function driver(options: Config = {}): Driver {
       markStepPopoverWaiting(ctx);
       graceTimer = window.setTimeout(() => {
         graceTimer = undefined;
-        if (signal.aborted || activation.latched || activation.pendingCompletion || recover()) {
+        if (
+          signal.aborted ||
+          activation.latched ||
+          activation.pendingCompletion ||
+          ctx.getState("__pendingWaitCancel") ||
+          recover()
+        ) {
           return;
         }
 
@@ -753,8 +766,9 @@ export function driver(options: Config = {}): Driver {
       reason = ctx.getState("__destroyReason") ?? "api";
     }
 
+    const initialWait = ctx.getState("__initialWait");
     const activeElement = ctx.getState("__activeElement");
-    const activeStep = ctx.getState("__activeStep");
+    const activeStep = ctx.getState("__activeStep") ?? initialWait?.step;
 
     const activeOnDestroyed = ctx.getState("__activeOnDestroyed");
 
@@ -796,6 +810,10 @@ export function driver(options: Config = {}): Driver {
     const stateBeforeDestroy = ctx.getState();
 
     ctx.resetState();
+
+    if (!activeElement && activeStep && onDestroyed) {
+      onDestroyed(undefined, activeStep, ctx.getHookOpts(stateBeforeDestroy, reason));
+    }
 
     if (activeElement && activeStep) {
       const isActiveDummyElement = activeElement.id === "driver-dummy-element";

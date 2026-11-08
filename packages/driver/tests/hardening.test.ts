@@ -5,7 +5,11 @@ useDriverHarness();
 
 const tick = (ms = 10) => new Promise(resolve => setTimeout(resolve, ms));
 
-function key(type: "keydown" | "keyup", init: KeyboardEventInit, target: Element = document.activeElement || document.body) {
+function key(
+  type: "keydown" | "keyup",
+  init: KeyboardEventInit,
+  target: Element = document.activeElement || document.body
+) {
   const event = new KeyboardEvent(type, { bubbles: true, cancelable: true, composed: true, ...init });
   target.dispatchEvent(event);
   return event;
@@ -422,7 +426,11 @@ describe("fourth review", () => {
   it("reports again after the same node is reinserted and removed", async () => {
     const target = append("target");
     const onElementMissing = vi.fn();
-    createDriver({ animate: false, onElementMissing, steps: [{ element: "#target", popover: { title: "T" } }] }).drive();
+    createDriver({
+      animate: false,
+      onElementMissing,
+      steps: [{ element: "#target", popover: { title: "T" } }],
+    }).drive();
     await nextFrame();
 
     target.remove();
@@ -479,7 +487,17 @@ describe("fifth review", () => {
     await nextFrame();
     await nextFrame();
     target.getBoundingClientRect = () =>
-      ({ x: 120, y: 240, width: 40, height: 20, top: 240, left: 120, right: 160, bottom: 260, toJSON: () => ({}) }) as DOMRect;
+      ({
+        x: 120,
+        y: 240,
+        width: 40,
+        height: 20,
+        top: 240,
+        left: 120,
+        right: 160,
+        bottom: 260,
+        toJSON: () => ({}),
+      }) as DOMRect;
     document.body.appendChild(target);
     await nextFrame();
     await nextFrame();
@@ -498,7 +516,9 @@ describe("seventh review", () => {
         {
           element: "#field",
           advanceOn: (el, _step, opts) => {
-            el?.addEventListener("keydown", e => (e as KeyboardEvent).key === "Enter" && opts.next(), { signal: opts.signal });
+            el?.addEventListener("keydown", e => (e as KeyboardEvent).key === "Enter" && opts.next(), {
+              signal: opts.signal,
+            });
           },
         },
         SAMPLE_STEPS[1],
@@ -572,7 +592,8 @@ describe("eighth review", () => {
   it("moves on to the next missing step after an initial timeout", async () => {
     const d = createDriver({
       animate: false,
-      onElementMissing: (_el, _step, opts) => opts.driver.updatePopover({ description: "Unavailable; click Next to skip." }),
+      onElementMissing: (_el, _step, opts) =>
+        opts.driver.updatePopover({ description: "Unavailable; click Next to skip." }),
       steps: [
         { element: "#missing-1", waitForElement: 30, popover: { title: "One" } },
         { element: "#missing-2", waitForElement: 30, popover: { title: "Two" } },
@@ -604,5 +625,80 @@ describe("eighth review", () => {
 
     key("keyup", { key: "Escape", code: "Escape" }, document.body);
     expect(d.isActive()).toBe(true);
+  });
+});
+
+describe("ninth review", () => {
+  it("does not report removed while Next is waiting for the destination", async () => {
+    const page = append("page", "div");
+    const onElementMissing = vi.fn();
+    const d = createDriver({
+      animate: false,
+      onElementMissing,
+      steps: [
+        {
+          element: "#page",
+          popover: {
+            title: "Go",
+            onNextClick: () => {
+              page.remove();
+              d.moveNext();
+            },
+          },
+        },
+        { element: "#destination", waitForElement: 500, popover: { title: "There" } },
+      ],
+    });
+    d.drive();
+    await nextFrame();
+
+    navButton("next")?.click();
+    await nextFrame();
+    await nextFrame();
+
+    expect(onElementMissing).not.toHaveBeenCalled();
+  });
+
+  it("runs onDestroyed when closing during an initial wait", async () => {
+    const onDestroyed = vi.fn();
+    createDriver({
+      animate: false,
+      onDestroyed,
+      steps: [{ element: "#missing", waitForElement: 500, popover: { title: "First" } }],
+    }).drive();
+
+    navButton("close")?.click();
+
+    expect(onDestroyed).toHaveBeenCalledTimes(1);
+    expect(onDestroyed.mock.calls[0][0]).toBeUndefined();
+    expect(onDestroyed.mock.calls[0][1].popover.title).toBe("First");
+  });
+
+  it("locks scrolling on the replacement's scrollable parent", async () => {
+    const makeList = () => {
+      const list = document.createElement("div");
+      list.style.overflow = "auto";
+      list.innerHTML = `<button id="item">Item</button>`;
+      document.body.appendChild(list);
+      return list;
+    };
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(500);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(100);
+    const first = makeList();
+    createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [{ element: "#item", popover: { title: "Item" } }],
+    }).drive();
+    await nextFrame();
+    expect(first.classList.contains("driver-active-element-parent-no-scroll")).toBe(true);
+
+    first.remove();
+    const second = makeList();
+    await nextFrame();
+    await nextFrame();
+
+    expect(second.classList.contains("driver-active-element-parent")).toBe(true);
+    expect(second.classList.contains("driver-active-element-parent-no-scroll")).toBe(true);
   });
 });

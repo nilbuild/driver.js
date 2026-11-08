@@ -232,7 +232,12 @@ describe("updatePopover precision", () => {
     const onClick = vi.fn();
     const d = createDriver({
       animate: false,
-      steps: [{ element: "#intro", popover: { title: "Title", description: `<input id="note"><button id="extra">Extra</button>` } }],
+      steps: [
+        {
+          element: "#intro",
+          popover: { title: "Title", description: `<input id="note"><button id="extra">Extra</button>` },
+        },
+      ],
       onPopoverRender: () => document.querySelector("#extra")?.addEventListener("click", onClick),
     });
     d.drive();
