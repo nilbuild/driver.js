@@ -756,3 +756,80 @@ describe("tenth review", () => {
     expect(region.textContent).toBe("Right-click instead.");
   });
 });
+
+describe("eleventh review", () => {
+  it("runs each advanceOn cleanup once across a re-render and completion", async () => {
+    const input = append("field", "input") as HTMLInputElement;
+    const cleanups: string[] = [];
+    createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [
+        {
+          element: "#field",
+          advanceOn: (el, _step, opts) => {
+            const name = (el as HTMLInputElement).dataset.name || "old";
+            if ((el as HTMLInputElement).value === "done") {
+              opts.next();
+            }
+            return () => cleanups.push(name);
+          },
+        },
+        SAMPLE_STEPS[1],
+      ],
+    }).drive();
+    await nextFrame();
+
+    input.remove();
+    const replacement = append("field", "input") as HTMLInputElement;
+    replacement.value = "done";
+    replacement.dataset.name = "new";
+    await nextFrame();
+    await nextFrame();
+
+    expect(cleanups).toEqual(["old", "new"]);
+  });
+
+  it("lets ArrowRight move on after an initial timeout", async () => {
+    const d = createDriver({
+      animate: false,
+      onElementMissing: (_el, _step, opts) => opts.driver.updatePopover({ description: "Click Next to skip." }),
+      steps: [
+        { element: "#missing", waitForElement: 30, popover: { title: "One" } },
+        { element: "#intro", popover: { title: "Two" } },
+      ],
+    });
+    d.drive();
+    await tick(70);
+
+    key("keyup", { key: "ArrowRight", code: "ArrowRight" }, document.body);
+    expect(popoverTitle()).toBe("Two");
+  });
+
+  it("keeps the launcher as return focus across chained initial waits", async () => {
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(function (this: HTMLElement) {
+      for (let node: HTMLElement | null = this; node; node = node.parentElement) {
+        if (node.style.display === "none") {
+          return 0;
+        }
+      }
+      return 10;
+    });
+    const launcher = append("launcher");
+    launcher.focus();
+    const d = createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [
+        { element: "#missing-1", waitForElement: 30, popover: { title: "One" } },
+        { element: "#missing-2", waitForElement: 30, popover: { title: "Two" } },
+      ],
+    });
+    d.drive();
+    await tick(70);
+    navButton("next")?.click();
+    d.destroy();
+
+    expect(document.activeElement).toBe(launcher);
+  });
+});
