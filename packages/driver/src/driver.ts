@@ -1,7 +1,16 @@
 import { AllowedButtons, destroyPopover, hidePopover, Popover } from "./popover";
 import { destroyOverlay } from "./overlay";
 import { destroyEvents, initEvents, requireRefresh } from "./events";
-import { Activation, AdvanceOn, Config, createContext, DestroyReason, DriverHook, PopoverPatch } from "./context";
+import {
+  Activation,
+  AdvanceOn,
+  Config,
+  createContext,
+  DestroyReason,
+  DriverHook,
+  InteractionHook,
+  PopoverPatch,
+} from "./context";
 import { announce, destroyLiveRegion, mountLiveRegion } from "./live-region";
 import { listenForAdvanceEvents, resolveAdvanceOn } from "./advance";
 import { destroyHighlight, highlight } from "./highlight";
@@ -27,6 +36,9 @@ export type {
   DestroyReason,
   DriverHook,
   HookOpts,
+  InteractionHook,
+  InteractionOpts,
+  InteractionRegion,
   PopoverPatch,
   State,
 } from "./context";
@@ -42,6 +54,7 @@ export type DriveStep = {
   disableActiveInteraction?: boolean;
   advanceOnClick?: boolean;
   advanceOn?: AdvanceOn;
+  onInteraction?: InteractionHook;
   skipMissingElement?: boolean;
   waitForElement?: number;
   data?: Record<string, any>;
