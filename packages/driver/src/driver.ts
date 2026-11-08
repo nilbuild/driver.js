@@ -172,18 +172,19 @@ export function driver(options: Config = {}): Driver {
     }
 
     if (overlayClickBehavior === "nextStep") {
-      const activeStep = ctx.getState("activeStep");
-      const activeElement = ctx.getState("activeElement");
-
-      const onNextClick = resolveNextHook(ctx, activeStep);
-      if (onNextClick) {
-        markDoneIfLastStep();
-        onNextClick(activeElement, activeStep!, ctx.getHookOpts());
-        return;
-      }
-
-      moveNext();
+      goNext(ctx.getState("activeElement"), ctx.getState("activeStep"));
     }
+  }
+
+  function goNext(element: Element | undefined, step: DriveStep | undefined) {
+    const onNextClick = resolveNextHook(ctx, step);
+    if (onNextClick) {
+      markDoneIfLastStep();
+      onNextClick(element, step!, ctx.getHookOpts());
+      return;
+    }
+
+    moveNext();
   }
 
   function moveNext() {
@@ -232,15 +233,7 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    const activeElement = ctx.getState("activeElement");
-    const onNextClick = resolveNextHook(ctx, activeStep);
-    if (onNextClick) {
-      markDoneIfLastStep();
-      onNextClick(activeElement, activeStep, ctx.getHookOpts());
-      return;
-    }
-
-    moveNext();
+    goNext(ctx.getState("activeElement"), activeStep);
   }
 
   function requestCompletion(activationId: number) {
@@ -522,7 +515,6 @@ export function driver(options: Config = {}): Driver {
 
     const activeIndex = ctx.getState("activeIndex");
     const activeStep = currentPopoverStep();
-    const activeElement = ctx.getState("__activeElement");
     if (typeof activeIndex === "undefined" || typeof activeStep === "undefined") {
       return;
     }
@@ -531,13 +523,7 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    const onNextClick = resolveNextHook(ctx, activeStep);
-    if (onNextClick) {
-      markDoneIfLastStep();
-      return onNextClick(activeElement, activeStep, ctx.getHookOpts());
-    }
-
-    moveNext();
+    goNext(ctx.getState("__activeElement"), activeStep);
   }
 
   function popoverText() {
