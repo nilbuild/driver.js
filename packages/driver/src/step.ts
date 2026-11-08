@@ -79,6 +79,12 @@ export type TourStepDefaults = {
   onCloseClick: DriverHook;
 };
 
+function formatProgress(ctx: Context, text: string, stepIndex: number): string {
+  const total = (ctx.getConfig("steps") || []).length;
+
+  return text.replace("{{current}}", `${stepIndex + 1}`).replace("{{total}}", `${total}`);
+}
+
 // The resolved step is what ends up in state and what the lifecycle hooks
 // receive, not just what gets rendered.
 export function resolveTourStep(ctx: Context, stepIndex: number, defaults: TourStepDefaults): DriveStep {
@@ -94,9 +100,6 @@ export function resolveTourStep(ctx: Context, stepIndex: number, defaults: TourS
   const showProgress =
     typeof popover.showProgress !== "undefined" ? popover.showProgress : ctx.getConfig("showProgress");
   const progressText = popover.progressText || ctx.getConfig("progressText") || DEFAULT_PROGRESS_TEXT;
-  const progressTextReplaced = progressText
-    .replace("{{current}}", `${stepIndex + 1}`)
-    .replace("{{total}}", `${steps.length}`);
 
   const configuredButtons = popover.showButtons || ctx.getConfig("showButtons");
   const calculatedButtons: AllowedButtons[] = [
@@ -106,10 +109,6 @@ export function resolveTourStep(ctx: Context, stepIndex: number, defaults: TourS
   ].filter(b => {
     return !configuredButtons || configuredButtons.includes(b as AllowedButtons);
   }) as AllowedButtons[];
-
-  const onNextClick = popover.onNextClick || ctx.getConfig("onNextClick");
-  const onPrevClick = popover.onPrevClick || ctx.getConfig("onPrevClick");
-  const onCloseClick = popover.onCloseClick || ctx.getConfig("onCloseClick");
 
   return {
     ...step,
@@ -121,11 +120,11 @@ export function resolveTourStep(ctx: Context, stepIndex: number, defaults: TourS
         ...(!hasPreviousStep ? ["previous" as AllowedButtons] : []),
       ],
       showProgress,
-      onNextClick: onNextClick ? onNextClick : defaults.onNextClick,
-      onPrevClick: onPrevClick ? onPrevClick : defaults.onPrevClick,
-      onCloseClick: onCloseClick ? onCloseClick : defaults.onCloseClick,
+      onNextClick: popover.onNextClick || ctx.getConfig("onNextClick") || defaults.onNextClick,
+      onPrevClick: resolvePrevHook(ctx, step) || defaults.onPrevClick,
+      onCloseClick: resolveCloseHook(ctx, step) || defaults.onCloseClick,
       ...popover,
-      progressText: progressTextReplaced,
+      progressText: formatProgress(ctx, progressText, stepIndex),
     },
   };
 }
@@ -260,11 +259,7 @@ function resolvePatchedPopover(ctx: Context, element: Element, step: DriveStep):
   }
 
   if (patch.progressText !== undefined) {
-    const steps = ctx.getConfig("steps") || [];
-    const activeIndex = ctx.getState("activeIndex") ?? 0;
-    options.progressText = patch.progressText
-      .replace("{{current}}", `${activeIndex + 1}`)
-      .replace("{{total}}", `${steps.length}`);
+    options.progressText = formatProgress(ctx, patch.progressText, ctx.getState("activeIndex") ?? 0);
   }
 
   return options;
