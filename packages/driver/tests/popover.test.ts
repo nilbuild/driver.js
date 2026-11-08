@@ -678,3 +678,14 @@ describe("popover landmarks", () => {
     expect(popoverEl()?.querySelector(".driver-popover-footer")?.tagName).toBe("DIV");
   });
 });
+
+describe("empty showButtons in the config", () => {
+  it("hides every button instead of showing them all", () => {
+    const d = createDriver({ animate: false, showButtons: [], steps: SAMPLE_STEPS });
+    d.drive(1);
+
+    expect(navButton("next")?.style.display).toBe("none");
+    expect(navButton("prev")?.style.display).toBe("none");
+    expect(navButton("close")?.style.display).toBe("none");
+  });
+});

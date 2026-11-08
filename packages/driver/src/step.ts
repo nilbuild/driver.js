@@ -93,7 +93,7 @@ export function resolveTourStep(ctx: Context, stepIndex: number, defaults: TourS
     "previous",
     ...(allowsClosing ? ["close" as AllowedButtons] : []),
   ].filter(b => {
-    return !configuredButtons?.length || configuredButtons.includes(b as AllowedButtons);
+    return !configuredButtons || configuredButtons.includes(b as AllowedButtons);
   }) as AllowedButtons[];
 
   const onNextClick = popover.onNextClick || ctx.getConfig("onNextClick");
