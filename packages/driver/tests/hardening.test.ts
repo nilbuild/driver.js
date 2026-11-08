@@ -345,3 +345,75 @@ describe("second review", () => {
     expect(onNextClick.mock.calls[0][0]).toBe(replacement);
   });
 });
+
+describe("third review", () => {
+  it("does not leave a rejected widget key owning the next Escape", async () => {
+    const menu = append("menu", "div");
+    const item = document.createElement("button");
+    menu.appendChild(item);
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#menu", popover: { title: "Menu" } }],
+      onInteraction: (_el, _step, opts) => ((opts.event as KeyboardEvent).key === "Escape" ? false : undefined),
+    });
+    d.drive();
+    await nextFrame();
+
+    item.focus();
+    key("keydown", { key: "Escape", code: "Escape" }, item);
+    key("keyup", { key: "Escape", code: "Escape" }, item);
+    expect(d.isActive()).toBe(true);
+
+    item.blur();
+    key("keydown", { key: "Escape", code: "Escape" }, document.body);
+    key("keyup", { key: "Escape", code: "Escape" }, document.body);
+    expect(d.isActive()).toBe(false);
+  });
+
+  it("passes the rebound element to popover button hooks", async () => {
+    const original = append("target");
+    const onNextClick = vi.fn();
+    createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [{ element: "#target", popover: { title: "T", onNextClick } }],
+    }).drive();
+    await nextFrame();
+
+    original.remove();
+    const replacement = append("target");
+    await nextFrame();
+    await nextFrame();
+
+    navButton("next")?.click();
+    expect(onNextClick.mock.calls[0][0]).toBe(replacement);
+  });
+
+  it("renders a delayed popover in the waiting state when a wait is pending", async () => {
+    let next: (() => void) | undefined;
+    const d = createDriver({
+      animate: true,
+      duration: 200,
+      steps: [
+        SAMPLE_STEPS[0],
+        {
+          element: "#card-1",
+          popover: { title: "Two" },
+          advanceOn: (_el, _step, opts) => {
+            next = opts.next;
+          },
+        },
+        { element: "#late", waitForElement: 1000, popover: { title: "Late" } },
+      ],
+    });
+    d.drive();
+    await tick(250);
+    d.moveNext();
+    next?.();
+    await tick(300);
+
+    expect(popoverTitle()).toBe("Two");
+    expect(navButton("next")?.disabled).toBe(true);
+    expect(navButton("prev")?.disabled).toBe(true);
+  });
+});

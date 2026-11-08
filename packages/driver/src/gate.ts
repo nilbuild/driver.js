@@ -81,6 +81,10 @@ function onGatedEvent(ctx: Context, event: Event) {
     const id = keyId(event);
     if (event.type === "keyup") {
       if (rejected.delete(id)) {
+        if (ctx.getState("__widgetKey") === id) {
+          ctx.setState("__widgetKey", undefined);
+        }
+        ctx.getState("__handledKeys")?.delete(id);
         consume(ctx, event);
       }
 

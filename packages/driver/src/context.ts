@@ -224,6 +224,7 @@ export type State = {
   __teardownGate?: () => void;
   __syncAllowedElements?: () => void;
   __initialWait?: { element: Element; step: DriveStep };
+  __isWaiting?: boolean;
   __lastAnnouncement?: string;
 
   // User action a destroy() called from a hook reports instead of "api".

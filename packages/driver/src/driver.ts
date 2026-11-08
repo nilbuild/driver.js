@@ -694,6 +694,7 @@ export function driver(options: Config = {}): Driver {
 
     const step = resolveStepAt(stepIndex);
     const activation = beginActivation(step);
+    ctx.setState("__isWaiting", false);
     highlight(ctx, step);
     armActivation(activation);
   }
@@ -860,6 +861,7 @@ export function driver(options: Config = {}): Driver {
           : undefined,
       };
       const activation = beginActivation(highlightStep);
+      ctx.setState("__isWaiting", false);
       highlight(ctx, highlightStep);
       armActivation(activation);
     },
