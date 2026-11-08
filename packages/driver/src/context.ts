@@ -72,8 +72,16 @@ export type Activation = {
   controller: AbortController;
   cleanup?: () => void;
   latched: boolean;
+  pendingCompletion?: boolean;
+  recheck?: () => void;
   popoverPatch?: PopoverPatch;
 };
+
+export type ElementMissingOpts = HookOpts & {
+  cause: "removed" | "timeout";
+};
+
+export type ElementMissingHook = (element: Element | undefined, step: DriveStep, opts: ElementMissingOpts) => void;
 
 export type Config = {
   steps?: DriveStep[];
@@ -99,6 +107,7 @@ export type Config = {
   advanceOn?: AdvanceOn;
   onInteraction?: InteractionHook;
   allowedElements?: AllowedElements;
+  onElementMissing?: ElementMissingHook;
 
   // Skip a step whose target element is specified but missing from the DOM.
   // Element-less steps are intentional centered steps and never skipped. (default: false)
@@ -213,6 +222,7 @@ export type State = {
   __handledKeys?: Set<string>;
   __teardownGate?: () => void;
   __syncAllowedElements?: () => void;
+  __initialWait?: { element: Element; step: DriveStep };
   __lastAnnouncement?: string;
 
   // User action a destroy() called from a hook reports instead of "api".

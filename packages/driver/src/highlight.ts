@@ -41,7 +41,7 @@ function restoreAria(element: Element) {
   originalAria.delete(element);
 }
 
-function mountDummyElement(): Element {
+export function mountDummyElement(): Element {
   const existingDummy = document.getElementById("driver-dummy-element");
   if (existingDummy) {
     return existingDummy;
@@ -217,4 +217,27 @@ export function destroyHighlight() {
     element.classList.remove("driver-active-element", "driver-no-interaction");
     restoreAria(element);
   });
+}
+
+export function rebindActiveElement(ctx: Context, element: Element) {
+  const step = ctx.getState("activeStep");
+  if (!step) {
+    return;
+  }
+
+  document.querySelectorAll(".driver-active-element").forEach(previous => {
+    previous.classList.remove("driver-active-element", "driver-no-interaction");
+    restoreAria(previous);
+  });
+
+  element.classList.add("driver-active-element");
+  if (step.disableActiveInteraction ?? ctx.getConfig("disableActiveInteraction")) {
+    element.classList.add("driver-no-interaction");
+  }
+  setPopoverAria(element);
+
+  ctx.setState("activeElement", element);
+  ctx.setState("__activeElement", element);
+  trackActiveElement(ctx, element);
+  repositionStepPopover(ctx, element, step);
 }

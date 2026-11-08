@@ -1,4 +1,4 @@
-import type { AdvanceOn, Context } from "./context";
+import type { Activation, AdvanceOn, Context } from "./context";
 import type { DriveStep } from "./driver";
 
 export function resolveAdvanceOn(ctx: Context, step: DriveStep): AdvanceOn | undefined {
@@ -34,9 +34,10 @@ export function isOnPath(event: Event, element: Element | undefined): boolean {
 export function listenForAdvanceEvents(
   ctx: Context,
   eventTypes: string[],
-  signal: AbortSignal,
+  activation: Activation,
   onComplete: () => void
 ) {
+  const { signal } = activation.controller;
   let pendingEvent: Event | undefined;
   let pendingTimer: number | undefined;
 
@@ -48,12 +49,17 @@ export function listenForAdvanceEvents(
     window.clearTimeout(pendingTimer);
     pendingEvent = undefined;
     pendingTimer = undefined;
+    activation.pendingCompletion = false;
 
-    if (signal.aborted || ctx.isConsumed(event)) {
+    if (signal.aborted) {
       return;
     }
 
-    onComplete();
+    if (!ctx.isConsumed(event)) {
+      onComplete();
+    }
+
+    activation.recheck?.();
   };
 
   const onCapture = (event: Event) => {
@@ -62,6 +68,7 @@ export function listenForAdvanceEvents(
     }
 
     pendingEvent = event;
+    activation.pendingCompletion = true;
     window.clearTimeout(pendingTimer);
     pendingTimer = window.setTimeout(() => settle(event), 0);
   };
