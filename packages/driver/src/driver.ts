@@ -291,20 +291,26 @@ export function driver(options: Config = {}): Driver {
     let graceTimer: number | undefined;
     let hasReported = false;
 
+    const isBusy = () => activation.latched || activation.pendingCompletion || ctx.getState("__pendingWaitCancel");
+
+    const restore = (element: Element) => {
+      window.clearTimeout(graceTimer);
+      graceTimer = undefined;
+      hasReported = false;
+      rebindActiveElement(ctx, element);
+      activation.rebind?.();
+      if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
+        clearWaiting();
+      }
+    };
+
     const recover = () => {
       const replacement = resolveElement(step.element);
       if (!replacement || !replacement.isConnected) {
         return false;
       }
 
-      window.clearTimeout(graceTimer);
-      graceTimer = undefined;
-      hasReported = false;
-      rebindActiveElement(ctx, replacement);
-      activation.rebind?.();
-      if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
-        clearWaiting();
-      }
+      restore(replacement);
       return true;
     };
 
@@ -323,27 +329,13 @@ export function driver(options: Config = {}): Driver {
 
       if (element.isConnected) {
         if (hasReported || graceTimer !== undefined) {
-          window.clearTimeout(graceTimer);
-          graceTimer = undefined;
-          hasReported = false;
-          rebindActiveElement(ctx, element);
-          activation.rebind?.();
-          if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
-            clearWaiting();
-          }
+          restore(element);
         }
 
         return;
       }
 
-      if (
-        activation.latched ||
-        activation.pendingCompletion ||
-        ctx.getState("__pendingWaitCancel") ||
-        recover() ||
-        hasReported ||
-        graceTimer
-      ) {
+      if (isBusy() || recover() || hasReported || graceTimer) {
         return;
       }
 
@@ -356,13 +348,7 @@ export function driver(options: Config = {}): Driver {
       markStepPopoverWaiting(ctx);
       graceTimer = window.setTimeout(() => {
         graceTimer = undefined;
-        if (
-          signal.aborted ||
-          activation.latched ||
-          activation.pendingCompletion ||
-          ctx.getState("__pendingWaitCancel") ||
-          recover()
-        ) {
+        if (signal.aborted || isBusy() || recover()) {
           return;
         }
 
