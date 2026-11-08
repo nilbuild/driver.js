@@ -30,11 +30,15 @@ function trapFocus(ctx: Context, e: KeyboardEvent) {
   const activeElement = ctx.getState("__activeElement");
   const popoverEl = ctx.getState("popover")?.wrapper;
 
-  const focusableEls = getFocusableElements([
-    ...(popoverEl ? [popoverEl] : []),
-    ...(activeElement ? [activeElement] : []),
-    ...Array.from(document.querySelectorAll(`.${ALLOWED_CLASS}`)),
-  ]);
+  const focusableEls = [
+    ...new Set(
+      getFocusableElements([
+        ...(popoverEl ? [popoverEl] : []),
+        ...(activeElement ? [activeElement] : []),
+        ...Array.from(document.querySelectorAll(`.${ALLOWED_CLASS}`)),
+      ])
+    ),
+  ];
 
   const firstFocusableEl = focusableEls[0];
   const lastFocusableEl = focusableEls[focusableEls.length - 1];
@@ -64,17 +68,24 @@ function handledKeys(ctx: Context): Set<string> {
 
 function onKeydownCapture(ctx: Context, e: KeyboardEvent) {
   handledKeys(ctx).add(keyId(e));
+  if (isFocusInPlay(ctx)) {
+    ctx.setState("__widgetKey", keyId(e));
+  }
 }
 
 function onKeydownBubble(ctx: Context, e: KeyboardEvent) {
-  if (!e.defaultPrevented) {
-    handledKeys(ctx).delete(keyId(e));
+  const id = keyId(e);
+  if (!e.defaultPrevented && ctx.getState("__widgetKey") !== id) {
+    handledKeys(ctx).delete(id);
   }
 }
 
 function onKeyup(ctx: Context, e: KeyboardEvent) {
   const allowKeyboardControl = ctx.getConfig("allowKeyboardControl") ?? true;
   const wasHandledByApp = handledKeys(ctx).delete(keyId(e));
+  if (ctx.getState("__widgetKey") === keyId(e)) {
+    ctx.setState("__widgetKey", undefined);
+  }
 
   if (!allowKeyboardControl || wasHandledByApp || isFocusInPlay(ctx)) {
     return;
@@ -90,6 +101,10 @@ function onKeyup(ctx: Context, e: KeyboardEvent) {
 }
 
 export function initEvents(ctx: Context) {
+  if (ctx.getState("__events")) {
+    return;
+  }
+
   // Stashed in state so destroyEvents can detach these exact references.
   const onWindowKeyup = (e: KeyboardEvent) => onKeyup(ctx, e);
   const onWindowKeydown = (e: KeyboardEvent) => {

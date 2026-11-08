@@ -43,11 +43,15 @@ export function trackAllowedElements(ctx: Context, step: DriveStep, signal: Abor
 
     const matches = new Set(resolveAllowedElements(setting));
     marked.forEach(element => {
-      if (!matches.has(element)) {
+      if (!matches.has(element) && element.classList.contains(ALLOWED_CLASS)) {
         element.classList.remove(ALLOWED_CLASS);
       }
     });
-    matches.forEach(element => element.classList.add(ALLOWED_CLASS));
+    matches.forEach(element => {
+      if (!element.classList.contains(ALLOWED_CLASS)) {
+        element.classList.add(ALLOWED_CLASS);
+      }
+    });
     marked = matches;
   };
 

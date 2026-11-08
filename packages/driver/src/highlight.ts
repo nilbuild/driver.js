@@ -152,17 +152,19 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
     if (ctx.getConfig("animate") && elapsed < duration) {
       transitionStage(ctx, elapsed, duration, fromElement, toElement);
     } else {
-      trackActiveElement(ctx, toElement);
+      const reboundElement = ctx.getState("activeStep") === toStep ? ctx.getState("activeElement") : undefined;
+      const finalElement = reboundElement || toElement;
+      trackActiveElement(ctx, finalElement);
 
       if (highlightedHook) {
-        highlightedHook(isToDummyElement ? undefined : toElement, toStep, ctx.getHookOpts());
+        highlightedHook(isToDummyElement ? undefined : finalElement, toStep, ctx.getHookOpts());
       }
 
       ctx.setState("__transitionCallback", undefined);
       ctx.setState("__previousStep", fromStep);
       ctx.setState("__previousElement", fromElement);
       ctx.setState("__activeStep", toStep);
-      ctx.setState("__activeElement", toElement);
+      ctx.setState("__activeElement", finalElement);
     }
 
     window.requestAnimationFrame(animate);
@@ -225,8 +227,14 @@ export function rebindActiveElement(ctx: Context, element: Element) {
     return;
   }
 
-  document.querySelectorAll(".driver-active-element").forEach(previous => {
+  const previousElements = new Set([ctx.getState("activeElement"), ...document.querySelectorAll(".driver-active-element")]);
+  previousElements.forEach(previous => {
+    if (!previous) {
+      return;
+    }
+
     previous.classList.remove("driver-active-element", "driver-no-interaction");
+    previous.parentElement?.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
     restoreAria(previous);
   });
 
