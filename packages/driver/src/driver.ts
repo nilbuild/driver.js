@@ -316,7 +316,20 @@ export function driver(options: Config = {}): Driver {
     const check = () => {
       frame = undefined;
       const element = ctx.getState("activeElement");
-      if (signal.aborted || !element || isDummyElement(element) || element.isConnected) {
+      if (signal.aborted || !element || isDummyElement(element)) {
+        return;
+      }
+
+      if (element.isConnected) {
+        if (hasReported || graceTimer !== undefined) {
+          window.clearTimeout(graceTimer);
+          graceTimer = undefined;
+          hasReported = false;
+          if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
+            clearWaiting();
+          }
+        }
+
         return;
       }
 

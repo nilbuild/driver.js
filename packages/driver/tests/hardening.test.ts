@@ -417,3 +417,49 @@ describe("third review", () => {
     expect(navButton("prev")?.disabled).toBe(true);
   });
 });
+
+describe("fourth review", () => {
+  it("reports again after the same node is reinserted and removed", async () => {
+    const target = append("target");
+    const onElementMissing = vi.fn();
+    createDriver({ animate: false, onElementMissing, steps: [{ element: "#target", popover: { title: "T" } }] }).drive();
+    await nextFrame();
+
+    target.remove();
+    await nextFrame();
+    await nextFrame();
+    expect(onElementMissing).toHaveBeenCalledTimes(1);
+
+    document.body.appendChild(target);
+    await nextFrame();
+    await nextFrame();
+    target.remove();
+    await nextFrame();
+    await nextFrame();
+
+    expect(onElementMissing).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears the waiting state as soon as the same node comes back", async () => {
+    const target = append("target");
+    const d = createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [SAMPLE_STEPS[0], { element: "#target", waitForElement: 500, popover: { title: "T" } }, SAMPLE_STEPS[1]],
+    });
+    d.drive(1);
+    await nextFrame();
+
+    target.remove();
+    await nextFrame();
+    await nextFrame();
+    expect(navButton("next")?.disabled).toBe(true);
+
+    document.body.appendChild(target);
+    await nextFrame();
+    await nextFrame();
+
+    expect(navButton("next")?.disabled).toBe(false);
+    expect(document.querySelector(".driver-popover")?.classList.contains("driver-popover-waiting")).toBe(false);
+  });
+});
