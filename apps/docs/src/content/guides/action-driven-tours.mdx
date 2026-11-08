@@ -7,13 +7,15 @@ sort: 3.5
 
 import { ActionDrivenSample } from "../../components/ActionDrivenSample.tsx";
 
-Training flows teach by doing. Each step waits for the user to perform the action it describes, clicks elsewhere can be blocked, and a wrong action gets a hint. Driver.js gives you the building blocks; your app decides what counts as right or wrong.
+A normal tour points at a button and says "click this", but the user can just press Next without learning anything. Action-driven tours wait for the user to actually do it: type the email, pick the right role, open the menu. If they do something else, they get a hint instead of a dead tour.
+
+Every section below has a live demo. Press **Show me an Example** under it and try doing the wrong thing too.
 
 ## Try It
 
 The tour below walks through inviting a teammate. Each step waits for you to do it: type an email, pick a role, send. Click anywhere else, or pick the wrong role, and the tour tells you.
 
-<ActionDrivenSample client:load>
+<ActionDrivenSample scenario="invite" client:load>
   ```js
   import { driver } from "driver.js";
   import "driver.js/dist/driver.css";
@@ -83,86 +85,237 @@ The tour below walks through inviting a teammate. Each step waits for you to do 
   ```
 </ActionDrivenSample>
 
-## Complete a Step with `advanceOn`
 
-Give `advanceOn` an event name and the step completes when that event happens on the highlighted element. It behaves like pressing Next, and your own handlers still run first.
+## What You Can Build
 
-```js
-{ element: "#invite-send", advanceOn: "click" }
-{ element: "#file", advanceOn: ["dblclick", "contextmenu"] } // either one
-```
+| You want to... | Use |
+| --- | --- |
+| Move on when the user does something | `advanceOn: "change"` |
+| Only move on when it's done right | `advanceOn: { event, when }` |
+| Move on when your app finishes something | `onHighlighted` + `moveNext()` |
+| Block clicks elsewhere and give a hint | `onInteraction` + `nudge()` |
+| Let the user use a menu the step opens | `allowedElements` |
+| Get back on track when the page changes | `onElementMissing` |
 
-An event only means the action happened, not that it succeeded. Add `when` to check the result. It runs after your app has handled the event, and the step only completes when it returns `true`.
+## Move On When Something Happens
 
-```js
-{
-  element: "#invite-role",
-  advanceOn: {
-    event: "change",
-    when: (element, step, { event }) => element.value === "editor",
-  },
-}
-```
+Give `advanceOn` an event name and the step completes when that event happens on the highlighted element, like pressing Next. Your own handlers still run first. Flip the switch below to continue.
 
-Only events on the highlighted element count, not on `allowedElements`. When completion depends on something else, like a save finishing or a route change, call `driverObj.moveNext()` from your app. `onHighlighted` gets a `signal` that aborts when the step is left, so listeners clean themselves up:
+<ActionDrivenSample scenario="toggle" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["close"],
+    steps: [
+      {
+        element: "#notifications",
+        advanceOn: "change",
+        popover: { title: "Turn on notifications", description: "Flip the switch." },
+      },
+      {
+        element: "#notifications",
+        popover: { title: "Notifications on", showButtons: ["next"] },
+      },
+    ],
+  });
 
-```js
-onHighlighted: (element, step, { signal }) => {
-  window.addEventListener("invite-saved", () => driverObj.moveNext(), { signal });
-},
-```
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
 
-## Block Clicks with `onInteraction`
+Any DOM event works, like `"click"`, `"input"`, `"dblclick"` or `"contextmenu"`. Pass a list to accept any of them: `advanceOn: ["dblclick", "contextmenu"]`.
 
-`onInteraction` sees every click, right-click and double-click during a step, before your app does. `region` says where it happened: `"element"`, `"allowed"` or `"outside"`. Return `false` to block it.
+## Only Move On When It's Right
 
-```js
-onInteraction: (element, step, { region }) => {
-  if (region === "outside") {
-    return false;
-  }
-},
-```
+An event only means something happened, not that it was right. Add `when` to check the result. It runs after your app has handled the event, and the step only completes when it returns `true`. Try picking Team first.
+
+<ActionDrivenSample scenario="plan" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["close"],
+    steps: [
+      {
+        element: "#plan",
+        advanceOn: {
+          event: "change",
+          when: (element, step, { driver }) => {
+            if (element.querySelector("input:checked").value === "pro") {
+              return true;
+            }
+
+            driver.nudge({ description: "That plan has no reports. Pick Pro." });
+            return false;
+          },
+        },
+        popover: { title: "Pick a plan", description: "Choose Pro to get reports." },
+      },
+      { element: "#plan", popover: { title: "Pro it is", showButtons: ["next"] } },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
+
+`when` gets the highlighted element, the step and the event, so you can check anything: a field's value, which key was pressed, what the app shows now.
+
+## Move On When Your App Is Done
+
+Sometimes the click is not the end of it: a save has to finish, a request has to come back, a route has to change. Call `driverObj.moveNext()` from your app when it's done. `onHighlighted` gets a `signal` that aborts when the step is left, so your listener cleans itself up. The save below takes a second.
+
+<ActionDrivenSample scenario="save" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["close"],
+    steps: [
+      {
+        element: "#save",
+        onHighlighted: (element, step, { signal, driver }) => {
+          window.addEventListener("profile-saved", () => driver.moveNext(), { signal });
+        },
+        popover: { title: "Save your profile", description: "Click Save." },
+      },
+      {
+        element: "#saved",
+        waitForElement: 1000,
+        popover: { title: "Saved", showButtons: ["next"] },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
+
+## Block Wrong Clicks and Give a Hint
+
+`onInteraction` sees every click, right-click and double-click during a step, before your app does. `region` says where it happened: `"element"`, `"allowed"` or `"outside"`. Return `false` to block it. `driverObj.nudge()` shakes the popover, and passing it a change updates the text at the same time. Try right-clicking the file, or clicking somewhere else.
+
+<ActionDrivenSample scenario="feedback" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["close"],
+    onInteraction: (element, step, { event, region, driver }) => {
+      if (region === "element" && event.type === "contextmenu") {
+        driver.nudge({ description: "That was a right-click. Double-click instead." });
+        return false;
+      }
+
+      if (region === "outside") {
+        driver.nudge({ description: "Stay on the file. Double-click it." });
+        return false;
+      }
+    },
+    steps: [
+      {
+        element: "#file",
+        advanceOn: "dblclick",
+        popover: { title: "Open the file", description: "Double-click report.pdf." },
+      },
+      {
+        element: "#opened",
+        waitForElement: 1000,
+        popover: { title: "Opened", showButtons: ["next"] },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
 
 - A blocked click on the overlay keeps the tour open.
-- A double-click is reported as click, click, dblclick, so a double-click step must not reject clicks.
+- A double-click is reported as click, click, dblclick, so a double-click step must not block clicks on the element.
 - Blocking a click can't undo what your app already did on `pointerdown`, like closing a menu.
 - Key presses are not reported, so typing always works.
+- `driverObj.updatePopover()` changes the popover without the shake. Calling it without arguments restores the original.
 
-## Allow a Menu with `allowedElements`
+## Let the User Use a Menu
 
-When the action opens something outside the highlighted element, like a context menu or dropdown, list it in `allowedElements` to make it usable. Elements that appear later are picked up automatically.
+When the action opens something outside the highlighted element, like a menu or a dropdown, list it in `allowedElements` so the user can use it. Elements that appear later are picked up automatically. In the demo, the menu is usable, Delete is blocked, and pressing Escape or clicking More again closes the menu and sends you back a step.
 
-```js
-{
-  element: ".menu [data-action=rename]",
-  allowedElements: [".menu", "#file"],
-}
-```
+<ActionDrivenSample scenario="menu" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["close"],
+    onInteraction: (element, step, { event, region, driver }) => {
+      if (event.target.closest("[data-action=delete]")) {
+        driver.nudge({ description: "Not Delete. Choose Archive." });
+        return false;
+      }
 
-If the menu still sits below the overlay, target its positioned wrapper or set `--driver-allowed-z-index`.
+      if (region === "outside") {
+        driver.nudge({ description: step.data.hint });
+        return false;
+      }
+    },
+    onElementMissing: (element, step, { cause, driver }) => {
+      if (cause === "removed") {
+        driver.movePrevious();
+        driver.updatePopover({ description: "The menu closed. Click More to open it again." });
+      }
+    },
+    steps: [
+      {
+        element: "#more",
+        advanceOn: "click",
+        allowedElements: ".menu",
+        data: { hint: "Click More to open the menu." },
+        popover: { title: "Open the menu", description: "Click More." },
+      },
+      {
+        element: ".menu [data-action=archive]",
+        waitForElement: 500,
+        advanceOn: "click",
+        allowedElements: [".menu", "#more"],
+        data: { hint: "Choose Archive from the menu." },
+        popover: { title: "Archive it", description: "Choose Archive." },
+      },
+      {
+        element: "#archived",
+        waitForElement: 1000,
+        popover: { title: "Archived", showButtons: ["next"] },
+      },
+    ],
+  });
 
-## Give Feedback with `nudge`
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
 
-`driverObj.nudge()` shakes the popover. Pass it a change to update the popover at the same time. `driverObj.updatePopover()` changes the popover without the shake, and calling it without arguments restores the original.
+`onElementMissing` runs with `cause: "removed"` when the highlighted element leaves the page. With `waitForElement` set, it first waits that long for the element to come back. While the hook is set, the tour also follows an element that your framework re-renders.
 
-```js
-driverObj.nudge({ description: "Only editors can make changes. Choose Editor." });
-```
+If the menu sits below the overlay, target its positioned wrapper or set `--driver-allowed-z-index`.
 
-## Recover with `onElementMissing`
+## Recover From a Slow Load
 
-Sometimes the target goes away, like a menu closed with Escape. `onElementMissing` runs with `cause: "removed"` when the highlighted element leaves the page.
+When a step's `waitForElement` runs out, `onElementMissing` runs with `cause: "timeout"`, before the usual fallback popover. Return `false` to keep the user on the current step so they can try again. The first load below is slow on purpose.
 
-```js
-onElementMissing: (element, step, { cause, driver }) => {
-  if (cause === "removed") {
-    driver.movePrevious();
-    driver.updatePopover({ description: "The menu closed. Right-click the file again." });
-  }
-},
-```
+<ActionDrivenSample scenario="load" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["close"],
+    onElementMissing: (element, step, { cause, driver }) => {
+      if (cause === "timeout") {
+        driver.nudge({ description: "Still loading. Click Load report again." });
+        return false;
+      }
+    },
+    steps: [
+      {
+        element: "#load",
+        advanceOn: "click",
+        popover: { title: "Load the report", description: "Click Load report." },
+      },
+      {
+        element: "#report",
+        waitForElement: 1500,
+        popover: { title: "Loaded", showButtons: ["next"] },
+      },
+    ],
+  });
 
-It also runs with `cause: "timeout"` when a step's `waitForElement` runs out, before the usual fallback. Return `false` to keep the user on the current step instead. While the hook is set, the tour also follows a highlighted element that your framework re-renders.
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
 
 > **Tip**: Always leave a way out, like the close button. iOS Safari never fires `contextmenu`, so if a step waits for a right-click, accept another event too.
