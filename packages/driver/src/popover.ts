@@ -112,7 +112,7 @@ function setDisplay(element: HTMLElement, isVisible: boolean, display = "block")
   element.style.display = isVisible ? display : "none";
 }
 
-function toggleButton(button: HTMLButtonElement, isDisabled: boolean) {
+export function toggleButton(button: HTMLButtonElement, isDisabled: boolean) {
   button.disabled = isDisabled;
   button.classList.toggle("driver-popover-btn-disabled", isDisabled);
 }
