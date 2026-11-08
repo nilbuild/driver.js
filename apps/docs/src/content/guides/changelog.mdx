@@ -10,6 +10,22 @@ ships, these entries move under a versioned heading.
 
 ## Unreleased
 
+### Added
+
+- `advanceOn` completes a step on any event, like `"contextmenu"`, or when your function calls `next()`.
+- `onInteraction` sees clicks, right-clicks and keys during a step and can block them with `return false`.
+- `allowedElements` keeps menus and popups opened by a step usable above the overlay.
+- `onElementMissing` lets you recover when a step's element disappears or a wait times out.
+- `driverObj.updatePopover()` changes the popover text in place and announces it to screen readers.
+- `driverObj.nudge()` shakes the popover and pulses a ring around the highlighted element.
+
+### Changed
+
+- While `waitForElement` waits, the popover stays visible in a waiting state, keeping the close button usable.
+- Escape and arrow keys pressed inside the highlighted element now go to your app instead of the tour.
+- The popover no longer takes focus from the highlighted element when a step starts.
+- `showButtons: []` in the driver config now hides all buttons instead of showing all of them.
+
 ### Fixed
 
 - Hints in an open `<dialog>` no longer get covered when the page styles
