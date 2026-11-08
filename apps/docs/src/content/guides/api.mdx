@@ -71,6 +71,17 @@ driverObj.highlight({
   /* ... */
 }); // Highlight an element
 
+// Change the visible popover in place, without re-rendering it. Changes
+// merge and only last while the current step is shown; call it without
+// arguments to restore the step's original popover. Changed text is
+// announced to screen readers.
+driverObj.updatePopover({ description: "Not quite. Right-click the file." });
+driverObj.updatePopover();
+
+// Draw attention: shake the popover and pulse a ring around the element.
+// Pass "popover" or "element" for just one. (default: "both")
+driverObj.nudge();
+
 // Destroy the tour. The destroy hooks receive `options.reason` "api",
 // or the reason of the user action when called from inside a hook.
 // https://driverjs.com/docs/configuration#driver-configuration

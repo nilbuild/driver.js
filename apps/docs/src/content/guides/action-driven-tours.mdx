@@ -1,0 +1,258 @@
+---
+title: "Action-Driven Tours"
+description: "Build Driver.js tours that only move on when the user performs the real action: right-click, double-click, type, pick a menu item. Block everything else, give feedback on wrong actions and recover when the UI changes."
+groupTitle: "Examples"
+sort: 3.5
+---
+
+import { CodeSample } from "../../components/CodeSample.tsx";
+
+Training flows teach by doing. Instead of a Next button, each step waits for the user to perform the action it describes, everything else on the page is blocked, and a wrong action gets a hint instead of silently doing nothing. Driver.js gives you the building blocks; your app decides what counts as right or wrong.
+
+| Option | What it does |
+| --- | --- |
+| `advanceOn` | What completes a step: an event name like `"contextmenu"`, or a function that calls `next()` |
+| `onInteraction` | Sees every click, right-click, double-click and key press during a step; return `false` to block it |
+| `allowedElements` | Extra elements the user may use during a step, like a menu opened by the action |
+| `onElementMissing` | Recover when the highlighted element disappears or never shows up |
+| `driverObj.updatePopover()` | Change the popover text in place, for hints |
+| `driverObj.nudge()` | Shake the popover and pulse a ring around the element |
+
+All step options can also be set on the driver config, where they apply to every step.
+
+## Try It
+
+Right-click the first highlighted line, then double-click the second. Click anywhere else, or use the wrong mouse button, and the tour tells you.
+
+<CodeSample
+  heading={'Action-Driven Tour'}
+  config={{
+    animate: true,
+    showButtons: ['close'],
+    allowKeyboardControl: false,
+    overlayClickBehavior: 'none',
+  }}
+  tour={[
+    { element: '.line:nth-child(4)', advanceOn: 'contextmenu', data: { reject: ['click', 'dblclick'], hint: 'Not quite. <b>Right-click</b> this line.' }, popover: { title: 'Right-click', description: 'Right-click this highlighted line to continue.', side: 'bottom', align: 'start' }},
+    { element: '.line:nth-child(7)', advanceOn: 'dblclick', data: { reject: ['contextmenu'], hint: 'Use a <b>double-click</b> here.' }, popover: { title: 'Double-click', description: 'Now double-click this line.', side: 'bottom', align: 'start' }},
+    { element: '.line:nth-child(12)', popover: { title: 'Done', description: 'Each step only moved on when you did the real thing.', showButtons: ['next'], side: 'top', align: 'start' }},
+  ]}
+  id={"action-driven"}
+  client:load>
+  ```js
+  import { driver } from "driver.js";
+  import "driver.js/dist/driver.css";
+
+  const driverObj = driver({
+    showButtons: ["close"],
+    allowKeyboardControl: false,
+    overlayClickBehavior: "none",
+    onInteraction: (element, step, { event, region, driver }) => {
+      const isWrongHere = region === "element" && step.data?.reject?.includes(event.type);
+      if (event.type === "keydown" || (region !== "outside" && !isWrongHere)) {
+        return;
+      }
+
+      driver.updatePopover({ description: step.data.hint });
+      driver.nudge();
+      return false;
+    },
+    steps: [
+      { element: "#file", advanceOn: "contextmenu", data: { reject: ["click"], hint: "Right-click the file." } },
+      { element: "#file", advanceOn: "dblclick", data: { reject: ["contextmenu"], hint: "Double-click it." } },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</CodeSample>
+
+## Complete a Step with `advanceOn`
+
+Give `advanceOn` the name of a DOM event and the step completes when that event happens on the highlighted element or anything inside it. It behaves exactly like pressing Next, so `onNextClick` and `onDoneClick` still apply, and the last step ends the tour with reason `"done"`.
+
+```js
+{ element: "#file", advanceOn: "contextmenu" }
+{ element: "#file", advanceOn: ["dblclick", "contextmenu"] } // either one
+```
+
+The event is observed, never blocked, and the tour moves on after your own handlers have run. It still works when your app calls `stopPropagation()`.
+
+An event name means "the event happened", not "the action succeeded". When completion depends on your app, like a value typed, a request finished or a route changed, pass a function and call `next()` yourself. The `signal` aborts when the step is left, and a returned function runs at the same moment, so listeners and subscriptions clean themselves up.
+
+```js
+{
+  element: "#rename-input",
+  advanceOn: (element, step, { next, signal }) => {
+    element.addEventListener("keydown", event => {
+      if (event.key === "Enter" && element.value.trim()) {
+        next();
+      }
+    }, { signal });
+  },
+}
+
+{
+  element: "#save",
+  advanceOn: (element, step, { next }) => store.subscribe(state => state.saved && next()),
+}
+```
+
+A step completes once. Repeated events while the next step is still waiting for its element are ignored. Set `advanceOn: false` on a step to switch off a value inherited from the config. `advanceOnClick: true` still works and means `advanceOn: "click"`.
+
+## Block Everything Else with `onInteraction`
+
+While a tour runs, the page outside the highlighted element is already unclickable. `onInteraction` lets you see those attempts, and decide about the ones on the highlighted element too.
+
+```ts
+onInteraction?: (
+  element: Element | undefined,
+  step: DriveStep,
+  options: {
+    event: MouseEvent | KeyboardEvent;
+    region: "element" | "allowed" | "outside";
+    config: Config; state: State; driver: Driver; index: number | undefined;
+  }
+) => false | void;
+```
+
+- It runs for `click`, `auxclick`, `contextmenu`, `dblclick` and `keydown`, before any of your app's handlers. A right-click is reported once, as `contextmenu`. Clicks inside the popover are never reported.
+- `region` tells you where it happened: on the highlighted element, on one of the `allowedElements`, or anywhere else, including the dark overlay. For keys, it is where focus is.
+- Return `false` to block the event: its default action is prevented and nothing else sees it, not your app and not `overlayClickBehavior`. For a key, its matching `keyup` is blocked too.
+- Return nothing to let it through. Without `onInteraction`, nothing changes compared to a normal tour.
+
+Some things to keep in mind:
+
+- Decide on the event type. Pointer down happens before the browser knows whether it is a click, a right-click or the start of a double-click, so the hook only sees the finished action.
+- A double-click is reported as click, click, dblclick. A step that expects a double-click must not reject clicks.
+- Blocking a click cannot undo what already happened on pointer down, such as focus moving or a menu that opens on press.
+- Be careful with keys. Blocking every key also blocks browser and screen reader shortcuts. The recipe below never blocks keys.
+
+## Allow a Menu with `allowedElements`
+
+The action often opens something outside the highlighted element: a context menu, a dropdown, a dialog. List it in `allowedElements` and it becomes usable, sits above the overlay and joins the Tab focus trap. Elements that appear later, like a menu opened by the action, are picked up automatically.
+
+```js
+{
+  element: ".menu [data-action=rename]",
+  allowedElements: [".menu", "#file"], // the menu, and the file to reopen it
+}
+
+{ allowedElements: () => document.querySelectorAll("[data-state=open]") }
+```
+
+Allowed elements get the `driver-allowed-element` class and `z-index: var(--driver-allowed-z-index, 10001)`. That works when the element is positioned in the page's root stacking context, which is the case for most portal menus. If your menu library positions a wrapper, match the wrapper.
+
+## Give Feedback with `updatePopover` and `nudge`
+
+`driverObj.updatePopover()` changes the visible popover in place: no re-render, no animation, and focus stays where it is. Changes merge, and calling it without arguments restores the step's original popover. The change only lasts while the step is shown. Changed text is announced to screen readers.
+
+```js
+driverObj.updatePopover({ description: "Not quite. Right-click the file." });
+driverObj.updatePopover({ showButtons: ["close"], popoverClass: "is-hint" });
+driverObj.updatePopover(); // back to the original
+```
+
+It accepts `title`, `description`, `showButtons`, `disableButtons`, `showProgress`, `progressText`, `nextBtnText`, `prevBtnText`, `closeBtnLabel` and `popoverClass`.
+
+`driverObj.nudge()` draws attention: the popover shakes and a ring pulses around the highlighted element. Pass `"popover"` or `"element"` for just one. Your element is never restyled, and with reduced motion turned on the shake becomes a flash.
+
+```css
+:root {
+  --driver-nudge-color: #f59e0b;
+  --driver-nudge-duration: 500ms;
+  --driver-nudge-distance: 6px;
+}
+```
+
+## Recover with `onElementMissing`
+
+Actions change the page, and sometimes the target goes away: the user presses Escape and the menu closes under a "Choose Rename" step. `onElementMissing` lets you get them back on track.
+
+```ts
+onElementMissing?: (
+  element: Element | undefined,
+  step: DriveStep,
+  options: { cause: "removed" | "timeout"; config: Config; state: State; driver: Driver; index: number | undefined }
+) => void;
+```
+
+- `"removed"`: the highlighted element left the page. If the step's element shows up again, for example because your framework re-rendered it, the tour quietly follows the new one and nothing fires. With `waitForElement` set, the step waits that long for it to come back first. It never fires because the correct action removed the element.
+- `"timeout"`: the next step's `waitForElement` ran out. The hook runs instead of the usual fallback and receives the step that was being waited for. If you don't navigate, the user stays on the current step and can try again.
+
+```js
+onElementMissing: (element, step, { cause, driver }) => {
+  if (cause === "timeout") {
+    driver.updatePopover({ description: "That is taking longer than expected. Try again." });
+    return;
+  }
+
+  driver.movePrevious();
+  driver.updatePopover({ description: "The menu closed. Right-click the file to open it again." });
+},
+```
+
+While a step waits for its element, the current popover stays on screen with the `driver-popover-waiting` class: its content is dimmed, Next and Previous are disabled and the close button keeps working.
+
+## Keyboard and Focus
+
+- When focus is inside the highlighted element or an allowed element, Escape and the arrow keys belong to your widget. They close your menu or move through it, not the tour. The same goes for keys your app already handled with `preventDefault()`.
+- When a step starts while focus is inside its element or an allowed element, the popover leaves focus alone so your menu stays open, and the new instructions are announced to screen readers.
+- Users who can't right-click can open a context menu with Shift+F10 or the menu key, which fires `contextmenu`. Mention it in your hint text.
+
+## A Complete Recipe
+
+```js
+const tour = driver({
+  showButtons: ["close"],          // no Next or Previous, but always a way out
+  allowKeyboardControl: false,     // Escape belongs to the app's menu
+  overlayClickBehavior: "none",
+
+  onInteraction: (element, step, { event, region, driver }) => {
+    if (event.type === "keydown") {
+      return;                      // never punish keys
+    }
+
+    const isWrongHere = region === "element" && step.data?.reject?.includes(event.type);
+    if (region !== "outside" && !isWrongHere) {
+      return;
+    }
+
+    driver.updatePopover({ description: step.data?.hint });
+    driver.nudge();
+    return false;
+  },
+
+  onElementMissing: (element, step, { cause, driver }) => {
+    if (cause === "timeout") {
+      driver.updatePopover({ description: "That is taking longer than expected. Try again." });
+      return;
+    }
+
+    driver.movePrevious();
+    driver.updatePopover({ description: "The menu closed. Right-click the file to open it again." });
+  },
+
+  steps: [
+    {
+      element: "#file",
+      advanceOn: "contextmenu",
+      allowedElements: ".context-menu",
+      data: { reject: ["click", "dblclick"], hint: "Not quite. Right-click the file, or press Shift+F10." },
+      popover: { title: "Open the menu", description: "Right-click the file." },
+    },
+    {
+      element: ".context-menu [data-action=rename]",
+      waitForElement: 2000,
+      advanceOn: "click",
+      allowedElements: [".context-menu", "#file"],
+      data: { reject: ["contextmenu"], hint: "Choose Rename from the menu." },
+      popover: { title: "Rename", description: "Choose Rename." },
+    },
+  ],
+});
+
+tour.drive();
+```
+
+> **Tip**: Always leave a way out, like the close button. iOS Safari never fires `contextmenu`, so if your tour runs on iPhones, accept another event too or use a function `advanceOn`.

@@ -10,9 +10,9 @@ import { CodeSample } from "../../components/CodeSample.tsx";
 Sometimes the best way forward in a tour is the product itself: click the button you are pointing at, not a "Next" in the popover. Two options make this work without any custom hooks:
 
 - `advanceOnClick` advances the tour when the highlighted element is clicked, exactly as if the next button was pressed. The element's own click behavior still runs.
-- `waitForElement` makes a step wait up to the given number of milliseconds for its element to appear, staying on the current step with its popover hidden in the meantime.
+- `waitForElement` makes a step wait up to the given number of milliseconds for its element to appear, staying on the current step in the meantime. The current popover stays visible in a waiting state, with its close button usable.
 
-Both can be set for the whole tour or per step.
+Both can be set for the whole tour or per step. For tours where every step waits for a specific action, like a right-click or typing, and wrong actions get feedback, see [Action-Driven Tours](/docs/action-driven-tours).
 
 ## Advance on Click
 
@@ -100,7 +100,7 @@ Click-driven tours usually lead somewhere new: the click opens a modal or a drop
   ```
 </CodeSample>
 
-If the element never appears, the wait times out into the usual missing-element behavior: the centered fallback popover, or a skip when `skipMissingElement` is set.
+If the element never appears, the wait times out into the usual missing-element behavior: the centered fallback popover, or a skip when `skipMissingElement` is set. To handle the timeout yourself, for example to show a hint and let the user try again, use [`onElementMissing`](/docs/action-driven-tours#recover-with-onelementmissing).
 
 ## Async Steps
 
