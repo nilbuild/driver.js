@@ -177,7 +177,7 @@ export function updatePopoverContent(popover: PopoverDOM, anchor: Element, optio
 
   applyPopoverContent(popover, options);
 
-  if (hadFocus && isUnreachable(focused!, popover.wrapper)) {
+  if (hadFocus && (!focused!.isConnected || isUnreachable(focused!, popover.wrapper))) {
     popover.wrapper.setAttribute("tabindex", "-1");
     popover.wrapper.focus();
   }

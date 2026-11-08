@@ -74,6 +74,7 @@ export type Activation = {
   latched: boolean;
   pendingCompletion?: boolean;
   recheck?: () => void;
+  rebind?: () => void;
   popoverPatch?: PopoverPatch;
 };
 

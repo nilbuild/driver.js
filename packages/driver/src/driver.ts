@@ -301,6 +301,7 @@ export function driver(options: Config = {}): Driver {
       graceTimer = undefined;
       hasReported = false;
       rebindActiveElement(ctx, replacement);
+      activation.rebind?.();
       if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
         clearWaiting();
       }
@@ -326,6 +327,7 @@ export function driver(options: Config = {}): Driver {
           graceTimer = undefined;
           hasReported = false;
           rebindActiveElement(ctx, element);
+          activation.rebind?.();
           if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
             clearWaiting();
           }
@@ -405,23 +407,36 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    const element = ctx.getState("activeElement");
-    const isDummyElement = !element || element.id === "driver-dummy-element";
-    const cleanup = advanceOn(isDummyElement ? undefined : element, step, {
-      ...ctx.getHookOpts(),
-      next: complete,
-      signal: activation.controller.signal,
-    });
+    let unbind: (() => void) | undefined;
+    const bind = () => {
+      unbind?.();
+      const binding = new AbortController();
+      const stop = () => binding.abort();
+      activation.controller.signal.addEventListener("abort", stop);
 
-    if (typeof cleanup !== "function") {
-      return;
-    }
+      const element = ctx.getState("activeElement");
+      const cleanup = advanceOn(isDummyElement(element) ? undefined : element, step, {
+        ...ctx.getHookOpts(),
+        next: complete,
+        signal: binding.signal,
+      });
 
-    if (ctx.getState("__activation") === activation) {
-      activation.cleanup = cleanup;
-    } else {
-      cleanup();
-    }
+      unbind = () => {
+        activation.controller.signal.removeEventListener("abort", stop);
+        binding.abort();
+        if (typeof cleanup === "function") {
+          cleanup();
+        }
+      };
+
+      if (ctx.getState("__activation") !== activation) {
+        unbind();
+      }
+    };
+
+    bind();
+    activation.rebind = bind;
+    activation.cleanup = () => unbind?.();
   }
 
   function handleArrowLeft() {
@@ -500,8 +515,10 @@ export function driver(options: Config = {}): Driver {
     activation.popoverPatch = patch ? { ...activation.popoverPatch, ...patch } : undefined;
 
     const popover = ctx.getState("popover");
-    const element = ctx.getState("activeElement");
-    if (!popover || !element || ctx.getState("activeStep") !== activation.step) {
+    const initialWait = ctx.getState("__initialWait");
+    const element = initialWait?.element ?? ctx.getState("activeElement");
+    const currentStep = initialWait?.step ?? ctx.getState("activeStep");
+    if (!popover || !element || currentStep !== activation.step) {
       return;
     }
 
@@ -623,6 +640,7 @@ export function driver(options: Config = {}): Driver {
     const element = mountDummyElement();
     ctx.setState("activeIndex", stepIndex);
     ctx.setState("__initialWait", { element, step });
+    beginActivation(step);
     renderStepPopover(ctx, element, step);
     markStepPopoverWaiting(ctx);
   }
