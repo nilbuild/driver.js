@@ -178,3 +178,29 @@ export function removeFromLayer(node: Element) {
     layer.remove();
   }
 }
+
+const KEY_WIDGETS = [
+  "input",
+  "textarea",
+  "select",
+  "[role=combobox]",
+  "[role=grid]",
+  "[role=listbox]",
+  "[role=menu]",
+  "[role=menubar]",
+  "[role=radiogroup]",
+  "[role=slider]",
+  "[role=spinbutton]",
+  "[role=tablist]",
+  "[role=textbox]",
+  "[role=tree]",
+  "[role=treegrid]",
+].join(", ");
+
+export function isKeyWidget(node: EventTarget | null | undefined): boolean {
+  if (!(node instanceof HTMLElement)) {
+    return false;
+  }
+
+  return node.isContentEditable || !!node.closest(KEY_WIDGETS);
+}

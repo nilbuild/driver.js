@@ -1,6 +1,6 @@
 import type { Context, InteractionRegion } from "./context";
 import { ALLOWED_CLASS } from "./allowed";
-import { isDummyElement } from "./utils";
+import { isDummyElement, isKeyWidget } from "./utils";
 
 const GATED_EVENTS = ["click", "auxclick", "contextmenu", "dblclick", "keydown", "keyup"] as const;
 const DRIVER_KEYS = ["Escape", "ArrowLeft", "ArrowRight"];
@@ -33,14 +33,18 @@ export function pathOf(node: Node | null): EventTarget[] {
   return path;
 }
 
-export function isInPlay(ctx: Context, path: EventTarget[]): boolean {
+function isInPlay(ctx: Context, path: EventTarget[]): boolean {
   const region = regionOf(ctx, path);
 
   return region === "element" || region === "allowed";
 }
 
+export function isKeyInPlay(ctx: Context, path: EventTarget[]): boolean {
+  return isKeyWidget(path[0]) && isInPlay(ctx, path);
+}
+
 export function isFocusInPlay(ctx: Context): boolean {
-  return isInPlay(ctx, pathOf(document.activeElement));
+  return isKeyInPlay(ctx, pathOf(document.activeElement));
 }
 
 export function keyId(event: KeyboardEvent): string {
@@ -142,7 +146,7 @@ export function initGate(ctx: Context): () => void {
   window.addEventListener(
     "keydown",
     event => {
-      if (isInPlay(ctx, event.composedPath())) {
+      if (isKeyInPlay(ctx, event.composedPath())) {
         ctx.setState("__widgetKey", keyId(event));
       }
     },

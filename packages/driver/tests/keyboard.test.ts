@@ -211,6 +211,7 @@ describe("widget key ownership across keydown and keyup", () => {
   it("does not close the tour when a widget's Escape moves focus outside", async () => {
     const trigger = append("trigger");
     const menu = append("menu", "div");
+    menu.setAttribute("role", "menu");
     const item = document.createElement("button");
     menu.appendChild(item);
     item.addEventListener("keydown", e => {
@@ -233,6 +234,7 @@ describe("widget key ownership across keydown and keyup", () => {
   it("keeps Escape with the widget when a capture handler moves focus outside", async () => {
     const trigger = append("trigger");
     const menu = append("menu", "div");
+    menu.setAttribute("role", "menu");
     const item = document.createElement("button");
     menu.appendChild(item);
 
@@ -257,6 +259,7 @@ describe("widget key ownership across keydown and keyup", () => {
 
   it("does not leave a rejected widget key owning the next Escape", async () => {
     const menu = append("menu", "div");
+    menu.setAttribute("role", "menu");
     const item = document.createElement("button");
     menu.appendChild(item);
     const d = createDriver({
