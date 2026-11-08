@@ -27,6 +27,7 @@ import {
   clearStepPopoverWaiting,
   isPopoverWaiting,
   markStepPopoverWaiting,
+  popoverText,
   withPopoverPatch,
   renderStepPopover,
   resolveTourStep,
@@ -506,17 +507,6 @@ export function driver(options: Config = {}): Driver {
     goNext(ctx.getState("__activeElement"), activeStep);
   }
 
-  function popoverText() {
-    const popover = ctx.getState("popover");
-    if (!popover) {
-      return { title: "", description: "" };
-    }
-
-    const visibleText = (element: HTMLElement) => (element.style.display === "none" ? "" : element.textContent || "");
-
-    return { title: visibleText(popover.title), description: visibleText(popover.description) };
-  }
-
   function updatePopover(patch?: PopoverPatch) {
     const activation = ctx.getState("__activation");
     if (!activation) {
@@ -536,18 +526,14 @@ export function driver(options: Config = {}): Driver {
     }
 
     const wasWaiting = isPopoverWaiting(ctx);
-    const before = popoverText();
+    const before = popoverText(popover);
     updateStepPopover(ctx, element, activation.step);
     if (wasWaiting) {
       markStepPopoverWaiting(ctx);
     }
-    const after = popoverText();
 
-    const changed = [
-      after.title !== before.title ? after.title : "",
-      after.description !== before.description ? after.description : "",
-    ];
-    announce(ctx, changed.filter(Boolean).join(". "));
+    const changed = popoverText(popover).filter((text, index) => text && text !== before[index]);
+    announce(ctx, changed.join(". "));
   }
 
   function init() {
