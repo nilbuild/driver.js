@@ -76,6 +76,45 @@ type Config = {
   // level. (default: false)
   advanceOnClick?: boolean;
 
+  // What completes a step, as if the next button was pressed: a DOM event
+  // name or list of names fired on the highlighted element ("contextmenu",
+  // ["dblclick", "contextmenu"]), or a function that calls options.next().
+  // The function also gets options.signal, aborted when the step is left,
+  // and may return a cleanup function. false switches it off for a step.
+  // Takes over from advanceOnClick. Can be configured at the step level.
+  // See the Action-Driven Tours guide. (default: undefined, off)
+  advanceOn?:
+    | false
+    | string
+    | string[]
+    | ((element: Element | undefined, step: DriveStep, options: HookOptions & { next: () => void; signal: AbortSignal }) => void | (() => void));
+
+  // Called for every click, auxclick, contextmenu, dblclick and keydown
+  // during a step, before your app's handlers. options.region is "element",
+  // "allowed" or "outside". Return false to block the event, including
+  // overlayClickBehavior and, for keys, the matching keyup. Can be
+  // configured at the step level.
+  onInteraction?: (
+    element: Element | undefined,
+    step: DriveStep,
+    options: HookOptions & { event: MouseEvent | KeyboardEvent; region: "element" | "allowed" | "outside" }
+  ) => false | void;
+
+  // Extra elements the user may interact with during a step, such as a menu
+  // the action opens. They sit above the overlay and join the focus trap;
+  // matches that appear later are picked up. Can be configured at the step level.
+  allowedElements?: string | Element | Array<string | Element> | (() => Element[] | NodeListOf<Element>);
+
+  // Called when the highlighted element leaves the page (cause "removed",
+  // after waiting up to waitForElement for it to come back) or when the
+  // next step's waitForElement runs out (cause "timeout", instead of the
+  // fallback). Can be configured at the step level.
+  onElementMissing?: (
+    element: Element | undefined,
+    step: DriveStep,
+    options: HookOptions & { cause: "removed" | "timeout" }
+  ) => void;
+
   // Skip a step whose target element is specified but missing from the DOM,
   // moving on in the direction of travel instead of showing the centered
   // fallback popover. Steps without an element are intentional centered steps
@@ -85,7 +124,7 @@ type Config = {
   // Wait up to this many milliseconds for a step's element to appear before
   // treating it as missing (centered fallback popover, or a skip when
   // skipMissingElement is set). The current step stays highlighted, with its
-  // popover hidden, while waiting. Useful when the next element is rendered on demand, e.g. inside
+  // popover in a waiting state, while waiting. Useful when the next element is rendered on demand, e.g. inside
   // a modal that the previous step's click opens. Can be configured at the
   // step level. (default: 0, off)
   waitForElement?: number;
@@ -95,7 +134,8 @@ type Config = {
   // Distance between the popover and the highlighted element. (default: 10)
   popoverOffset?: number;
   // Array of buttons to show in the popover. Defaults to ["next", "previous", "close"]
-  // for product tours and [] for single element highlighting.
+  // for product tours and [] for single element highlighting. An empty array
+  // shows no buttons.
   showButtons?: AllowedButtons[];
   // Array of buttons to disable. This is useful when you want to show some of the
   // buttons, but disable some of them.
@@ -337,6 +377,8 @@ type Popover = {
 };
 ```
 
+In the types above, `HookOptions` is `{ config: Config; state: State; driver: Driver; index: number | undefined }`, the same options every hook receives.
+
 ## Drive Step Configuration
 
 Drive step is the configuration object passed to the `highlight` method or the `steps` array of the `drive` method. You can configure the popover and the target element for each step. Given below are some of the available configuration options.
@@ -360,6 +402,13 @@ type DriveStep = {
   // Advance the tour when this step's highlighted element is clicked.
   // Overrides the driver-level option for this step. (default: false)
   advanceOnClick?: boolean;
+
+  // Step-level versions of the driver options with the same name.
+  // Each overrides the driver-level value for this step.
+  advanceOn?: false | string | string[] | Function;
+  onInteraction?: Function;
+  allowedElements?: string | Element | Array<string | Element> | (() => Element[] | NodeListOf<Element>);
+  onElementMissing?: Function;
 
   // Skip this step when its target element is specified but missing from the
   // DOM. Overrides the driver-level option for this step. (default: false)
