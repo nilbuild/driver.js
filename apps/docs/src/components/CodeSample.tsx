@@ -101,19 +101,6 @@ export function CodeSample(props: CodeSampleProps) {
         };
       }
 
-      if (id === "action-driven") {
-        config!.onInteraction = (element, step, { event, region, driver }) => {
-          const isWrongHere = region === "element" && step.data?.reject?.includes(event.type);
-          if (event.type === "keydown" || (region !== "outside" && !isWrongHere)) {
-            return;
-          }
-
-          driver.updatePopover({ description: step.data?.hint });
-          driver.nudge();
-          return false;
-        };
-      }
-
       if (id === "interactive-wait" && tour) {
         // Stands in for an app rendering a modal on demand: pressing next
         // mounts the element shortly after, while the tour is already
