@@ -226,7 +226,10 @@ export function rebindActiveElement(ctx: Context, element: Element) {
     return;
   }
 
-  const previousElements = new Set([ctx.getState("activeElement"), ...document.querySelectorAll(".driver-active-element")]);
+  const previousElements = new Set([
+    ctx.getState("activeElement"),
+    ...document.querySelectorAll(".driver-active-element"),
+  ]);
   previousElements.forEach(previous => {
     if (!previous) {
       return;
@@ -236,6 +239,14 @@ export function rebindActiveElement(ctx: Context, element: Element) {
     previous.parentElement?.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
     restoreAria(previous);
   });
+
+  const parent = element.parentElement;
+  if (parent && parent !== document.body) {
+    parent.classList.add("driver-active-element-parent");
+    if (isScrollable(parent)) {
+      parent.classList.add("driver-active-element-parent-no-scroll");
+    }
+  }
 
   element.classList.add("driver-active-element");
   if (step.disableActiveInteraction ?? ctx.getConfig("disableActiveInteraction")) {

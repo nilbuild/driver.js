@@ -191,7 +191,12 @@ const renameSteps: DriveStep[] = [
       backTo: 0,
       lostHint: "Renaming was cancelled. Start again by right-clicking the file.",
     },
-    popover: { title: "Name it", description: "Type a new name and press <b>Enter</b>.", side: "bottom", align: "start" },
+    popover: {
+      title: "Name it",
+      description: "Type a new name and press <b>Enter</b>.",
+      side: "bottom",
+      align: "start",
+    },
   },
   {
     element: "#demo-file",
@@ -250,7 +255,11 @@ export const actionDrivenGroup: ExampleGroup = {
             },
             {
               element: "#card-1",
-              popover: { title: "Got it", description: "The step completed on the double-click.", showButtons: ["next"] },
+              popover: {
+                title: "Got it",
+                description: "The step completed on the double-click.",
+                showButtons: ["next"],
+              },
             },
           ],
         });

@@ -51,7 +51,10 @@ describe("advanceOn", () => {
     });
 
     it("advances on events fired by a descendant of the highlighted element", async () => {
-      const d = createDriver({ animate: false, steps: withStep(0, { element: ".page-header", advanceOn: "dblclick" }) });
+      const d = createDriver({
+        animate: false,
+        steps: withStep(0, { element: ".page-header", advanceOn: "dblclick" }),
+      });
       d.drive();
       await nextFrame();
 

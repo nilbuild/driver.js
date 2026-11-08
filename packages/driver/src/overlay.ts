@@ -97,7 +97,9 @@ function renderOverlay(ctx: Context, stagePosition: StageDefinition) {
   }
 
   pathElement.setAttribute("d", generateStageSvgPathString(stagePosition, stageOptions(ctx)));
-  overlaySvg.querySelector(".driver-nudge-ring")?.setAttribute("d", generateStageCutoutPath(stagePosition, stageOptions(ctx)));
+  overlaySvg
+    .querySelector(".driver-nudge-ring")
+    ?.setAttribute("d", generateStageCutoutPath(stagePosition, stageOptions(ctx)));
 }
 
 export function mountNudgeRing(ctx: Context): SVGPathElement | undefined {
