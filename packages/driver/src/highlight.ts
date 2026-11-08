@@ -3,7 +3,7 @@ import { DriveStep } from "./driver";
 import { refreshOverlay, trackActiveElement, transitionStage } from "./overlay";
 import { hidePopover } from "./popover";
 import { renderStepPopover, repositionStepPopover } from "./step";
-import { bringInView, isScrollable, layerFor, resolveElement } from "./utils";
+import { bringInView, isDummyElement, isScrollable, layerFor, resolveElement } from "./utils";
 
 const POPOVER_ARIA: Record<string, string> = {
   "aria-haspopup": "dialog",
@@ -152,18 +152,17 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
     if (ctx.getConfig("animate") && elapsed < duration) {
       transitionStage(ctx, elapsed, duration, fromElement, targetElement);
     } else {
-      const finalElement = targetElement;
-      trackActiveElement(ctx, finalElement);
+      trackActiveElement(ctx, targetElement);
 
       if (highlightedHook) {
-        highlightedHook(isToDummyElement ? undefined : finalElement, toStep, ctx.getHookOpts());
+        highlightedHook(isToDummyElement ? undefined : targetElement, toStep, ctx.getHookOpts());
       }
 
       ctx.setState("__transitionCallback", undefined);
       ctx.setState("__previousStep", fromStep);
       ctx.setState("__previousElement", fromElement);
       ctx.setState("__activeStep", toStep);
-      ctx.setState("__activeElement", finalElement);
+      ctx.setState("__activeElement", targetElement);
     }
 
     window.requestAnimationFrame(animate);
@@ -182,28 +181,32 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
     renderStepPopover(ctx, toElement, toStep);
   }
 
-  document.querySelectorAll(".driver-active-element").forEach(element => {
-    element.classList.remove("driver-active-element", "driver-no-interaction");
-    restoreAria(element);
-  });
+  document.querySelectorAll(".driver-active-element").forEach(clearActiveElement);
+  markActiveElement(ctx, toElement, toStep);
+}
 
-  const disableActiveInteraction = toStep.disableActiveInteraction ?? ctx.getConfig("disableActiveInteraction");
-  if (disableActiveInteraction) {
-    toElement.classList.add("driver-no-interaction");
+function clearActiveElement(element: Element) {
+  element.classList.remove("driver-active-element", "driver-no-interaction");
+  restoreAria(element);
+}
+
+function markActiveElement(ctx: Context, element: Element, step: DriveStep) {
+  if (step.disableActiveInteraction ?? ctx.getConfig("disableActiveInteraction")) {
+    element.classList.add("driver-no-interaction");
   }
 
-  const toParent = toElement.parentElement;
-  if (toParent && toParent !== document.body) {
-    toParent.classList.add("driver-active-element-parent");
+  const parent = element.parentElement;
+  if (parent && parent !== document.body) {
+    parent.classList.add("driver-active-element-parent");
 
-    if (isScrollable(toParent)) {
-      toParent.classList.add("driver-active-element-parent-no-scroll");
+    if (isScrollable(parent)) {
+      parent.classList.add("driver-active-element-parent-no-scroll");
     }
   }
 
-  toElement.classList.add("driver-active-element");
-  if (toElement.id !== "driver-dummy-element") {
-    setPopoverAria(toElement);
+  element.classList.add("driver-active-element");
+  if (!isDummyElement(element)) {
+    setPopoverAria(element);
   }
 }
 
@@ -215,8 +218,7 @@ export function destroyHighlight() {
       parent.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
     }
 
-    element.classList.remove("driver-active-element", "driver-no-interaction");
-    restoreAria(element);
+    clearActiveElement(element);
   });
 }
 
@@ -235,24 +237,11 @@ export function rebindActiveElement(ctx: Context, element: Element) {
       return;
     }
 
-    previous.classList.remove("driver-active-element", "driver-no-interaction");
+    clearActiveElement(previous);
     previous.parentElement?.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
-    restoreAria(previous);
   });
 
-  const parent = element.parentElement;
-  if (parent && parent !== document.body) {
-    parent.classList.add("driver-active-element-parent");
-    if (isScrollable(parent)) {
-      parent.classList.add("driver-active-element-parent-no-scroll");
-    }
-  }
-
-  element.classList.add("driver-active-element");
-  if (step.disableActiveInteraction ?? ctx.getConfig("disableActiveInteraction")) {
-    element.classList.add("driver-no-interaction");
-  }
-  setPopoverAria(element);
+  markActiveElement(ctx, element, step);
 
   ctx.setState("activeElement", element);
   ctx.setState("__activeElement", element);
