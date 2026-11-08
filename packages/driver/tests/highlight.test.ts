@@ -1,7 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
-import { createDriver, navButton, SAMPLE_STEPS, useDriverHarness } from "./utils";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { append, createDriver, navButton, nextFrame, SAMPLE_STEPS, useDriverHarness } from "./utils";
 
 useDriverHarness();
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 const NO_INTERACTION_CLASS = "driver-no-interaction";
 
@@ -94,6 +98,34 @@ describe("active element parent scroll lock", () => {
 
     expect(document.getElementById("scroll-area")?.classList.contains(NO_SCROLL_CLASS)).toBe(false);
   });
+
+  it("locks scrolling on the replacement's scrollable parent", async () => {
+    const makeList = () => {
+      const list = document.createElement("div");
+      list.style.overflow = "auto";
+      list.innerHTML = `<button id="item">Item</button>`;
+      document.body.appendChild(list);
+      return list;
+    };
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(500);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(100);
+    const first = makeList();
+    createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [{ element: "#item", popover: { title: "Item" } }],
+    }).drive();
+    await nextFrame();
+    expect(first.classList.contains("driver-active-element-parent-no-scroll")).toBe(true);
+
+    first.remove();
+    const second = makeList();
+    await nextFrame();
+    await nextFrame();
+
+    expect(second.classList.contains("driver-active-element-parent")).toBe(true);
+    expect(second.classList.contains("driver-active-element-parent-no-scroll")).toBe(true);
+  });
 });
 
 describe("disableActiveInteraction", () => {
@@ -124,6 +156,20 @@ describe("disableActiveInteraction", () => {
 
     navButton("next")?.click();
     expect(document.querySelector("#card-1")?.classList.contains(NO_INTERACTION_CLASS)).toBe(false);
+  });
+
+  it("still takes focus when the highlighted element is not interactive", async () => {
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(10);
+    const input = append("field", "input");
+    input.focus();
+
+    createDriver({
+      animate: false,
+      steps: [{ element: "#field", disableActiveInteraction: true, popover: { title: "Look" } }],
+    }).drive();
+    await nextFrame();
+
+    expect(document.activeElement).not.toBe(input);
   });
 });
 

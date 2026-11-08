@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
-import { createDriver, nextFrame, popoverTitle, pressKey, SAMPLE_STEPS, useDriverHarness } from "./utils";
+import {
+  append,
+  createDriver,
+  keyEvent,
+  nextFrame,
+  popoverTitle,
+  pressKey,
+  SAMPLE_STEPS,
+  useDriverHarness,
+} from "./utils";
 
 useDriverHarness();
 
@@ -183,6 +192,89 @@ describe("keyboard control follows the buttons", () => {
     d.highlight({ element: "#intro", popover: { title: "Intro" } });
     pressKey("Escape");
 
+    expect(d.isActive()).toBe(false);
+  });
+
+  it("does not advance with ArrowRight after Next was hidden", async () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+
+    d.updatePopover({ showButtons: ["close"] });
+    keyEvent("keyup", { key: "ArrowRight", code: "ArrowRight" }, document.body);
+
+    expect(d.getActiveIndex()).toBe(0);
+  });
+});
+
+describe("widget key ownership across keydown and keyup", () => {
+  it("does not close the tour when a widget's Escape moves focus outside", async () => {
+    const trigger = append("trigger");
+    const menu = append("menu", "div");
+    const item = document.createElement("button");
+    menu.appendChild(item);
+    item.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        trigger.focus();
+      }
+    });
+
+    const d = createDriver({ animate: false, steps: [{ element: "#menu", popover: { title: "Menu" } }] });
+    d.drive();
+    await nextFrame();
+
+    item.focus();
+    keyEvent("keydown", { key: "Escape", code: "Escape" }, item);
+    keyEvent("keyup", { key: "Escape", code: "Escape" }, trigger);
+
+    expect(d.isActive()).toBe(true);
+  });
+
+  it("keeps Escape with the widget when a capture handler moves focus outside", async () => {
+    const trigger = append("trigger");
+    const menu = append("menu", "div");
+    const item = document.createElement("button");
+    menu.appendChild(item);
+
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#menu", popover: { title: "Menu" } }],
+      onInteraction: (_el, _step, opts) => {
+        if ((opts.event as KeyboardEvent).key === "Escape") {
+          trigger.focus();
+        }
+      },
+    });
+    d.drive();
+    await nextFrame();
+
+    item.focus();
+    keyEvent("keydown", { key: "Escape", code: "Escape" }, item);
+    keyEvent("keyup", { key: "Escape", code: "Escape" }, trigger);
+
+    expect(d.isActive()).toBe(true);
+  });
+
+  it("does not leave a rejected widget key owning the next Escape", async () => {
+    const menu = append("menu", "div");
+    const item = document.createElement("button");
+    menu.appendChild(item);
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#menu", popover: { title: "Menu" } }],
+      onInteraction: (_el, _step, opts) => ((opts.event as KeyboardEvent).key === "Escape" ? false : undefined),
+    });
+    d.drive();
+    await nextFrame();
+
+    item.focus();
+    keyEvent("keydown", { key: "Escape", code: "Escape" }, item);
+    keyEvent("keyup", { key: "Escape", code: "Escape" }, item);
+    expect(d.isActive()).toBe(true);
+
+    item.blur();
+    keyEvent("keydown", { key: "Escape", code: "Escape" }, document.body);
+    keyEvent("keyup", { key: "Escape", code: "Escape" }, document.body);
     expect(d.isActive()).toBe(false);
   });
 });

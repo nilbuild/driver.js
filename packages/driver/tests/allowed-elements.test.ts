@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createDriver, nextFrame, popoverEl, SAMPLE_STEPS, useDriverHarness } from "./utils";
+import { append, createDriver, nextFrame, popoverEl, SAMPLE_STEPS, useDriverHarness } from "./utils";
 
 useDriverHarness();
 
@@ -143,6 +143,24 @@ describe("allowedElements", () => {
     d.destroy();
 
     expect(menu.className).toBe("context-menu app-class");
+  });
+
+  it("settles instead of re-running every frame", async () => {
+    const menu = append("menu", "div");
+    const resolver = vi.fn(() => [menu]);
+    createDriver({ animate: false, steps: [{ ...SAMPLE_STEPS[0], allowedElements: resolver }] }).drive();
+    await nextFrame();
+
+    document.body.appendChild(document.createElement("span"));
+    for (let i = 0; i < 5; i++) {
+      await nextFrame();
+    }
+    const settledCount = resolver.mock.calls.length;
+
+    for (let i = 0; i < 5; i++) {
+      await nextFrame();
+    }
+    expect(resolver.mock.calls.length).toBe(settledCount);
   });
 });
 

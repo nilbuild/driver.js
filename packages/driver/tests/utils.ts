@@ -43,6 +43,25 @@ export function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
 }
 
+export const tick = (ms = 10) => new Promise(resolve => setTimeout(resolve, ms));
+
+export function append(id: string, tag = "button"): HTMLElement {
+  const element = document.createElement(tag);
+  element.id = id;
+  document.body.appendChild(element);
+  return element;
+}
+
+export function keyEvent(
+  type: "keydown" | "keyup",
+  init: KeyboardEventInit,
+  target: Element = document.activeElement || document.body
+): KeyboardEvent {
+  const event = new KeyboardEvent(type, { bubbles: true, cancelable: true, composed: true, ...init });
+  target.dispatchEvent(event);
+  return event;
+}
+
 export const popoverEl = () => document.querySelector(".driver-popover");
 export const popoverTitle = () => document.querySelector(".driver-popover-title")?.textContent?.trim();
 export const popoverDescription = () => document.querySelector(".driver-popover-description")?.textContent?.trim();

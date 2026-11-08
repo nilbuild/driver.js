@@ -230,3 +230,23 @@ describe("one active instance at a time", () => {
     expect(d.getActiveIndex()).toBe(1);
   });
 });
+
+describe("setSteps", () => {
+  it("does not install a second gate or live region", async () => {
+    const onInteraction = vi.fn();
+    const d = createDriver({ animate: false, onInteraction, steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+
+    d.setSteps(SAMPLE_STEPS);
+    d.drive();
+    await nextFrame();
+
+    document.querySelector("#intro")?.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+    expect(onInteraction).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll(".driver-live-region")).toHaveLength(1);
+
+    d.destroy();
+    expect(document.querySelectorAll(".driver-live-region")).toHaveLength(0);
+  });
+});

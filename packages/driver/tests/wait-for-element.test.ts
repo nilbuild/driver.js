@@ -1,11 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { createDriver, nextFrame, popoverEl, popoverTitle, useDriverHarness } from "./utils";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { append, createDriver, navButton, nextFrame, popoverEl, popoverTitle, tick, useDriverHarness } from "./utils";
 
 useDriverHarness();
 
-function tick(ms = 10): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 function appendElement(id: string): void {
   const element = document.createElement("div");
@@ -215,5 +215,76 @@ describe("waitForElement", () => {
     expect(d.getActiveIndex()).toBe(1);
     expect(popoverTitle()).toBe("Step 2");
     expect(d.getActiveElement()?.id).toBe("modal");
+  });
+
+  it("cancels the wait so it cannot take over later", async () => {
+    const d = createDriver({
+      animate: false,
+      steps: [
+        { element: "#intro", popover: { title: "One" } },
+        { element: "#late", waitForElement: 500, popover: { title: "Late" } },
+      ],
+    });
+    d.drive();
+    await nextFrame();
+    d.moveNext();
+
+    d.highlight({ element: "#card-1", popover: { title: "Highlighted" } });
+    append("late", "div");
+    await tick(30);
+
+    expect(popoverTitle()).toBe("Highlighted");
+  });
+});
+
+describe("return focus after an initial wait", () => {
+  it("returns focus to the launcher after an initial wait", async () => {
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(function (this: HTMLElement) {
+      for (let node: HTMLElement | null = this; node; node = node.parentElement) {
+        if (node.style.display === "none") {
+          return 0;
+        }
+      }
+      return 10;
+    });
+    const launcher = append("launcher");
+    launcher.focus();
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#late", waitForElement: 500, popover: { title: "First" } }],
+    });
+    d.drive();
+    append("late", "div");
+    await tick();
+    d.destroy();
+
+    expect(document.activeElement).toBe(launcher);
+  });
+
+  it("keeps the launcher as return focus across chained initial waits", async () => {
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(function (this: HTMLElement) {
+      for (let node: HTMLElement | null = this; node; node = node.parentElement) {
+        if (node.style.display === "none") {
+          return 0;
+        }
+      }
+      return 10;
+    });
+    const launcher = append("launcher");
+    launcher.focus();
+    const d = createDriver({
+      animate: false,
+      onElementMissing: vi.fn(),
+      steps: [
+        { element: "#missing-1", waitForElement: 30, popover: { title: "One" } },
+        { element: "#missing-2", waitForElement: 30, popover: { title: "Two" } },
+      ],
+    });
+    d.drive();
+    await tick(70);
+    navButton("next")?.click();
+    d.destroy();
+
+    expect(document.activeElement).toBe(launcher);
   });
 });
