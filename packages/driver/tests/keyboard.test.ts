@@ -237,47 +237,18 @@ describe("widget key ownership across keydown and keyup", () => {
     menu.setAttribute("role", "menu");
     const item = document.createElement("button");
     menu.appendChild(item);
+    const moveFocus = (e: KeyboardEvent) => e.key === "Escape" && trigger.focus();
+    document.addEventListener("keydown", moveFocus, true);
 
-    const d = createDriver({
-      animate: false,
-      steps: [{ element: "#menu", popover: { title: "Menu" } }],
-      onInteraction: (_el, _step, opts) => {
-        if ((opts.event as KeyboardEvent).key === "Escape") {
-          trigger.focus();
-        }
-      },
-    });
+    const d = createDriver({ animate: false, steps: [{ element: "#menu", popover: { title: "Menu" } }] });
     d.drive();
     await nextFrame();
 
     item.focus();
     keyEvent("keydown", { key: "Escape", code: "Escape" }, item);
     keyEvent("keyup", { key: "Escape", code: "Escape" }, trigger);
+    document.removeEventListener("keydown", moveFocus, true);
 
     expect(d.isActive()).toBe(true);
-  });
-
-  it("does not leave a rejected widget key owning the next Escape", async () => {
-    const menu = append("menu", "div");
-    menu.setAttribute("role", "menu");
-    const item = document.createElement("button");
-    menu.appendChild(item);
-    const d = createDriver({
-      animate: false,
-      steps: [{ element: "#menu", popover: { title: "Menu" } }],
-      onInteraction: (_el, _step, opts) => ((opts.event as KeyboardEvent).key === "Escape" ? false : undefined),
-    });
-    d.drive();
-    await nextFrame();
-
-    item.focus();
-    keyEvent("keydown", { key: "Escape", code: "Escape" }, item);
-    keyEvent("keyup", { key: "Escape", code: "Escape" }, item);
-    expect(d.isActive()).toBe(true);
-
-    item.blur();
-    keyEvent("keydown", { key: "Escape", code: "Escape" }, document.body);
-    keyEvent("keyup", { key: "Escape", code: "Escape" }, document.body);
-    expect(d.isActive()).toBe(false);
   });
 });

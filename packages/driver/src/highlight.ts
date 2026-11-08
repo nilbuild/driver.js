@@ -155,7 +155,10 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
       trackActiveElement(ctx, targetElement);
 
       if (highlightedHook) {
-        highlightedHook(isToDummyElement ? undefined : targetElement, toStep, ctx.getHookOpts());
+        highlightedHook(isToDummyElement ? undefined : targetElement, toStep, {
+          ...ctx.getHookOpts(),
+          signal: ctx.getState("__activation")?.controller.signal,
+        });
       }
 
       ctx.setState("__transitionCallback", undefined);

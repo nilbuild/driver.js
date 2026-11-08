@@ -250,3 +250,41 @@ describe("setSteps", () => {
     expect(document.querySelectorAll(".driver-live-region")).toHaveLength(0);
   });
 });
+
+describe("onHighlighted signal", () => {
+  it("aborts when the step is left", async () => {
+    const signals: AbortSignal[] = [];
+    const d = createDriver({
+      animate: false,
+      steps: SAMPLE_STEPS,
+      onHighlighted: (_el, _step, opts) => {
+        signals.push(opts.signal!);
+      },
+    });
+    d.drive();
+    await nextFrame();
+    expect(signals[0].aborted).toBe(false);
+
+    d.moveNext();
+    await nextFrame();
+
+    expect(signals[0].aborted).toBe(true);
+    expect(signals[1].aborted).toBe(false);
+  });
+
+  it("aborts when the tour is destroyed", async () => {
+    let signal: AbortSignal | undefined;
+    const d = createDriver({
+      animate: false,
+      onHighlighted: (_el, _step, opts) => {
+        signal = opts.signal;
+      },
+    });
+    d.highlight({ element: "#intro", popover: { title: "Hi" } });
+    await nextFrame();
+
+    d.destroy();
+
+    expect(signal?.aborted).toBe(true);
+  });
+});

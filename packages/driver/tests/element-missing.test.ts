@@ -96,26 +96,19 @@ describe("waiting state", () => {
   });
 
   it("renders a delayed popover in the waiting state when a wait is pending", async () => {
-    let next: (() => void) | undefined;
     const d = createDriver({
       animate: true,
       duration: 200,
       steps: [
         SAMPLE_STEPS[0],
-        {
-          element: "#card-1",
-          popover: { title: "Two" },
-          advanceOn: (_el, _step, opts) => {
-            next = opts.next;
-          },
-        },
+        { element: "#card-1", popover: { title: "Two" }, advanceOn: "click" },
         { element: "#late", waitForElement: 1000, popover: { title: "Late" } },
       ],
     });
     d.drive();
     await tick(250);
     d.moveNext();
-    next?.();
+    fire(document.querySelector("#card-1"), "click");
     await tick(300);
 
     expect(popoverTitle()).toBe("Two");
@@ -125,7 +118,7 @@ describe("waiting state", () => {
 });
 
 describe("onElementMissing: timeout", () => {
-  it("runs instead of the fallback, with the waited-for step", async () => {
+  it("runs before the fallback, with the waited-for step and its index", async () => {
     const onElementMissing = vi.fn();
     const d = createDriver({
       animate: false,
@@ -145,11 +138,49 @@ describe("onElementMissing: timeout", () => {
     expect(element).toBeUndefined();
     expect(step.popover.title).toBe("Two");
     expect(opts.cause).toBe("timeout");
-    expect(opts.index).toBe(0);
+    expect(opts.index).toBe(1);
+
+    expect(d.getActiveIndex()).toBe(1);
+    expect(popoverTitle()).toBe("Two");
+    expect(isWaiting()).toBe(false);
+  });
+
+  it("keeps the current step when the hook returns false", async () => {
+    const d = createDriver({
+      animate: false,
+      onElementMissing: () => false,
+      steps: [
+        { element: "#intro", popover: { title: "One" } },
+        { element: "#never", waitForElement: 30, popover: { title: "Two" } },
+      ],
+    });
+    d.drive();
+    await nextFrame();
+    d.moveNext();
+    await tick(60);
 
     expect(d.getActiveIndex()).toBe(0);
     expect(popoverTitle()).toBe("One");
     expect(isWaiting()).toBe(false);
+  });
+
+  it("skips the fallback when the hook navigates", async () => {
+    const d = createDriver({
+      animate: false,
+      onElementMissing: (_el, _step, opts) => opts.driver.moveTo(2),
+      steps: [
+        { element: "#intro", popover: { title: "One" } },
+        { element: "#never", waitForElement: 30, popover: { title: "Two" } },
+        { element: "#card-1", popover: { title: "Three" } },
+      ],
+    });
+    d.drive();
+    await nextFrame();
+    d.moveNext();
+    await tick(60);
+
+    expect(d.getActiveIndex()).toBe(2);
+    expect(popoverTitle()).toBe("Three");
   });
 
   it("prefers the waited-for step's hook", async () => {
@@ -177,6 +208,7 @@ describe("onElementMissing: timeout", () => {
       onElementMissing: (_el, _step, opts) => {
         if (opts.cause === "timeout") {
           opts.driver.updatePopover({ description: "Try again" });
+          return false;
         }
       },
       steps: [
@@ -221,8 +253,10 @@ describe("onElementMissing: timeout", () => {
   it("moves on to the next missing step after an initial timeout", async () => {
     const d = createDriver({
       animate: false,
-      onElementMissing: (_el, _step, opts) =>
-        opts.driver.updatePopover({ description: "Unavailable; click Next to skip." }),
+      onElementMissing: (_el, _step, opts) => {
+        opts.driver.updatePopover({ description: "Unavailable; click Next to skip." });
+        return false;
+      },
       steps: [
         { element: "#missing-1", waitForElement: 30, popover: { title: "One" } },
         { element: "#missing-2", waitForElement: 30, popover: { title: "Two" } },
@@ -246,7 +280,10 @@ describe("onElementMissing: timeout", () => {
   it("honours a close-button patch on Escape during an initial wait", async () => {
     const d = createDriver({
       animate: false,
-      onElementMissing: (_el, _step, opts) => opts.driver.updatePopover({ disableButtons: ["close"] }),
+      onElementMissing: (_el, _step, opts) => {
+        opts.driver.updatePopover({ disableButtons: ["close"] });
+        return false;
+      },
       steps: [{ element: "#missing", waitForElement: 30, popover: { title: "One" } }],
     });
     d.drive();
@@ -274,7 +311,10 @@ describe("onElementMissing: timeout", () => {
   it("lets ArrowRight move on after an initial timeout", async () => {
     const d = createDriver({
       animate: false,
-      onElementMissing: (_el, _step, opts) => opts.driver.updatePopover({ description: "Click Next to skip." }),
+      onElementMissing: (_el, _step, opts) => {
+        opts.driver.updatePopover({ description: "Click Next to skip." });
+        return false;
+      },
       steps: [
         { element: "#missing", waitForElement: 30, popover: { title: "One" } },
         { element: "#intro", popover: { title: "Two" } },
@@ -475,7 +515,6 @@ describe("onElementMissing: removed", () => {
   it("does not report removed while a completion is navigating", async () => {
     const target = append("target");
     const onElementMissing = vi.fn();
-    let next: (() => void) | undefined;
     const d = createDriver({
       animate: false,
       onElementMissing,
@@ -483,9 +522,6 @@ describe("onElementMissing: removed", () => {
         {
           element: "#target",
           waitForElement: 40,
-          advanceOn: (_el, _step, opts) => {
-            next = opts.next;
-          },
         },
         { element: "#later", waitForElement: 500 },
       ],
@@ -496,7 +532,7 @@ describe("onElementMissing: removed", () => {
     target.remove();
     await nextFrame();
     await nextFrame();
-    next?.();
+    d.moveNext();
     await tick(80);
 
     expect(onElementMissing).not.toHaveBeenCalled();
@@ -504,7 +540,6 @@ describe("onElementMissing: removed", () => {
 
   it("keeps the waiting state when the target returns during a pending navigation", async () => {
     const target = append("target");
-    let next: (() => void) | undefined;
     const d = createDriver({
       animate: false,
       onElementMissing: vi.fn(),
@@ -513,9 +548,6 @@ describe("onElementMissing: removed", () => {
           element: "#target",
           waitForElement: 200,
           popover: { title: "Target" },
-          advanceOn: (_el, _step, opts) => {
-            next = opts.next;
-          },
         },
         { element: "#later", waitForElement: 1000, popover: { title: "Later" } },
       ],
@@ -526,7 +558,7 @@ describe("onElementMissing: removed", () => {
     target.remove();
     await nextFrame();
     await nextFrame();
-    next?.();
+    d.moveNext();
     document.body.appendChild(target);
     await tick(260);
 

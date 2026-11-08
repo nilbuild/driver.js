@@ -274,7 +274,7 @@ describe("return focus after an initial wait", () => {
     launcher.focus();
     const d = createDriver({
       animate: false,
-      onElementMissing: vi.fn(),
+      onElementMissing: () => false,
       steps: [
         { element: "#missing-1", waitForElement: 30, popover: { title: "One" } },
         { element: "#missing-2", waitForElement: 30, popover: { title: "Two" } },

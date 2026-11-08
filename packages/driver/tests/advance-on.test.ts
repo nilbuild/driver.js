@@ -156,136 +156,109 @@ describe("advanceOn", () => {
     });
   });
 
-  describe("function", () => {
-    it("covers a key check by listening with the signal", async () => {
+  describe("event with a condition", () => {
+    function addInput() {
+      const input = document.createElement("input");
+      document.querySelector("#intro")?.appendChild(input);
+      return input;
+    }
+
+    it("advances only when the condition holds", async () => {
+      const input = addInput();
       const d = createDriver({
         animate: false,
         steps: withStep(0, {
-          element: "#card-1",
-          advanceOn: (el: Element, _step: unknown, opts: { next: () => void; signal: AbortSignal }) => {
-            el.addEventListener(
-              "keydown",
-              e => {
-                if ((e as KeyboardEvent).key === "Enter") {
-                  opts.next();
-                }
-              },
-              { signal: opts.signal }
-            );
+          advanceOn: {
+            event: "change",
+            when: (el: Element) => (el.querySelector("input") as HTMLInputElement).value === "yes",
           },
         }),
       });
       d.drive();
       await nextFrame();
 
-      key("#card-1", { key: "a" });
+      input.value = "no";
+      input.dispatchEvent(new Event("change", { bubbles: true }));
       expect(d.getActiveIndex()).toBe(0);
 
-      key("#card-1", { key: "Enter" });
+      input.value = "yes";
+      input.dispatchEvent(new Event("change", { bubbles: true }));
       expect(d.getActiveIndex()).toBe(1);
     });
 
-    it("covers a target outside the highlighted element", async () => {
-      const menu = document.createElement("button");
-      menu.className = "menu-item";
-      document.body.appendChild(menu);
+    it("advances on the event when no condition is given", async () => {
+      const d = createDriver({ animate: false, steps: withStep(0, { advanceOn: { event: "dblclick" } }) });
+      d.drive();
+      await nextFrame();
 
+      fire("#intro", "dblclick");
+      expect(d.getActiveIndex()).toBe(1);
+    });
+
+    it("accepts a list of events", async () => {
+      const when = vi.fn(() => true);
       const d = createDriver({
         animate: false,
-        steps: withStep(0, {
-          advanceOn: (_el: Element, _step: unknown, opts: { next: () => void; signal: AbortSignal }) => {
-            document.addEventListener(
-              "click",
-              e => {
-                if ((e.target as Element).closest(".menu-item")) {
-                  opts.next();
-                }
-              },
-              { signal: opts.signal }
-            );
-          },
-        }),
+        steps: withStep(0, { advanceOn: { event: ["dblclick", "contextmenu"], when } }),
+      });
+      d.drive();
+      await nextFrame();
+
+      fire("#intro", "contextmenu");
+      expect(d.getActiveIndex()).toBe(1);
+    });
+
+    it("passes the element, step and options with the event", async () => {
+      const when = vi.fn(() => false);
+      const d = createDriver({ animate: false, steps: withStep(0, { advanceOn: { event: "click", when } }) });
+      d.drive();
+      await nextFrame();
+
+      fire("#intro", "click");
+
+      expect(when).toHaveBeenCalledTimes(1);
+      const [element, step, opts] = when.mock.calls[0] as unknown as [
+        Element,
+        { popover: { title: string } },
+        { event: Event; driver: unknown; index: number },
+      ];
+      expect(element).toBe(document.querySelector("#intro"));
+      expect(step.popover.title).toBe("Step 1");
+      expect(opts.event.type).toBe("click");
+      expect(opts.driver).toBe(d);
+      expect(opts.index).toBe(0);
+    });
+
+    it("checks the condition after the app's own handlers", async () => {
+      const input = addInput();
+      input.addEventListener("keydown", () => {
+        input.dataset.handled = "true";
+      });
+      const d = createDriver({
+        animate: false,
+        steps: withStep(0, { advanceOn: { event: "keydown", when: () => input.dataset.handled === "true" } }),
+      });
+      d.drive();
+      await nextFrame();
+
+      keyEvent("keydown", { key: "Enter", code: "Enter" }, input);
+      expect(d.getActiveIndex()).toBe(1);
+    });
+
+    it("does not check an event blocked by onInteraction", async () => {
+      const when = vi.fn(() => true);
+      const d = createDriver({
+        animate: false,
+        onInteraction: () => false,
+        steps: withStep(0, { advanceOn: { event: "click", when } }),
       });
       d.drive();
       await nextFrame();
 
       fire("#intro", "click");
+
+      expect(when).not.toHaveBeenCalled();
       expect(d.getActiveIndex()).toBe(0);
-
-      fire(".menu-item", "click");
-      expect(d.getActiveIndex()).toBe(1);
-    });
-
-    it("advances when the function calls next", async () => {
-      let next: (() => void) | undefined;
-      const d = createDriver({
-        animate: false,
-        steps: withStep(0, {
-          advanceOn: (_el: Element, _step: unknown, opts: { next: () => void }) => {
-            next = opts.next;
-          },
-        }),
-      });
-      d.drive();
-      await nextFrame();
-
-      expect(d.getActiveIndex()).toBe(0);
-      next?.();
-      expect(d.getActiveIndex()).toBe(1);
-    });
-
-    it("receives the element, step and hook options", async () => {
-      const advanceOn = vi.fn();
-      const d = createDriver({ animate: false, steps: withStep(0, { advanceOn }) });
-      d.drive();
-      await nextFrame();
-
-      expect(advanceOn).toHaveBeenCalledTimes(1);
-      const [element, step, opts] = advanceOn.mock.calls[0];
-      expect(element).toBe(document.querySelector("#intro"));
-      expect(step.popover.title).toBe("Step 1");
-      expect(opts.driver).toBe(d);
-      expect(opts.index).toBe(0);
-      expect(opts.signal).toBeInstanceOf(AbortSignal);
-    });
-
-    it("aborts the signal and ignores next once the step is left", async () => {
-      let captured: { next: () => void; signal: AbortSignal } | undefined;
-      const d = createDriver({
-        animate: false,
-        steps: withStep(0, {
-          advanceOn: (_el: Element, _step: unknown, opts: { next: () => void; signal: AbortSignal }) => {
-            captured = opts;
-          },
-        }),
-      });
-      d.drive();
-      await nextFrame();
-
-      expect(captured?.signal.aborted).toBe(false);
-      d.moveTo(2);
-      await nextFrame();
-      expect(captured?.signal.aborted).toBe(true);
-
-      captured?.next();
-      expect(d.getActiveIndex()).toBe(2);
-    });
-
-    it("aborts the signal on destroy", async () => {
-      let signal: AbortSignal | undefined;
-      const d = createDriver({
-        animate: false,
-        steps: withStep(0, {
-          advanceOn: (_el: Element, _step: unknown, opts: { signal: AbortSignal }) => {
-            signal = opts.signal;
-          },
-        }),
-      });
-      d.drive();
-      await nextFrame();
-      d.destroy();
-
-      expect(signal?.aborted).toBe(true);
     });
   });
 
@@ -414,50 +387,6 @@ describe("advanceOn", () => {
       expect(onNextClick).toHaveBeenCalledTimes(2);
     });
 
-    it("runs a returned cleanup when the step is left", async () => {
-      const cleanup = vi.fn();
-      const d = createDriver({ animate: false, steps: withStep(0, { advanceOn: () => cleanup }) });
-      d.drive();
-      await nextFrame();
-      expect(cleanup).not.toHaveBeenCalled();
-
-      d.moveNext();
-      expect(cleanup).toHaveBeenCalledTimes(1);
-    });
-
-    it("runs the cleanup straight away when next is called synchronously", async () => {
-      const cleanup = vi.fn();
-      const d = createDriver({
-        animate: false,
-        steps: withStep(0, {
-          advanceOn: (_el: Element, _step: unknown, opts: { next: () => void }) => {
-            opts.next();
-            return cleanup;
-          },
-        }),
-      });
-      d.drive();
-
-      expect(d.getActiveIndex()).toBe(1);
-      expect(cleanup).toHaveBeenCalledTimes(1);
-    });
-
-    it("aborts the signal when setSteps replaces the steps", async () => {
-      let signal: AbortSignal | undefined;
-      const d = createDriver({
-        animate: false,
-        steps: withStep(0, {
-          advanceOn: (_el: Element, _step: unknown, opts: { signal: AbortSignal }) => {
-            signal = opts.signal;
-          },
-        }),
-      });
-      d.drive();
-      d.setSteps(SAMPLE_STEPS);
-
-      expect(signal?.aborted).toBe(true);
-    });
-
     it("works with highlight()", async () => {
       const onNextClick = vi.fn();
       const d = createDriver({ animate: false, onNextClick });
@@ -471,7 +400,7 @@ describe("advanceOn", () => {
 });
 
 describe("advanceOn on re-rendered elements", () => {
-  it("re-binds a function advanceOn to a re-rendered element", async () => {
+  it("follows a re-rendered element", async () => {
     const input = append("field", "input");
     const d = createDriver({
       animate: false,
@@ -479,11 +408,7 @@ describe("advanceOn on re-rendered elements", () => {
       steps: [
         {
           element: "#field",
-          advanceOn: (el, _step, opts) => {
-            el?.addEventListener("keydown", e => (e as KeyboardEvent).key === "Enter" && opts.next(), {
-              signal: opts.signal,
-            });
-          },
+          advanceOn: { event: "keydown", when: (_el, _step, opts) => (opts.event as KeyboardEvent).key === "Enter" },
         },
         SAMPLE_STEPS[1],
       ],
@@ -498,37 +423,5 @@ describe("advanceOn on re-rendered elements", () => {
 
     keyEvent("keydown", { key: "Enter", code: "Enter" }, replacement);
     expect(d.getActiveIndex()).toBe(1);
-  });
-
-  it("runs each advanceOn cleanup once across a re-render and completion", async () => {
-    const input = append("field", "input") as HTMLInputElement;
-    const cleanups: string[] = [];
-    createDriver({
-      animate: false,
-      onElementMissing: vi.fn(),
-      steps: [
-        {
-          element: "#field",
-          advanceOn: (el, _step, opts) => {
-            const name = (el as HTMLInputElement).dataset.name || "old";
-            if ((el as HTMLInputElement).value === "done") {
-              opts.next();
-            }
-            return () => cleanups.push(name);
-          },
-        },
-        SAMPLE_STEPS[1],
-      ],
-    }).drive();
-    await nextFrame();
-
-    input.remove();
-    const replacement = append("field", "input") as HTMLInputElement;
-    replacement.value = "done";
-    replacement.dataset.name = "new";
-    await nextFrame();
-    await nextFrame();
-
-    expect(cleanups).toEqual(["old", "new"]);
   });
 });

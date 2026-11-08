@@ -22,20 +22,22 @@ export type HookOpts = {
 
   // Only set for onDestroyStarted, onDestroyed and the onDeselected that runs on destroy.
   reason?: DestroyReason;
+
+  signal?: AbortSignal;
 };
 
 export type DriverHook = (element: Element | undefined, step: DriveStep, opts: HookOpts) => void;
 
 export type AdvanceOnOpts = HookOpts & {
-  next: () => void;
-  signal: AbortSignal;
+  event: Event;
 };
 
-export type AdvanceOn =
-  | false
-  | string
-  | string[]
-  | ((element: Element | undefined, step: DriveStep, opts: AdvanceOnOpts) => void | (() => void));
+export type AdvanceOnEvent = {
+  event: string | string[];
+  when?: (element: Element, step: DriveStep, opts: AdvanceOnOpts) => boolean;
+};
+
+export type AdvanceOn = false | string | string[] | AdvanceOnEvent;
 
 export type AllowedElements =
   | string
@@ -46,7 +48,7 @@ export type AllowedElements =
 export type InteractionRegion = "element" | "allowed" | "outside";
 
 export type InteractionOpts = HookOpts & {
-  event: MouseEvent | KeyboardEvent;
+  event: MouseEvent;
   region: InteractionRegion;
 };
 
@@ -69,11 +71,9 @@ export type PopoverPatch = Pick<
 export type Activation = {
   step: DriveStep;
   controller: AbortController;
-  cleanup?: () => void;
   latched: boolean;
   pendingCompletion?: boolean;
   recheck?: () => void;
-  rebind?: () => void;
   popoverPatch?: PopoverPatch;
 };
 
@@ -81,7 +81,11 @@ export type ElementMissingOpts = HookOpts & {
   cause: "removed" | "timeout";
 };
 
-export type ElementMissingHook = (element: Element | undefined, step: DriveStep, opts: ElementMissingOpts) => void;
+export type ElementMissingHook = (
+  element: Element | undefined,
+  step: DriveStep,
+  opts: ElementMissingOpts
+) => false | void;
 
 export type Config = {
   steps?: DriveStep[];
@@ -215,7 +219,6 @@ export type State = {
   __pendingWaitCancel?: () => void;
   __activation?: Activation;
   __liveRegion?: HTMLElement;
-  __rejectedKeys?: Set<string>;
   __handledKeys?: Set<string>;
   __widgetKey?: string;
   __teardownGate?: () => void;
