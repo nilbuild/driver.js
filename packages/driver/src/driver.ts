@@ -125,9 +125,7 @@ export function driver(options: Config = {}): Driver {
   }
 
   function handleEscape() {
-    const step = currentPopoverStep();
-    const { disableButtons } = resolveStepButtons(ctx, step ? withPopoverPatch(ctx, step) : step);
-    if (disableButtons.includes("close")) {
+    if (currentButtons().disableButtons.includes("close")) {
       return;
     }
 
@@ -138,13 +136,18 @@ export function driver(options: Config = {}): Driver {
     return ctx.getState("__initialWait")?.step ?? ctx.getState("__activeStep");
   }
 
+  function currentButtons() {
+    const step = currentPopoverStep();
+
+    return resolveStepButtons(ctx, step && withPopoverPatch(ctx, step));
+  }
+
   function canUseButton(button: AllowedButtons) {
     if (button !== "close" && isPopoverWaiting(ctx)) {
       return false;
     }
 
-    const step = currentPopoverStep();
-    const { showButtons, disableButtons } = resolveStepButtons(ctx, step ? withPopoverPatch(ctx, step) : step);
+    const { showButtons, disableButtons } = currentButtons();
 
     return showButtons.includes(button) && !disableButtons.includes(button);
   }
@@ -276,11 +279,18 @@ export function driver(options: Config = {}): Driver {
     return step.onElementMissing || ctx.getConfig("onElementMissing");
   }
 
-  function clearWaiting() {
+  function popoverTarget() {
     const initialWait = ctx.getState("__initialWait");
-    const element = initialWait?.element ?? ctx.getState("activeElement");
-    const step = initialWait?.step ?? ctx.getState("activeStep");
-    clearStepPopoverWaiting(ctx, element, step);
+
+    return {
+      element: initialWait?.element ?? ctx.getState("activeElement"),
+      step: initialWait?.step ?? ctx.getState("activeStep"),
+    };
+  }
+
+  function clearWaiting() {
+    const target = popoverTarget();
+    clearStepPopoverWaiting(ctx, target.element, target.step);
   }
 
   function watchForRemoval(activation: Activation) {
@@ -550,10 +560,8 @@ export function driver(options: Config = {}): Driver {
     activation.popoverPatch = patch ? { ...activation.popoverPatch, ...patch } : undefined;
 
     const popover = ctx.getState("popover");
-    const initialWait = ctx.getState("__initialWait");
-    const element = initialWait?.element ?? ctx.getState("activeElement");
-    const currentStep = initialWait?.step ?? ctx.getState("activeStep");
-    if (!popover || !element || currentStep !== activation.step) {
+    const { element, step } = popoverTarget();
+    if (!popover || !element || step !== activation.step) {
       return;
     }
 
