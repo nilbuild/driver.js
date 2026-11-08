@@ -1,7 +1,8 @@
 import { AllowedButtons, destroyPopover, hidePopover, Popover } from "./popover";
 import { destroyOverlay } from "./overlay";
 import { destroyEvents, initEvents, requireRefresh } from "./events";
-import { Config, createContext, DestroyReason, DriverHook } from "./context";
+import { Activation, AdvanceOn, Config, createContext, DestroyReason, DriverHook } from "./context";
+import { listenForAdvanceEvents, resolveAdvanceOn } from "./advance";
 import { destroyHighlight, highlight } from "./highlight";
 import {
   findReachableIndex,
@@ -17,7 +18,7 @@ import "./driver.css";
 let teardownActive: (() => void) | undefined;
 
 // Re-export the public types so they remain part of the package's type surface.
-export type { Config, DestroyReason, DriverHook, HookOpts, State } from "./context";
+export type { AdvanceOn, AdvanceOnOpts, Config, DestroyReason, DriverHook, HookOpts, State } from "./context";
 export type { StageDefinition } from "./stage";
 export type { Popover, PopoverDOM, Side, Alignment, AllowedButtons } from "./popover";
 
@@ -29,6 +30,7 @@ export type DriveStep = {
   popover?: Popover;
   disableActiveInteraction?: boolean;
   advanceOnClick?: boolean;
+  advanceOn?: AdvanceOn;
   skipMissingElement?: boolean;
   waitForElement?: number;
   data?: Record<string, any>;
@@ -62,6 +64,7 @@ export interface Driver {
 export function driver(options: Config = {}): Driver {
   const ctx = createContext(options);
   const teardown = () => destroy("replaced", false);
+  let activationCount = 0;
 
   function handleClose(reason: DestroyReason = "close") {
     if (!ctx.getConfig("allowClose")) {
@@ -169,23 +172,13 @@ export function driver(options: Config = {}): Driver {
     }
   }
 
-  function handleActiveElementClick() {
-    const isTransitioning = ctx.getState("__transitionCallback");
-    if (isTransitioning) {
-      return;
-    }
-
-    const activeStep = ctx.getState("__activeStep");
+  function advance() {
+    const activeStep = ctx.getState("activeStep");
     if (!activeStep) {
       return;
     }
 
-    const advanceOnClick = activeStep.advanceOnClick ?? ctx.getConfig("advanceOnClick");
-    if (!advanceOnClick) {
-      return;
-    }
-
-    const activeElement = ctx.getState("__activeElement");
+    const activeElement = ctx.getState("activeElement");
     const onNextClick = resolveNextHook(ctx, activeStep);
     if (onNextClick) {
       markDoneIfLastStep();
@@ -194,6 +187,74 @@ export function driver(options: Config = {}): Driver {
     }
 
     moveNext();
+  }
+
+  function requestCompletion(activationId: number) {
+    const activation = ctx.getState("__activation");
+    if (!activation || activation.id !== activationId || activation.latched) {
+      return;
+    }
+
+    activation.latched = true;
+    advance();
+
+    if (ctx.getState("__activation") === activation && !ctx.getState("__pendingWaitCancel")) {
+      activation.latched = false;
+    }
+  }
+
+  function endActivation() {
+    const activation = ctx.getState("__activation");
+    if (!activation) {
+      return;
+    }
+
+    ctx.setState("__activation", undefined);
+    activation.controller.abort();
+    activation.cleanup?.();
+  }
+
+  function startActivation() {
+    endActivation();
+
+    const step = ctx.getState("activeStep");
+    if (!step) {
+      return;
+    }
+
+    activationCount += 1;
+    const activation: Activation = { id: activationCount, controller: new AbortController(), latched: false };
+    ctx.setState("__activation", activation);
+
+    const advanceOn = resolveAdvanceOn(ctx, step);
+    if (!advanceOn) {
+      return;
+    }
+
+    const complete = () => requestCompletion(activation.id);
+    if (typeof advanceOn !== "function") {
+      const eventTypes = Array.isArray(advanceOn) ? advanceOn : [advanceOn];
+      listenForAdvanceEvents(ctx, eventTypes, activation.controller.signal, complete);
+      return;
+    }
+
+    const element = ctx.getState("activeElement");
+    const isDummyElement = !element || element.id === "driver-dummy-element";
+    const cleanup = advanceOn(isDummyElement ? undefined : element, step, {
+      ...ctx.getHookOpts(),
+      next: complete,
+      signal: activation.controller.signal,
+    });
+
+    if (typeof cleanup !== "function") {
+      return;
+    }
+
+    if (ctx.getState("__activation") === activation) {
+      activation.cleanup = cleanup;
+    } else {
+      cleanup();
+    }
   }
 
   function handleArrowLeft() {
@@ -272,7 +333,6 @@ export function driver(options: Config = {}): Driver {
     initEvents(ctx);
 
     ctx.listen("overlayClick", handleOverlayClick);
-    ctx.listen("activeElementClick", handleActiveElementClick);
     ctx.listen("escapePress", handleEscape);
     ctx.listen("closeClick", handleClose);
     ctx.listen("arrowLeftPress", handleArrowLeft);
@@ -380,6 +440,8 @@ export function driver(options: Config = {}): Driver {
         },
       })
     );
+
+    startActivation();
   }
 
   function destroy(reason: DestroyReason, withOnDestroyStartedHook = true) {
@@ -423,6 +485,7 @@ export function driver(options: Config = {}): Driver {
     document.body.style.removeProperty("--driver-animation-duration");
 
     cancelElementWait();
+    endActivation();
     destroyEvents(ctx);
     destroyPopover(ctx.getState("popover"));
     destroyHighlight();
@@ -467,6 +530,7 @@ export function driver(options: Config = {}): Driver {
     setConfig: ctx.setConfig,
     setSteps: (steps: DriveStep[]) => {
       cancelElementWait();
+      endActivation();
       ctx.resetState();
       ctx.setConfig({
         ...ctx.getConfig(),
@@ -528,6 +592,7 @@ export function driver(options: Config = {}): Driver {
             }
           : undefined,
       });
+      startActivation();
     },
     destroy: () => {
       destroy("api", false);

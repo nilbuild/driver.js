@@ -65,40 +65,24 @@ function onKeyup(ctx: Context, e: KeyboardEvent) {
   }
 }
 
-// Driver's own UI (popover, overlay) swallows its clicks during the capture
-// phase, so anything reaching this bubble-phase listener is a click on the
-// page itself. Bubble also means the app's own handlers have already run.
-function onDocumentClick(ctx: Context, e: MouseEvent) {
-  const activeElement = ctx.getState("__activeElement");
-  const target = e.target as Element | null;
-  if (!activeElement || !target || !activeElement.contains(target)) {
-    return;
-  }
-
-  ctx.emit("activeElementClick");
-}
-
 export function initEvents(ctx: Context) {
   // Stashed in state so destroyEvents can detach these exact references.
   const onWindowKeyup = (e: KeyboardEvent) => onKeyup(ctx, e);
   const onWindowKeydown = (e: KeyboardEvent) => trapFocus(ctx, e);
   const onWindowResize = () => requireRefresh(ctx);
   const onWindowScroll = () => requireRefresh(ctx);
-  const onClick = (e: MouseEvent) => onDocumentClick(ctx, e);
 
   ctx.setState("__events", {
     onKeyup: onWindowKeyup,
     onKeydown: onWindowKeydown,
     onResize: onWindowResize,
     onScroll: onWindowScroll,
-    onClick,
   });
 
   window.addEventListener("keyup", onWindowKeyup, false);
   window.addEventListener("keydown", onWindowKeydown, false);
   window.addEventListener("resize", onWindowResize);
   window.addEventListener("scroll", onWindowScroll);
-  document.addEventListener("click", onClick, false);
 }
 
 export function destroyEvents(ctx: Context) {
@@ -111,5 +95,4 @@ export function destroyEvents(ctx: Context) {
   window.removeEventListener("keydown", events.onKeydown);
   window.removeEventListener("resize", events.onResize);
   window.removeEventListener("scroll", events.onScroll);
-  document.removeEventListener("click", events.onClick, false);
 }
