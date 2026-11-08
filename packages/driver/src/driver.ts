@@ -16,6 +16,7 @@ import {
 import { announce, destroyLiveRegion, mountLiveRegion } from "./live-region";
 import { listenForAdvanceEvents, resolveAdvanceOn } from "./advance";
 import { isDummyElement } from "./gate";
+import { nudge, NudgeTarget } from "./nudge";
 import { trackAllowedElements } from "./allowed";
 import { destroyHighlight, highlight, mountDummyElement, rebindActiveElement } from "./highlight";
 import {
@@ -53,6 +54,7 @@ export type {
   State,
 } from "./context";
 export type { StageDefinition } from "./stage";
+export type { NudgeTarget } from "./nudge";
 export type { Popover, PopoverDOM, Side, Alignment, AllowedButtons } from "./popover";
 
 export type DriveStep = {
@@ -95,6 +97,7 @@ export interface Driver {
   hasPreviousStep: () => boolean;
   highlight: (step: DriveStep) => void;
   updatePopover: (patch?: PopoverPatch) => void;
+  nudge: (target?: NudgeTarget) => void;
   destroy: () => void;
 }
 
@@ -825,6 +828,7 @@ export function driver(options: Config = {}): Driver {
       startActivation();
     },
     updatePopover,
+    nudge: (target?: NudgeTarget) => nudge(ctx, target),
     destroy: () => {
       destroy("api", false);
     },
