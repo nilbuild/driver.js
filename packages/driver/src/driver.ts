@@ -427,28 +427,46 @@ export function driver(options: Config = {}): Driver {
 
     let unbind: (() => void) | undefined;
     const bind = () => {
-      unbind?.();
+      const previous = unbind;
+      unbind = undefined;
+      previous?.();
+
       const binding = new AbortController();
       const stop = () => binding.abort();
       activation.controller.signal.addEventListener("abort", stop);
 
-      const element = ctx.getState("activeElement");
-      const cleanup = advanceOn(isDummyElement(element) ? undefined : element, step, {
-        ...ctx.getHookOpts(),
-        next: complete,
-        signal: binding.signal,
-      });
+      let isReleased = false;
+      let cleanup: void | (() => void);
+      const release = () => {
+        if (isReleased) {
+          return;
+        }
 
-      unbind = () => {
+        isReleased = true;
         activation.controller.signal.removeEventListener("abort", stop);
         binding.abort();
         if (typeof cleanup === "function") {
           cleanup();
         }
       };
+      unbind = release;
 
-      if (ctx.getState("__activation") !== activation) {
-        unbind();
+      const element = ctx.getState("activeElement");
+      cleanup = advanceOn(isDummyElement(element) ? undefined : element, step, {
+        ...ctx.getHookOpts(),
+        next: complete,
+        signal: binding.signal,
+      });
+
+      if (isReleased) {
+        if (typeof cleanup === "function") {
+          cleanup();
+        }
+        return;
+      }
+
+      if (ctx.getState("__activation") !== activation || binding.signal.aborted) {
+        release();
       }
     };
 
@@ -494,7 +512,7 @@ export function driver(options: Config = {}): Driver {
     }
 
     const activeIndex = ctx.getState("activeIndex");
-    const activeStep = ctx.getState("__activeStep");
+    const activeStep = currentPopoverStep();
     const activeElement = ctx.getState("__activeElement");
     if (typeof activeIndex === "undefined" || typeof activeStep === "undefined") {
       return;
@@ -656,7 +674,9 @@ export function driver(options: Config = {}): Driver {
     }
 
     const element = mountDummyElement();
-    ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
+    if (!ctx.getState("__keepReturnFocus")) {
+      ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
+    }
     ctx.setState("__keepReturnFocus", true);
     ctx.setState("activeIndex", stepIndex);
     ctx.setState("__initialWait", { element, step, index: stepIndex });
