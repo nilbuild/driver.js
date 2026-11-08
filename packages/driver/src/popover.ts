@@ -97,6 +97,16 @@ export function hidePopover(popover: PopoverDOM | undefined) {
 }
 
 const customClasses = new WeakMap<HTMLElement, string[]>();
+const appliedHtml = new WeakMap<HTMLElement, string>();
+
+function setHtml(element: HTMLElement, html: string) {
+  if (appliedHtml.get(element) === html) {
+    return;
+  }
+
+  element.innerHTML = html;
+  appliedHtml.set(element, html);
+}
 
 function toggleButton(button: HTMLButtonElement, isDisabled: boolean) {
   button.disabled = isDisabled;
@@ -107,21 +117,21 @@ function applyPopoverContent(popover: PopoverDOM, options: PopoverRenderOptions)
   const { title, description, showButtons, disableButtons, showProgress, nextBtnText, prevBtnText, progressText } =
     options;
 
-  popover.nextButton.innerHTML = nextBtnText;
-  popover.previousButton.innerHTML = prevBtnText;
-  popover.progress.innerHTML = progressText;
+  setHtml(popover.nextButton, nextBtnText);
+  setHtml(popover.previousButton, prevBtnText);
+  setHtml(popover.progress, progressText);
   popover.closeButton.setAttribute("aria-label", options.closeBtnLabel);
   popover.nextButton.classList.toggle("driver-popover-done-btn", !!options.doneButton);
 
   if (title) {
-    popover.title.innerHTML = title;
+    setHtml(popover.title, title);
     popover.title.style.display = "block";
   } else {
     popover.title.style.display = "none";
   }
 
   if (description) {
-    popover.description.innerHTML = description;
+    setHtml(popover.description, description);
     popover.description.style.display = "block";
   } else {
     popover.description.style.display = "none";

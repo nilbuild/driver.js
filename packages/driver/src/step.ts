@@ -217,13 +217,45 @@ function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): Po
   };
 }
 
-export function withPopoverPatch(ctx: Context, step: DriveStep): DriveStep {
+function activePatch(ctx: Context, step: DriveStep) {
   const activation = ctx.getState("__activation");
-  if (!activation?.popoverPatch || activation.step !== step) {
+
+  return activation?.popoverPatch && activation.step === step ? activation.popoverPatch : undefined;
+}
+
+export function withPopoverPatch(ctx: Context, step: DriveStep): DriveStep {
+  const patch = activePatch(ctx, step);
+  if (!patch) {
     return step;
   }
 
-  return { ...step, popover: { ...step.popover, ...activation.popoverPatch } };
+  return { ...step, popover: { ...step.popover, ...patch } };
+}
+
+function resolvePatchedPopover(ctx: Context, element: Element, step: DriveStep): PopoverRenderOptions {
+  const options = resolveStepPopover(ctx, element, withPopoverPatch(ctx, step));
+  const patch = activePatch(ctx, step);
+  if (!patch) {
+    return options;
+  }
+
+  if (patch.showProgress !== undefined) {
+    options.showProgress = patch.showProgress;
+  }
+
+  if (patch.popoverClass !== undefined) {
+    options.popoverClass = patch.popoverClass;
+  }
+
+  if (patch.progressText !== undefined) {
+    const steps = ctx.getConfig("steps") || [];
+    const activeIndex = ctx.getState("activeIndex") ?? 0;
+    options.progressText = patch.progressText
+      .replace("{{current}}", `${activeIndex + 1}`)
+      .replace("{{total}}", `${steps.length}`);
+  }
+
+  return options;
 }
 
 export function renderStepPopover(ctx: Context, element: Element, step: DriveStep) {
@@ -231,7 +263,7 @@ export function renderStepPopover(ctx: Context, element: Element, step: DriveSte
 
   const keepFocus = isFocusWithinStep(ctx, element, step);
   const popover = renderPopover(element, {
-    ...resolveStepPopover(ctx, element, withPopoverPatch(ctx, step)),
+    ...resolvePatchedPopover(ctx, element, step),
     keepFocus,
   });
 
@@ -253,7 +285,7 @@ export function updateStepPopover(ctx: Context, element: Element, step: DriveSte
     return;
   }
 
-  updatePopoverContent(popover, element, resolveStepPopover(ctx, element, withPopoverPatch(ctx, step)));
+  updatePopoverContent(popover, element, resolvePatchedPopover(ctx, element, step));
 }
 
 export function repositionStepPopover(ctx: Context, element: Element, step: DriveStep) {
