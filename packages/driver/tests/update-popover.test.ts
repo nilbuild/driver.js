@@ -226,3 +226,46 @@ describe("updatePopover", () => {
     });
   });
 });
+
+describe("updatePopover precision", () => {
+  it("leaves untouched content and its handlers alone", async () => {
+    const onClick = vi.fn();
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#intro", popover: { title: "Title", description: `<input id="note"><button id="extra">Extra</button>` } }],
+      onPopoverRender: () => document.querySelector("#extra")?.addEventListener("click", onClick),
+    });
+    d.drive();
+    await nextFrame();
+
+    const input = document.querySelector<HTMLInputElement>("#note")!;
+    input.value = "typed";
+    d.updatePopover({ title: "Updated title" });
+
+    expect(document.querySelector("#note")).toBe(input);
+    expect(input.value).toBe("typed");
+    document.querySelector<HTMLButtonElement>("#extra")?.click();
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("lets explicit false and empty values win over the config", async () => {
+    const d = createDriver({ animate: false, showProgress: true, popoverClass: "global-theme", steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+
+    d.updatePopover({ showProgress: false, popoverClass: "" });
+
+    expect(document.querySelector<HTMLElement>(".driver-popover-progress-text")?.style.display).toBe("none");
+    expect(popoverEl()?.classList.contains("global-theme")).toBe(false);
+  });
+
+  it("fills progress placeholders in a patched progressText", async () => {
+    const d = createDriver({ animate: false, showProgress: true, steps: SAMPLE_STEPS });
+    d.drive(1);
+    await nextFrame();
+
+    d.updatePopover({ progressText: "Step {{current}} / {{total}}" });
+
+    expect(document.querySelector(".driver-popover-progress-text")?.textContent).toBe("Step 2 / 3");
+  });
+});
