@@ -33,11 +33,24 @@ export function isOnPath(event: Event, element: Element | undefined): boolean {
 
 export function listenForAdvanceEvents(
   ctx: Context,
-  eventTypes: string[],
+  advanceOn: Exclude<AdvanceOn, false>,
   activation: Activation,
   onComplete: () => void
 ) {
   const { signal } = activation.controller;
+  const { event: types, when } =
+    typeof advanceOn === "object" && !Array.isArray(advanceOn) ? advanceOn : { event: advanceOn };
+  const eventTypes = Array.isArray(types) ? types : [types];
+
+  const isMet = (event: Event) => {
+    if (!when) {
+      return true;
+    }
+
+    const element = ctx.getState("activeElement");
+    return !!element && when(element, activation.step, { ...ctx.getHookOpts(), event });
+  };
+
   let pendingEvent: Event | undefined;
   let pendingTimer: number | undefined;
 
@@ -55,7 +68,7 @@ export function listenForAdvanceEvents(
       return;
     }
 
-    if (!ctx.isConsumed(event)) {
+    if (!ctx.isConsumed(event) && isMet(event)) {
       onComplete();
     }
 

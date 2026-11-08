@@ -197,102 +197,15 @@ describe("onInteraction", () => {
     });
   });
 
-  describe("keyboard", () => {
-    it("reports keydown with the region of the focused element", async () => {
-      const onInteraction = vi.fn();
-      await start({ onInteraction, steps: [{ element: "#card-1" }, ...SAMPLE_STEPS] });
+  it("does not report key presses", async () => {
+    const onInteraction = vi.fn();
+    await start({ onInteraction });
 
-      (document.querySelector("#card-1") as HTMLElement).focus();
-      keyEvent("keydown", { key: "a", code: "KeyA" });
-      (document.querySelector("#intro") as HTMLElement).setAttribute("tabindex", "0");
-      (document.querySelector("#intro") as HTMLElement).focus();
-      keyEvent("keydown", { key: "b", code: "KeyB" });
+    (document.querySelector("#card-1") as HTMLElement).focus();
+    keyEvent("keydown", { key: "a", code: "KeyA" });
+    keyEvent("keyup", { key: "a", code: "KeyA" });
 
-      expect(onInteraction.mock.calls.map(call => [call[2].event.key, call[2].region])).toEqual([
-        ["a", "element"],
-        ["b", "outside"],
-      ]);
-    });
-
-    it("does not report Tab or IME composition", async () => {
-      const onInteraction = vi.fn();
-      await start({ onInteraction });
-
-      keyEvent("keydown", { key: "Tab", code: "Tab" });
-      keyEvent("keydown", { key: "a", code: "KeyA", isComposing: true });
-
-      expect(onInteraction).not.toHaveBeenCalled();
-    });
-
-    it("leaves driver's own keys alone while keyboard control is on and focus is outside", async () => {
-      const onInteraction = vi.fn();
-      await start({ onInteraction });
-
-      document.body.focus();
-      keyEvent("keydown", { key: "Escape", code: "Escape" }, document.body);
-      keyEvent("keydown", { key: "ArrowRight", code: "ArrowRight" }, document.body);
-
-      expect(onInteraction).not.toHaveBeenCalled();
-    });
-
-    it("reports driver's keys when keyboard control is off", async () => {
-      const onInteraction = vi.fn();
-      await start({ onInteraction, allowKeyboardControl: false });
-
-      keyEvent("keydown", { key: "Escape", code: "Escape" }, document.body);
-
-      expect(onInteraction).toHaveBeenCalledTimes(1);
-    });
-
-    it("consumes the keyup of a rejected key", async () => {
-      const appKeyup = vi.fn();
-      window.addEventListener("keyup", appKeyup);
-      await start({ onInteraction: () => false, allowKeyboardControl: false });
-
-      const down = keyEvent("keydown", { key: "s", code: "KeyS", ctrlKey: true }, document.body);
-      const up = keyEvent("keyup", { key: "s", code: "KeyS", ctrlKey: true }, document.body);
-
-      expect(down.defaultPrevented).toBe(true);
-      expect(up.defaultPrevented).toBe(true);
-      expect(appKeyup).not.toHaveBeenCalled();
-      window.removeEventListener("keyup", appKeyup);
-    });
-
-    it("lets the keyup of an accepted key through", async () => {
-      const appKeyup = vi.fn();
-      window.addEventListener("keyup", appKeyup);
-      await start({ onInteraction: () => undefined, allowKeyboardControl: false });
-
-      keyEvent("keydown", { key: "s", code: "KeyS" }, document.body);
-      keyEvent("keyup", { key: "s", code: "KeyS" }, document.body);
-
-      expect(appKeyup).toHaveBeenCalledTimes(1);
-      window.removeEventListener("keyup", appKeyup);
-    });
-
-    it("consumes repeats of a rejected key without asking again", async () => {
-      const onInteraction = vi.fn(() => false as const);
-      await start({ onInteraction, allowKeyboardControl: false });
-
-      keyEvent("keydown", { key: "a", code: "KeyA" }, document.body);
-      const repeat = keyEvent("keydown", { key: "a", code: "KeyA", repeat: true }, document.body);
-
-      expect(onInteraction).toHaveBeenCalledTimes(1);
-      expect(repeat.defaultPrevented).toBe(true);
-    });
-
-    it("forgets rejected keys when the window loses focus", async () => {
-      const appKeyup = vi.fn();
-      window.addEventListener("keyup", appKeyup);
-      await start({ onInteraction: () => false, allowKeyboardControl: false });
-
-      keyEvent("keydown", { key: "a", code: "KeyA" }, document.body);
-      window.dispatchEvent(new Event("blur"));
-      keyEvent("keyup", { key: "a", code: "KeyA" }, document.body);
-
-      expect(appKeyup).toHaveBeenCalledTimes(1);
-      window.removeEventListener("keyup", appKeyup);
-    });
+    expect(onInteraction).not.toHaveBeenCalled();
   });
 });
 

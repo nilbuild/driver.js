@@ -42,6 +42,7 @@ let teardownActive: (() => void) | undefined;
 // Re-export the public types so they remain part of the package's type surface.
 export type {
   AdvanceOn,
+  AdvanceOnEvent,
   AdvanceOnOpts,
   AllowedElements,
   Config,
@@ -100,7 +101,7 @@ export interface Driver {
   hasPreviousStep: () => boolean;
   highlight: (step: DriveStep) => void;
   updatePopover: (patch?: PopoverPatch) => void;
-  nudge: () => void;
+  nudge: (patch?: PopoverPatch) => void;
   destroy: () => void;
 }
 
@@ -258,7 +259,6 @@ export function driver(options: Config = {}): Driver {
 
     ctx.setState("__activation", undefined);
     activation.controller.abort();
-    activation.cleanup?.();
   }
 
   function resolveMissingHook(step: DriveStep): ElementMissingHook | undefined {
@@ -297,7 +297,6 @@ export function driver(options: Config = {}): Driver {
       graceTimer = undefined;
       hasReported = false;
       rebindActiveElement(ctx, element);
-      activation.rebind?.();
       if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
         clearWaiting();
       }
@@ -398,57 +397,7 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    const complete = () => requestCompletion(activation);
-    if (typeof advanceOn !== "function") {
-      const eventTypes = Array.isArray(advanceOn) ? advanceOn : [advanceOn];
-      listenForAdvanceEvents(ctx, eventTypes, activation, complete);
-      return;
-    }
-
-    let unbind: (() => void) | undefined;
-    const bind = () => {
-      unbind?.();
-
-      const binding = new AbortController();
-      activation.controller.signal.addEventListener("abort", () => binding.abort(), { signal: binding.signal });
-
-      let isReleased = false;
-      let cleanup: void | (() => void);
-      const release = () => {
-        if (isReleased) {
-          return;
-        }
-
-        isReleased = true;
-        binding.abort();
-        if (typeof cleanup === "function") {
-          cleanup();
-        }
-      };
-      unbind = release;
-
-      const element = ctx.getState("activeElement");
-      cleanup = advanceOn(isDummyElement(element) ? undefined : element, step, {
-        ...ctx.getHookOpts(),
-        next: complete,
-        signal: binding.signal,
-      });
-
-      if (isReleased) {
-        if (typeof cleanup === "function") {
-          cleanup();
-        }
-        return;
-      }
-
-      if (ctx.getState("__activation") !== activation || binding.signal.aborted) {
-        release();
-      }
-    };
-
-    bind();
-    activation.rebind = bind;
-    activation.cleanup = () => unbind?.();
+    listenForAdvanceEvents(ctx, advanceOn, activation, () => requestCompletion(activation));
   }
 
   function handleArrowLeft() {
@@ -652,8 +601,22 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
+    const activation = ctx.getState("__activation");
     clearWaiting();
-    onElementMissing(undefined, waitedStep, { ...ctx.getHookOpts(), cause: "timeout" });
+    const result = onElementMissing(undefined, waitedStep, {
+      ...ctx.getHookOpts(),
+      index: stepIndex,
+      cause: "timeout",
+    });
+    const hasMoved =
+      !ctx.getState("isInitialized") ||
+      ctx.getState("__activation") !== activation ||
+      ctx.getState("__pendingWaitCancel");
+    if (result === false || hasMoved) {
+      return;
+    }
+
+    drive(stepIndex, true);
   }
 
   function drive(stepIndex: number = 0, hasWaitedForElement = false) {
@@ -860,7 +823,12 @@ export function driver(options: Config = {}): Driver {
       });
     },
     updatePopover,
-    nudge: () => nudge(ctx),
+    nudge: (patch?: PopoverPatch) => {
+      if (patch) {
+        updatePopover(patch);
+      }
+      nudge(ctx);
+    },
     destroy: () => {
       destroy("api", false);
     },

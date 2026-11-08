@@ -2,8 +2,7 @@ import type { Context, InteractionRegion } from "./context";
 import { ALLOWED_CLASS } from "./allowed";
 import { isDummyElement, isKeyWidget } from "./utils";
 
-const GATED_EVENTS = ["click", "auxclick", "contextmenu", "dblclick", "keydown", "keyup"] as const;
-const DRIVER_KEYS = ["Escape", "ArrowLeft", "ArrowRight"];
+const GATED_EVENTS = ["click", "auxclick", "contextmenu", "dblclick"] as const;
 
 type Region = InteractionRegion | "popover";
 
@@ -57,50 +56,19 @@ function consume(ctx: Context, event: Event) {
   ctx.consume(event);
 }
 
-export function keySet(ctx: Context, name: "__rejectedKeys" | "__handledKeys"): Set<string> {
-  let keys = ctx.getState(name);
+export function handledKeys(ctx: Context): Set<string> {
+  let keys = ctx.getState("__handledKeys");
   if (!keys) {
     keys = new Set();
-    ctx.setState(name, keys);
+    ctx.setState("__handledKeys", keys);
   }
 
   return keys;
 }
 
-function isUnreportedKey(ctx: Context, event: KeyboardEvent, region: Region): boolean {
-  if (event.key === "Tab" || event.isComposing || event.keyCode === 229) {
-    return true;
-  }
-
-  const isDriverKey = DRIVER_KEYS.includes(event.key) && ctx.getConfig("allowKeyboardControl") !== false;
-
-  return isDriverKey && region === "outside";
-}
-
-function onGatedEvent(ctx: Context, event: Event) {
+function onGatedEvent(ctx: Context, event: MouseEvent) {
   if (!ctx.getState("isInitialized")) {
     return;
-  }
-
-  const rejected = keySet(ctx, "__rejectedKeys");
-  if (event instanceof KeyboardEvent) {
-    const id = keyId(event);
-    if (event.type === "keyup") {
-      if (rejected.delete(id)) {
-        if (ctx.getState("__widgetKey") === id) {
-          ctx.setState("__widgetKey", undefined);
-        }
-        ctx.getState("__handledKeys")?.delete(id);
-        consume(ctx, event);
-      }
-
-      return;
-    }
-
-    if (event.repeat && rejected.has(id)) {
-      consume(ctx, event);
-      return;
-    }
   }
 
   const step = ctx.getState("activeStep");
@@ -109,7 +77,7 @@ function onGatedEvent(ctx: Context, event: Event) {
     return;
   }
 
-  if (event.type === "auxclick" && (event as MouseEvent).button === 2) {
+  if (event.type === "auxclick" && event.button === 2) {
     return;
   }
 
@@ -118,53 +86,27 @@ function onGatedEvent(ctx: Context, event: Event) {
     return;
   }
 
-  if (event instanceof KeyboardEvent && isUnreportedKey(ctx, event, region)) {
-    return;
-  }
-
   const element = ctx.getState("activeElement");
   const result = onInteraction(isDummyElement(element) ? undefined : element, step, {
     ...ctx.getHookOpts(),
-    event: event as MouseEvent | KeyboardEvent,
+    event,
     region,
   });
 
-  if (result !== false) {
-    return;
-  }
-
-  consume(ctx, event);
-  if (event instanceof KeyboardEvent) {
-    rejected.add(keyId(event));
+  if (result === false) {
+    consume(ctx, event);
   }
 }
 
 export function initGate(ctx: Context): () => void {
   const controller = new AbortController();
-  const listener = (event: Event) => onGatedEvent(ctx, event);
-
-  window.addEventListener(
-    "keydown",
-    event => {
-      if (isKeyInPlay(ctx, event.composedPath())) {
-        ctx.setState("__widgetKey", keyId(event));
-      }
-    },
-    { capture: true, signal: controller.signal }
-  );
+  const listener = (event: MouseEvent) => onGatedEvent(ctx, event);
 
   for (const type of GATED_EVENTS) {
     window.addEventListener(type, listener, { capture: true, signal: controller.signal });
   }
 
-  window.addEventListener(
-    "blur",
-    () => {
-      keySet(ctx, "__rejectedKeys").clear();
-      ctx.setState("__widgetKey", undefined);
-    },
-    { signal: controller.signal }
-  );
+  window.addEventListener("blur", () => ctx.setState("__widgetKey", undefined), { signal: controller.signal });
 
   return () => controller.abort();
 }

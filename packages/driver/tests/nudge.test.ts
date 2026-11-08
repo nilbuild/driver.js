@@ -26,6 +26,24 @@ describe("nudge", () => {
     expect(isPopoverNudged()).toBe(true);
   });
 
+  it("changes the popover and shakes it in one call", async () => {
+    const d = await start();
+
+    d.nudge({ description: "Not quite" });
+
+    expect(popoverEl()?.querySelector(".driver-popover-description")?.textContent).toBe("Not quite");
+    expect(isPopoverNudged()).toBe(true);
+  });
+
+  it("keeps an earlier change when called without one", async () => {
+    const d = await start();
+    d.updatePopover({ description: "Not quite" });
+
+    d.nudge();
+
+    expect(popoverEl()?.querySelector(".driver-popover-description")?.textContent).toBe("Not quite");
+  });
+
   it("never touches the highlighted element itself", async () => {
     const d = await start();
     const element = document.querySelector("#intro")!;

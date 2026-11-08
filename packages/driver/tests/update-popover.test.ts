@@ -320,7 +320,10 @@ describe("updatePopover from hooks", () => {
   it("applies updatePopover from an initial-wait timeout hook", async () => {
     createDriver({
       animate: false,
-      onElementMissing: (_el, _step, opts) => opts.driver.updatePopover({ description: "Load failed; retry" }),
+      onElementMissing: (_el, _step, opts) => {
+        opts.driver.updatePopover({ description: "Load failed; retry" });
+        return false;
+      },
       steps: [{ element: "#never", waitForElement: 30, popover: { title: "First", description: "Waiting" } }],
     }).drive();
     await wait(70);
