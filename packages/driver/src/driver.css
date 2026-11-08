@@ -17,7 +17,6 @@
 
 .driver-active .driver-active-element,
 .driver-active .driver-active-element *,
-.driver-active .driver-allowed-element,
 .driver-active .driver-allowed-element *,
 .driver-popover,
 .driver-popover * {
@@ -25,6 +24,7 @@
 }
 
 .driver-active .driver-allowed-element {
+  pointer-events: auto;
   z-index: var(--driver-allowed-z-index, 10001);
 }
 
