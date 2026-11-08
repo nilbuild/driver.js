@@ -92,7 +92,8 @@ export function isFocusWithinStep(ctx: Context, element: Element, step: DriveSte
   }
 
   const isRealElement = element.id !== "driver-dummy-element";
-  if (isRealElement && element.contains(focused)) {
+  const isInteractive = !(step.disableActiveInteraction ?? ctx.getConfig("disableActiveInteraction"));
+  if (isRealElement && isInteractive && element.contains(focused)) {
     return true;
   }
 

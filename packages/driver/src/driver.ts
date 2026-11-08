@@ -399,6 +399,7 @@ export function driver(options: Config = {}): Driver {
     activationCount += 1;
     const activation: Activation = { id: activationCount, step, controller: new AbortController(), latched: false };
     ctx.setState("__activation", activation);
+    ctx.setState("__lastAnnouncement", undefined);
 
     return activation;
   }
@@ -655,6 +656,8 @@ export function driver(options: Config = {}): Driver {
     }
 
     const element = mountDummyElement();
+    ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
+    ctx.setState("__keepReturnFocus", true);
     ctx.setState("activeIndex", stepIndex);
     ctx.setState("__initialWait", { element, step, index: stepIndex });
     beginActivation(step);
@@ -742,7 +745,10 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
+    if (!ctx.getState("__keepReturnFocus")) {
+      ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
+    }
+    ctx.setState("__keepReturnFocus", false);
     ctx.setState("activeIndex", stepIndex);
 
     const step = resolveStepAt(stepIndex);

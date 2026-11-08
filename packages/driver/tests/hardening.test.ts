@@ -702,3 +702,57 @@ describe("ninth review", () => {
     expect(second.classList.contains("driver-active-element-parent-no-scroll")).toBe(true);
   });
 });
+
+describe("tenth review", () => {
+  it("still takes focus when the highlighted element is not interactive", async () => {
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(10);
+    const input = append("field", "input");
+    input.focus();
+
+    createDriver({
+      animate: false,
+      steps: [{ element: "#field", disableActiveInteraction: true, popover: { title: "Look" } }],
+    }).drive();
+    await nextFrame();
+
+    expect(document.activeElement).not.toBe(input);
+  });
+
+  it("returns focus to the launcher after an initial wait", async () => {
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(function (this: HTMLElement) {
+      for (let node: HTMLElement | null = this; node; node = node.parentElement) {
+        if (node.style.display === "none") {
+          return 0;
+        }
+      }
+      return 10;
+    });
+    const launcher = append("launcher");
+    launcher.focus();
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#late", waitForElement: 500, popover: { title: "First" } }],
+    });
+    d.drive();
+    append("late", "div");
+    await tick();
+    d.destroy();
+
+    expect(document.activeElement).toBe(launcher);
+  });
+
+  it("announces the same feedback again on a later step", async () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+    d.updatePopover({ description: "Right-click instead." });
+
+    d.moveNext();
+    await nextFrame();
+    const region = document.querySelector(".driver-live-region")!;
+    region.textContent = "";
+    d.updatePopover({ description: "Right-click instead." });
+
+    expect(region.textContent).toBe("Right-click instead.");
+  });
+});
