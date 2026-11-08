@@ -16,7 +16,7 @@ Training flows teach by doing. Instead of a Next button, each step waits for the
 | `allowedElements` | Extra elements the user may use during a step, like a menu opened by the action |
 | `onElementMissing` | Recover when the highlighted element disappears or never shows up |
 | `driverObj.updatePopover()` | Change the popover text in place, for hints |
-| `driverObj.nudge()` | Shake the popover and pulse a ring around the element |
+| `driverObj.nudge()` | Shake the popover |
 
 All step options can also be set on the driver config, where they apply to every step.
 
@@ -155,7 +155,7 @@ driverObj.updatePopover(); // back to the original
 
 It accepts `title`, `description`, `showButtons`, `disableButtons`, `showProgress`, `progressText`, `nextBtnText`, `prevBtnText`, `closeBtnLabel` and `popoverClass`.
 
-`driverObj.nudge()` draws attention: the popover shakes and a ring pulses around the highlighted element. Pass `"popover"` or `"element"` for just one. Your element is never restyled, and with reduced motion turned on the shake becomes a flash.
+`driverObj.nudge()` draws attention to the popover with a short shake. With reduced motion turned on, the shake becomes a flash of its outline.
 
 ```css
 :root {

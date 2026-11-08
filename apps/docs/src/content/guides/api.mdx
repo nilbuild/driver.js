@@ -78,8 +78,7 @@ driverObj.highlight({
 driverObj.updatePopover({ description: "Not quite. Right-click the file." });
 driverObj.updatePopover();
 
-// Draw attention: shake the popover and pulse a ring around the element.
-// Pass "popover" or "element" for just one. (default: "both")
+// Draw attention to the popover with a short shake.
 driverObj.nudge();
 
 // Destroy the tour. The destroy hooks receive `options.reason` "api",

@@ -19,11 +19,6 @@ export function generateStageSvgPathString(stage: StageDefinition, options: Stag
   const windowX = window.innerWidth;
   const windowY = window.innerHeight;
 
-  return `M${windowX},0L0,0L0,${windowY}L${windowX},${windowY}L${windowX},0Z
-    ${generateStageCutoutPath(stage, options)}`;
-}
-
-export function generateStageCutoutPath(stage: StageDefinition, options: StageOptions) {
   const stagePadding = options.padding;
   const stageRadius = options.radius;
 
@@ -40,5 +35,6 @@ export function generateStageCutoutPath(stage: StageDefinition, options: StageOp
   const highlightBoxWidth = stageWidth - normalizedRadius * 2;
   const highlightBoxHeight = stageHeight - normalizedRadius * 2;
 
-  return `M${highlightBoxX},${highlightBoxY} h${highlightBoxWidth} a${normalizedRadius},${normalizedRadius} 0 0 1 ${normalizedRadius},${normalizedRadius} v${highlightBoxHeight} a${normalizedRadius},${normalizedRadius} 0 0 1 -${normalizedRadius},${normalizedRadius} h-${highlightBoxWidth} a${normalizedRadius},${normalizedRadius} 0 0 1 -${normalizedRadius},-${normalizedRadius} v-${highlightBoxHeight} a${normalizedRadius},${normalizedRadius} 0 0 1 ${normalizedRadius},-${normalizedRadius} z`;
+  return `M${windowX},0L0,0L0,${windowY}L${windowX},${windowY}L${windowX},0Z
+    M${highlightBoxX},${highlightBoxY} h${highlightBoxWidth} a${normalizedRadius},${normalizedRadius} 0 0 1 ${normalizedRadius},${normalizedRadius} v${highlightBoxHeight} a${normalizedRadius},${normalizedRadius} 0 0 1 -${normalizedRadius},${normalizedRadius} h-${highlightBoxWidth} a${normalizedRadius},${normalizedRadius} 0 0 1 -${normalizedRadius},-${normalizedRadius} v-${highlightBoxHeight} a${normalizedRadius},${normalizedRadius} 0 0 1 ${normalizedRadius},-${normalizedRadius} z`;
 }
