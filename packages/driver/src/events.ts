@@ -1,7 +1,7 @@
 import { Context } from "./context";
 import { refreshActiveHighlight } from "./highlight";
 import { getFocusableElements } from "./utils";
-import { initGate, isFocusInPlay, keyId } from "./gate";
+import { initGate, isFocusInPlay, keyId, regionOf } from "./gate";
 import { ALLOWED_CLASS } from "./allowed";
 
 export function requireRefresh(ctx: Context) {
@@ -68,7 +68,9 @@ function handledKeys(ctx: Context): Set<string> {
 
 function onKeydownCapture(ctx: Context, e: KeyboardEvent) {
   handledKeys(ctx).add(keyId(e));
-  if (isFocusInPlay(ctx)) {
+
+  const region = regionOf(ctx, e.composedPath());
+  if (region === "element" || region === "allowed" || isFocusInPlay(ctx)) {
     ctx.setState("__widgetKey", keyId(e));
   }
 }

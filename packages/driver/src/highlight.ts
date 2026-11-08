@@ -141,17 +141,18 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
     const elapsed = Date.now() - start;
     const timeRemaining = duration - elapsed;
     const isHalfwayThrough = timeRemaining <= duration / 2;
+    const reboundElement = ctx.getState("activeStep") === toStep ? ctx.getState("activeElement") : undefined;
+    const targetElement = reboundElement || toElement;
 
     if (toStep.popover && isHalfwayThrough && !isPopoverRendered && hasDelayedPopover) {
-      renderStepPopover(ctx, toElement, toStep);
+      renderStepPopover(ctx, targetElement, toStep);
       isPopoverRendered = true;
     }
 
     if (ctx.getConfig("animate") && elapsed < duration) {
-      transitionStage(ctx, elapsed, duration, fromElement, toElement);
+      transitionStage(ctx, elapsed, duration, fromElement, targetElement);
     } else {
-      const reboundElement = ctx.getState("activeStep") === toStep ? ctx.getState("activeElement") : undefined;
-      const finalElement = reboundElement || toElement;
+      const finalElement = targetElement;
       trackActiveElement(ctx, finalElement);
 
       if (highlightedHook) {
