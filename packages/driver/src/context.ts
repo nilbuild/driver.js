@@ -37,6 +37,15 @@ export type AdvanceOn =
   | string[]
   | ((element: Element | undefined, step: DriveStep, opts: AdvanceOnOpts) => void | (() => void));
 
+export type InteractionRegion = "element" | "allowed" | "outside";
+
+export type InteractionOpts = HookOpts & {
+  event: MouseEvent | KeyboardEvent;
+  region: InteractionRegion;
+};
+
+export type InteractionHook = (element: Element | undefined, step: DriveStep, opts: InteractionOpts) => false | void;
+
 export type PopoverPatch = Pick<
   Popover,
   | "title"
@@ -82,6 +91,7 @@ export type Config = {
   advanceOnClick?: boolean;
 
   advanceOn?: AdvanceOn;
+  onInteraction?: InteractionHook;
 
   // Skip a step whose target element is specified but missing from the DOM.
   // Element-less steps are intentional centered steps and never skipped. (default: false)
@@ -192,6 +202,9 @@ export type State = {
   __pendingWaitCancel?: () => void;
   __activation?: Activation;
   __liveRegion?: HTMLElement;
+  __rejectedKeys?: Set<string>;
+  __handledKeys?: Set<string>;
+  __teardownGate?: () => void;
   __lastAnnouncement?: string;
 
   // User action a destroy() called from a hook reports instead of "api".
@@ -202,6 +215,7 @@ export type State = {
   __events?: {
     onKeyup: (e: KeyboardEvent) => void;
     onKeydown: (e: KeyboardEvent) => void;
+    onKeydownCapture: (e: KeyboardEvent) => void;
     onResize: () => void;
     onScroll: () => void;
   };

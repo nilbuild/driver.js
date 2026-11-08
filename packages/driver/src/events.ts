@@ -1,6 +1,7 @@
 import { Context } from "./context";
 import { refreshActiveHighlight } from "./highlight";
 import { getFocusableElements } from "./utils";
+import { initGate, isFocusInPlay, keyId } from "./gate";
 
 export function requireRefresh(ctx: Context) {
   const resizeTimeout = ctx.getState("__resizeTimeout");
@@ -49,10 +50,31 @@ function trapFocus(ctx: Context, e: KeyboardEvent) {
   }
 }
 
+function handledKeys(ctx: Context): Set<string> {
+  let keys = ctx.getState("__handledKeys");
+  if (!keys) {
+    keys = new Set();
+    ctx.setState("__handledKeys", keys);
+  }
+
+  return keys;
+}
+
+function onKeydownCapture(ctx: Context, e: KeyboardEvent) {
+  handledKeys(ctx).add(keyId(e));
+}
+
+function onKeydownBubble(ctx: Context, e: KeyboardEvent) {
+  if (!e.defaultPrevented) {
+    handledKeys(ctx).delete(keyId(e));
+  }
+}
+
 function onKeyup(ctx: Context, e: KeyboardEvent) {
   const allowKeyboardControl = ctx.getConfig("allowKeyboardControl") ?? true;
+  const wasHandledByApp = handledKeys(ctx).delete(keyId(e));
 
-  if (!allowKeyboardControl) {
+  if (!allowKeyboardControl || wasHandledByApp || isFocusInPlay(ctx)) {
     return;
   }
 
@@ -68,17 +90,24 @@ function onKeyup(ctx: Context, e: KeyboardEvent) {
 export function initEvents(ctx: Context) {
   // Stashed in state so destroyEvents can detach these exact references.
   const onWindowKeyup = (e: KeyboardEvent) => onKeyup(ctx, e);
-  const onWindowKeydown = (e: KeyboardEvent) => trapFocus(ctx, e);
+  const onWindowKeydown = (e: KeyboardEvent) => {
+    onKeydownBubble(ctx, e);
+    trapFocus(ctx, e);
+  };
+  const onWindowKeydownCapture = (e: KeyboardEvent) => onKeydownCapture(ctx, e);
   const onWindowResize = () => requireRefresh(ctx);
   const onWindowScroll = () => requireRefresh(ctx);
 
   ctx.setState("__events", {
     onKeyup: onWindowKeyup,
     onKeydown: onWindowKeydown,
+    onKeydownCapture: onWindowKeydownCapture,
     onResize: onWindowResize,
     onScroll: onWindowScroll,
   });
 
+  ctx.setState("__teardownGate", initGate(ctx));
+  window.addEventListener("keydown", onWindowKeydownCapture, true);
   window.addEventListener("keyup", onWindowKeyup, false);
   window.addEventListener("keydown", onWindowKeydown, false);
   window.addEventListener("resize", onWindowResize);
@@ -93,6 +122,8 @@ export function destroyEvents(ctx: Context) {
 
   window.removeEventListener("keyup", events.onKeyup);
   window.removeEventListener("keydown", events.onKeydown);
+  window.removeEventListener("keydown", events.onKeydownCapture, true);
+  ctx.getState("__teardownGate")?.();
   window.removeEventListener("resize", events.onResize);
   window.removeEventListener("scroll", events.onScroll);
 }
