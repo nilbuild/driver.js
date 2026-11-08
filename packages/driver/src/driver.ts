@@ -1,7 +1,8 @@
 import { AllowedButtons, destroyPopover, hidePopover, Popover } from "./popover";
 import { destroyOverlay } from "./overlay";
 import { destroyEvents, initEvents, requireRefresh } from "./events";
-import { Activation, AdvanceOn, Config, createContext, DestroyReason, DriverHook } from "./context";
+import { Activation, AdvanceOn, Config, createContext, DestroyReason, DriverHook, PopoverPatch } from "./context";
+import { announce, destroyLiveRegion, mountLiveRegion } from "./live-region";
 import { listenForAdvanceEvents, resolveAdvanceOn } from "./advance";
 import { destroyHighlight, highlight } from "./highlight";
 import {
@@ -11,6 +12,7 @@ import {
   resolveStepButtons,
   resolveTourStep,
   shouldSkipStep,
+  updateStepPopover,
 } from "./step";
 import { resolveElement } from "./utils";
 import "./driver.css";
@@ -18,7 +20,16 @@ import "./driver.css";
 let teardownActive: (() => void) | undefined;
 
 // Re-export the public types so they remain part of the package's type surface.
-export type { AdvanceOn, AdvanceOnOpts, Config, DestroyReason, DriverHook, HookOpts, State } from "./context";
+export type {
+  AdvanceOn,
+  AdvanceOnOpts,
+  Config,
+  DestroyReason,
+  DriverHook,
+  HookOpts,
+  PopoverPatch,
+  State,
+} from "./context";
 export type { StageDefinition } from "./stage";
 export type { Popover, PopoverDOM, Side, Alignment, AllowedButtons } from "./popover";
 
@@ -58,6 +69,7 @@ export interface Driver {
   hasNextStep: () => boolean;
   hasPreviousStep: () => boolean;
   highlight: (step: DriveStep) => void;
+  updatePopover: (patch?: PopoverPatch) => void;
   destroy: () => void;
 }
 
@@ -223,7 +235,7 @@ export function driver(options: Config = {}): Driver {
     }
 
     activationCount += 1;
-    const activation: Activation = { id: activationCount, controller: new AbortController(), latched: false };
+    const activation: Activation = { id: activationCount, step, controller: new AbortController(), latched: false };
     ctx.setState("__activation", activation);
 
     const advanceOn = resolveAdvanceOn(ctx, step);
@@ -313,6 +325,46 @@ export function driver(options: Config = {}): Driver {
     moveNext();
   }
 
+  function popoverText() {
+    const popover = ctx.getState("popover");
+    if (!popover) {
+      return { title: "", description: "" };
+    }
+
+    const visibleText = (element: HTMLElement) => (element.style.display === "none" ? "" : element.textContent || "");
+
+    return { title: visibleText(popover.title), description: visibleText(popover.description) };
+  }
+
+  function updatePopover(patch?: PopoverPatch) {
+    const activation = ctx.getState("__activation");
+    if (!activation) {
+      return;
+    }
+
+    activation.popoverPatch = patch ? { ...activation.popoverPatch, ...patch } : undefined;
+
+    const popover = ctx.getState("popover");
+    const element = ctx.getState("activeElement");
+    if (!popover || !element || ctx.getState("activeStep") !== activation.step) {
+      return;
+    }
+
+    if (popover.wrapper.style.display === "none" || !popover.wrapper.isConnected) {
+      return;
+    }
+
+    const before = popoverText();
+    updateStepPopover(ctx, element, activation.step);
+    const after = popoverText();
+
+    const changed = [
+      after.title !== before.title ? after.title : "",
+      after.description !== before.description ? after.description : "",
+    ];
+    announce(ctx, changed.filter(Boolean).join(". "));
+  }
+
   function init() {
     if (ctx.getState("isInitialized")) {
       return;
@@ -331,6 +383,7 @@ export function driver(options: Config = {}): Driver {
     document.body.style.setProperty("--driver-animation-duration", `${ctx.getConfig("duration") || 400}ms`);
 
     initEvents(ctx);
+    mountLiveRegion(ctx);
 
     ctx.listen("overlayClick", handleOverlayClick);
     ctx.listen("escapePress", handleEscape);
@@ -487,6 +540,7 @@ export function driver(options: Config = {}): Driver {
     cancelElementWait();
     endActivation();
     destroyEvents(ctx);
+    destroyLiveRegion(ctx);
     destroyPopover(ctx.getState("popover"));
     destroyHighlight();
     destroyOverlay(ctx);
@@ -594,6 +648,7 @@ export function driver(options: Config = {}): Driver {
       });
       startActivation();
     },
+    updatePopover,
     destroy: () => {
       destroy("api", false);
     },

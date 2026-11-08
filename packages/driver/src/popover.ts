@@ -94,10 +94,14 @@ export function hidePopover(popover: PopoverDOM | undefined) {
   popover.wrapper.style.display = "none";
 }
 
-export function renderPopover(anchor: Element, options: PopoverRenderOptions): PopoverDOM {
-  const popover = createPopover();
-  layerFor(anchor).appendChild(popover.wrapper);
+const customClasses = new WeakMap<HTMLElement, string[]>();
 
+function toggleButton(button: HTMLButtonElement, isDisabled: boolean) {
+  button.disabled = isDisabled;
+  button.classList.toggle("driver-popover-btn-disabled", isDisabled);
+}
+
+function applyPopoverContent(popover: PopoverDOM, options: PopoverRenderOptions) {
   const { title, description, showButtons, disableButtons, showProgress, nextBtnText, prevBtnText, progressText } =
     options;
 
@@ -105,10 +109,7 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
   popover.previousButton.innerHTML = prevBtnText;
   popover.progress.innerHTML = progressText;
   popover.closeButton.setAttribute("aria-label", options.closeBtnLabel);
-
-  if (options.doneButton) {
-    popover.nextButton.classList.add("driver-popover-done-btn");
-  }
+  popover.nextButton.classList.toggle("driver-popover-done-btn", !!options.doneButton);
 
   if (title) {
     popover.title.innerHTML = title;
@@ -128,33 +129,59 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
 
   popover.closeButton.style.display = showButtons.includes("close") ? "block" : "none";
 
-  if (showFooter) {
-    popover.footer.style.display = "flex";
+  popover.footer.style.display = showFooter ? "flex" : "none";
+  popover.progress.style.display = showProgress ? "block" : "none";
+  popover.nextButton.style.display = showButtons.includes("next") ? "block" : "none";
+  popover.previousButton.style.display = showButtons.includes("previous") ? "block" : "none";
 
-    popover.progress.style.display = showProgress ? "block" : "none";
-    popover.nextButton.style.display = showButtons.includes("next") ? "block" : "none";
-    popover.previousButton.style.display = showButtons.includes("previous") ? "block" : "none";
-  } else {
-    popover.footer.style.display = "none";
+  toggleButton(popover.nextButton, disableButtons.includes("next"));
+  toggleButton(popover.previousButton, disableButtons.includes("previous"));
+  toggleButton(popover.closeButton, disableButtons.includes("close"));
+
+  const wrapper = popover.wrapper;
+  wrapper.classList.remove(...(customClasses.get(wrapper) || []));
+  const classes = (options.popoverClass || "").split(/\s+/).filter(Boolean);
+  wrapper.classList.add(...classes);
+  customClasses.set(wrapper, classes);
+}
+
+function isUnreachable(element: Element, root: HTMLElement): boolean {
+  if ((element as HTMLButtonElement).disabled) {
+    return true;
   }
 
-  if (disableButtons.includes("next")) {
-    popover.nextButton.disabled = true;
-    popover.nextButton.classList.add("driver-popover-btn-disabled");
+  for (let node: Element | null = element; node && node !== root; node = node.parentElement) {
+    if ((node as HTMLElement).style?.display === "none") {
+      return true;
+    }
   }
 
-  if (disableButtons.includes("previous")) {
-    popover.previousButton.disabled = true;
-    popover.previousButton.classList.add("driver-popover-btn-disabled");
+  return false;
+}
+
+export function updatePopoverContent(popover: PopoverDOM, anchor: Element, options: PopoverRenderOptions) {
+  const focused = document.activeElement;
+  const hadFocus = !!focused && popover.wrapper.contains(focused) && focused !== popover.wrapper;
+
+  applyPopoverContent(popover, options);
+
+  if (hadFocus && isUnreachable(focused!, popover.wrapper)) {
+    popover.wrapper.setAttribute("tabindex", "-1");
+    popover.wrapper.focus();
   }
 
-  if (disableButtons.includes("close")) {
-    popover.closeButton.disabled = true;
-    popover.closeButton.classList.add("driver-popover-btn-disabled");
-  }
+  repositionPopover(popover, anchor, options.position);
+  repositionOnImagesLoad(popover, anchor, options.position);
+}
 
-  // Reset the popover position
+export function renderPopover(anchor: Element, options: PopoverRenderOptions): PopoverDOM {
+  const popover = createPopover();
+  layerFor(anchor).appendChild(popover.wrapper);
+
   const popoverWrapper = popover.wrapper;
+  popoverWrapper.className = "driver-popover";
+  applyPopoverContent(popover, options);
+
   popoverWrapper.style.display = "block";
   popoverWrapper.style.left = "";
   popoverWrapper.style.top = "";
@@ -166,12 +193,7 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
   popoverWrapper.setAttribute("aria-labelledby", "driver-popover-title");
   popoverWrapper.setAttribute("aria-describedby", "driver-popover-description");
 
-  // Reset the classes responsible for the arrow position
-  const popoverArrow = popover.arrow;
-  popoverArrow.className = "driver-popover-arrow";
-
-  // Reset any custom classes on the popover
-  popoverWrapper.className = `driver-popover ${options.popoverClass || ""}`.trim();
+  popover.arrow.className = "driver-popover-arrow";
 
   // Handles the popover button clicks
   onDriverClick(
