@@ -78,7 +78,7 @@ Give `advanceOn` the name of a DOM event and the step completes when that event 
 
 The event is observed, never blocked, and the tour moves on after your own handlers have run. It still works when your app calls `stopPropagation()`.
 
-An event name means "the event happened", not "the action succeeded". When completion depends on your app, like a value typed, a request finished or a route changed, pass a function and call `next()` yourself. The `signal` aborts when the step is left, and a returned function runs at the same moment, so listeners and subscriptions clean themselves up.
+An event name means "the event happened", not "the action succeeded". When completion depends on your app, like a value typed, a request finished or a route changed, pass a function and call `next()` yourself. The `signal` aborts when the step is left, and a returned function runs at the same moment, so listeners and subscriptions clean themselves up. If your framework re-renders the highlighted element and the tour follows the new one, the function runs again with the new element after the old `signal` aborts.
 
 ```js
 {
