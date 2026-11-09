@@ -89,6 +89,25 @@ Here is the list of classes applied to the popover which you can use in conjunct
 /* Added to the next button on the last step, when it acts as the "Done" button */
 .driver-popover-next-btn.driver-popover-done-btn {
 }
+
+/* Action steps (popover.action): the popover, the instruction row and the
+   status shown in place of the next button */
+.driver-popover.driver-popover-action {
+}
+.driver-popover-action-text {
+}
+.driver-popover-action-status {
+}
+```
+
+The action row and status also read CSS variables:
+
+```css
+:root {
+  --driver-action-background: #f2f2f2;
+  --driver-action-color: inherit;
+  --driver-action-status-color: #727272;
+}
 ```
 
 Visit the [example page](/docs/styling#popover) for an example that modifies the popover styles.
@@ -125,6 +144,10 @@ type PopoverDOM = {
   nextButton: HTMLElement;
   closeButton: HTMLElement;
   footerButtons: HTMLElement;
+
+  // Only created once a step uses popover.action
+  action?: HTMLElement;
+  actionStatus?: HTMLElement;
 };
 
 onPopoverRender?: (popover: PopoverDOM, opts: { config: Config; state: State }) => void;

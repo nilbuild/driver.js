@@ -66,6 +66,8 @@ export type PopoverPatch = Pick<
   | "prevBtnText"
   | "closeBtnLabel"
   | "popoverClass"
+  | "action"
+  | "actionStatusText"
 >;
 
 export type Activation = {
@@ -135,6 +137,7 @@ export type Config = {
   prevBtnText?: string;
   doneBtnText?: string;
   closeBtnLabel?: string;
+  actionStatusText?: string;
 
   // Called after the popover is rendered
   onPopoverRender?: (popover: PopoverDOM, opts: HookOpts) => void;

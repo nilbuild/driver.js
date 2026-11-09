@@ -46,6 +46,8 @@ type Config = {
   // What to do when the overlay backdrop is clicked.
   // Possible options are 'close', 'nextStep', 'none', or a custom function. (default: 'close')
   // Use 'none' to ignore overlay clicks while Escape and the close button still work.
+  // 'nextStep' works whatever showButtons and disableButtons say, but not on
+  // action steps (popover.action) or while waitForElement waits.
   overlayClickBehavior?:
     | "close"
     | "nextStep"
@@ -157,6 +159,10 @@ type Config = {
 
   // Screen reader label of the close button. Defaults to "Close".
   closeBtnLabel?: string;
+
+  // Status shown in place of the next button on action steps
+  // (popover.action). Defaults to "Waiting for you".
+  actionStatusText?: string;
 
   // Called after the popover is rendered.
   // PopoverDOM is an object with references to
@@ -320,6 +326,17 @@ type Popover = {
 
   // Screen reader label of the close button. Defaults to "Close".
   closeBtnLabel?: string;
+
+  // Makes this an action step: what the user has to do to move on. You can
+  // use HTML. Shown in its own row below the description, with a status
+  // text in place of the next button. The next button, the right arrow key
+  // and overlayClickBehavior "nextStep" can't skip the step; it moves on
+  // through advanceOn or your own moveNext(). Previous and close work as usual.
+  // Clearing it with updatePopover() makes the step a normal step again.
+  action?: string;
+  // Status shown in place of the next button. Only when showButtons
+  // includes "next". Defaults to "Waiting for you".
+  actionStatusText?: string;
 
   // Whether to show the progress text in popover.
   showProgress?: boolean;

@@ -30,6 +30,14 @@ export type Popover = {
   prevBtnText?: string;
   closeBtnLabel?: string;
 
+  // Makes this an action step: what the user has to do to move on, shown
+  // between the description and the footer. The next button gives way to a
+  // status text and the step can't be skipped; it completes through
+  // advanceOn or your own moveNext().
+  action?: string;
+  // Status shown in place of the next button on an action step. (default: "Waiting for you")
+  actionStatusText?: string;
+
   // Called after the popover is rendered
   onPopoverRender?: (popover: PopoverDOM, opts: HookOpts) => void;
 
@@ -51,6 +59,10 @@ export type PopoverDOM = {
   nextButton: HTMLButtonElement;
   closeButton: HTMLButtonElement;
   footerButtons: HTMLElement;
+
+  // Only created once a step uses popover.action.
+  action?: HTMLElement;
+  actionStatus?: HTMLElement;
 };
 
 // Everything the primitive needs to render a popover, fully resolved by the
@@ -70,6 +82,10 @@ export type PopoverRenderOptions = {
 
   // Style the next button as the tour's done button.
   doneButton?: boolean;
+
+  // Shows the action row, and the status in place of the next button.
+  action?: string;
+  actionStatusText?: string;
 
   popoverClass?: string;
   smoothScroll?: boolean;
@@ -117,6 +133,59 @@ export function toggleButton(button: HTMLButtonElement, isDisabled: boolean) {
   button.classList.toggle("driver-popover-btn-disabled", isDisabled);
 }
 
+const ACTION_TEXT_ID = "driver-popover-action-text";
+
+// Adds or removes only our own id, keeping any an app added in onPopoverRender.
+function toggleDescribedBy(wrapper: HTMLElement, id: string, isOn: boolean) {
+  const ids = (wrapper.getAttribute("aria-describedby") || "").split(/\s+/).filter(token => token && token !== id);
+  if (isOn) {
+    ids.push(id);
+  }
+
+  wrapper.setAttribute("aria-describedby", ids.join(" "));
+}
+
+function createActionElements(popover: PopoverDOM) {
+  const action = document.createElement("div");
+  action.id = ACTION_TEXT_ID;
+  action.classList.add("driver-popover-action-text");
+
+  const actionStatus = document.createElement("span");
+  actionStatus.classList.add("driver-popover-action-status");
+  actionStatus.setAttribute("role", "status");
+
+  const footer = popover.footer.parentNode === popover.wrapper ? popover.footer : null;
+  popover.wrapper.insertBefore(action, footer);
+  popover.footerButtons.appendChild(actionStatus);
+
+  popover.action = action;
+  popover.actionStatus = actionStatus;
+}
+
+function applyAction(popover: PopoverDOM, options: PopoverRenderOptions) {
+  const { action, showButtons } = options;
+  if (action && !popover.action) {
+    createActionElements(popover);
+  }
+
+  // Popovers that never showed an action are left alone.
+  const { action: actionText, actionStatus } = popover;
+  if (!actionText || !actionStatus) {
+    return;
+  }
+
+  popover.wrapper.classList.toggle("driver-popover-action", !!action);
+  toggleDescribedBy(popover.wrapper, ACTION_TEXT_ID, !!action);
+
+  if (action) {
+    setHtml(actionText, action);
+  }
+  setDisplay(actionText, !!action);
+
+  setHtml(actionStatus, options.actionStatusText ?? "");
+  setDisplay(actionStatus, !!action && showButtons.includes("next"), "inline-block");
+}
+
 function applyPopoverContent(popover: PopoverDOM, options: PopoverRenderOptions) {
   const { title, description, showButtons, disableButtons, showProgress, nextBtnText, prevBtnText, progressText } =
     options;
@@ -142,7 +211,8 @@ function applyPopoverContent(popover: PopoverDOM, options: PopoverRenderOptions)
   setDisplay(popover.closeButton, showButtons.includes("close"));
   setDisplay(popover.footer, showFooter, "flex");
   setDisplay(popover.progress, showProgress);
-  setDisplay(popover.nextButton, showButtons.includes("next"));
+  setDisplay(popover.nextButton, showButtons.includes("next") && !options.action);
+  applyAction(popover, options);
   setDisplay(popover.previousButton, showButtons.includes("previous"));
 
   toggleButton(popover.nextButton, disableButtons.includes("next"));
@@ -202,7 +272,6 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
   popoverWrapper.id = "driver-popover-content";
   popoverWrapper.setAttribute("role", "dialog");
   popoverWrapper.setAttribute("aria-labelledby", "driver-popover-title");
-  popoverWrapper.setAttribute("aria-describedby", "driver-popover-description");
 
   popover.arrow.className = "driver-popover-arrow";
 
@@ -277,6 +346,7 @@ function repositionOnImagesLoad(popover: PopoverDOM, anchor: Element, position: 
 function createPopover(): PopoverDOM {
   const wrapper = document.createElement("div");
   wrapper.classList.add("driver-popover");
+  wrapper.setAttribute("aria-describedby", "driver-popover-description");
 
   const arrow = document.createElement("div");
   arrow.classList.add("driver-popover-arrow");

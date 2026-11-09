@@ -10,6 +10,14 @@ ships, these entries move under a versioned heading.
 
 ## Unreleased
 
+### Added
+
+- `popover.action` makes a step an action step: the instruction gets its own row, a "Waiting for you" status (`actionStatusText`) takes the place of the Next button, and the step can't be skipped with Next, the right arrow key or `overlayClickBehavior: "nextStep"`. It moves on through `advanceOn` or `moveNext()`, and `updatePopover()` / `nudge()` can change the instruction.
+
+### Changed
+
+- `overlayClickBehavior: "nextStep"` no longer moves on while the popover waits for an element with `waitForElement`, matching the Next button and the right arrow key.
+
 ### Fixed
 
 - The highlight now follows the highlighted element when its size changes, like a button whose label changes to "Saving...".

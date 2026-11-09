@@ -25,6 +25,7 @@ import {
   resolvePrevHook,
   resolveStepButtons,
   clearStepPopoverWaiting,
+  isActionStep,
   isPopoverWaiting,
   markStepPopoverWaiting,
   popoverText,
@@ -135,8 +136,22 @@ export function driver(options: Config = {}): Driver {
     return resolveStepButtons(ctx, step && withPopoverPatch(ctx, step));
   }
 
+  // Moving on by hand is off while the popover waits for an element and on
+  // action steps, which only complete through advanceOn or moveNext(). The
+  // activation is the step being entered, so this also holds while the
+  // highlight is still animating towards it.
+  function canSkipStep() {
+    const step = ctx.getState("__activation")?.step ?? currentPopoverStep();
+
+    return !isPopoverWaiting(ctx) && !isActionStep(ctx, step);
+  }
+
   function canUseButton(button: AllowedButtons) {
-    if (button !== "close" && isPopoverWaiting(ctx)) {
+    if (button === "previous" && isPopoverWaiting(ctx)) {
+      return false;
+    }
+
+    if (button === "next" && !canSkipStep()) {
       return false;
     }
 
@@ -164,7 +179,7 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    if (overlayClickBehavior === "nextStep") {
+    if (overlayClickBehavior === "nextStep" && canSkipStep()) {
       goNext(ctx.getState("activeElement"), ctx.getState("activeStep"));
     }
   }

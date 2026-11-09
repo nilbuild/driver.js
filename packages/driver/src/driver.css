@@ -117,3 +117,23 @@
       driver-nudge-flash var(--driver-nudge-duration, 500ms) ease-out;
   }
 }
+
+/* Action steps (popover.action): the instruction row, and the status shown in
+   place of the next button. The wrapper gets .driver-popover-action. */
+.driver-popover-action-text {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background-color: var(--driver-action-background, #f2f2f2);
+  color: var(--driver-action-color, inherit);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+
+.driver-popover-action-status {
+  padding: 4px 0 4px 8px;
+  color: var(--driver-action-status-color, #727272);
+  font-size: 12px;
+  line-height: 1.3;
+}

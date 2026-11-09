@@ -137,6 +137,12 @@ export function resolveStepButtons(ctx: Context, step?: DriveStep) {
   };
 }
 
+// An action step completes through advanceOn or the app's own moveNext(),
+// never through the next button, arrow key or overlay.
+export function isActionStep(ctx: Context, step?: DriveStep): boolean {
+  return !!step && !!withPopoverPatch(ctx, step).popover?.action;
+}
+
 export function isPopoverWaiting(ctx: Context): boolean {
   return (
     !!ctx.getState("__isWaiting") || !!ctx.getState("popover")?.wrapper.classList.contains("driver-popover-waiting")
@@ -175,6 +181,9 @@ function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): Po
     nextBtnText: popover.nextBtnText ?? (ctx.getConfig("nextBtnText") || "Next"),
     prevBtnText: popover.prevBtnText ?? (ctx.getConfig("prevBtnText") || "Previous"),
     closeBtnLabel: popover.closeBtnLabel ?? (ctx.getConfig("closeBtnLabel") || "Close"),
+
+    action: popover.action,
+    actionStatusText: popover.actionStatusText ?? (ctx.getConfig("actionStatusText") || "Waiting for you"),
 
     doneButton: isDoneStep,
 
@@ -285,8 +294,8 @@ export function renderStepPopover(ctx: Context, element: Element, step: DriveSte
 }
 
 export function popoverText(popover: PopoverDOM): string[] {
-  return [popover.title, popover.description].map(part =>
-    part.style.display === "none" ? "" : part.textContent || ""
+  return [popover.title, popover.description, popover.action].map(part =>
+    !part || part.style.display === "none" ? "" : part.textContent || ""
   );
 }
 

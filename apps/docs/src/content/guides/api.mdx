@@ -82,6 +82,7 @@ driverObj.updatePopover();
 // update the popover at the same time.
 driverObj.nudge();
 driverObj.nudge({ description: "Not quite. Choose Editor." });
+driverObj.nudge({ action: "Not that one. Click <b>Inbox</b>." });
 
 // Destroy the tour. The destroy hooks receive `options.reason` "api",
 // or the reason of the user action when called from inside a hook.

@@ -3,7 +3,7 @@ import type { Config, Driver, DriveStep } from "driver.js";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
-type Scenario = "invite" | "toggle" | "plan" | "save" | "feedback" | "menu" | "load";
+type Scenario = "invite" | "toggle" | "action" | "plan" | "save" | "feedback" | "menu" | "load";
 
 type ActionDrivenSampleProps = {
   scenario?: Scenario;
@@ -195,6 +195,81 @@ function ToggleDemo(props: DemoProps) {
         <input type="checkbox" checked={isOn} onChange={event => setIsOn(event.target.checked)} className="size-4" />
         Email notifications
       </label>
+    </div>
+  );
+
+  return <Frame ui={ui} code={props.code} onStart={onStart} />;
+}
+
+function ActionDemo(props: DemoProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const start = useTour();
+
+  function onStart() {
+    setIsOpen(false);
+    start({
+      showButtons: ["next", "previous", "close"],
+      onInteraction: (element, step, opts) => {
+        if (opts.region !== "outside" || !step.popover?.action) {
+          return;
+        }
+
+        opts.driver.nudge({ action: "Not that one. Click <b>Inbox</b> on the toolbar." });
+        return false;
+      },
+      steps: [
+        {
+          element: "#ad-toolbar",
+          popover: {
+            title: "The toolbar",
+            description: "Everything you use daily is one click away.",
+            side: "bottom",
+            align: "start",
+          },
+        },
+        {
+          element: "#ad-inbox",
+          advanceOn: "click",
+          popover: {
+            title: "Open your inbox",
+            description: "New messages land here first.",
+            action: "Click <b>Inbox</b> on the toolbar to open it.",
+            side: "bottom",
+            align: "start",
+          },
+        },
+        {
+          element: "#ad-inbox-panel",
+          waitForElement: 1000,
+          popover: {
+            title: "Your inbox",
+            description: "The tour moved on as soon as you clicked.",
+            side: "bottom",
+            align: "start",
+          },
+        },
+      ],
+    });
+  }
+
+  const ui = (
+    <div className={box}>
+      <div id="ad-toolbar" className="flex w-fit gap-2">
+        <button id="ad-inbox" type="button" onClick={() => setIsOpen(true)} className={secondary}>
+          Inbox
+        </button>
+        <button type="button" className={secondary}>
+          Calendar
+        </button>
+        <button type="button" className={secondary}>
+          Files
+        </button>
+      </div>
+      {isOpen && (
+        <div id="ad-inbox-panel" className="rounded-md border border-gray-200 p-3 text-sm">
+          3 unread messages
+        </div>
+      )}
     </div>
   );
 
@@ -580,6 +655,7 @@ function LoadDemo(props: DemoProps) {
 const demos = {
   invite: InviteDemo,
   toggle: ToggleDemo,
+  action: ActionDemo,
   plan: PlanDemo,
   save: SaveDemo,
   feedback: FeedbackDemo,

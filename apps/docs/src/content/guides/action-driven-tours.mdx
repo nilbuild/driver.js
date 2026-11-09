@@ -92,6 +92,7 @@ The tour below walks through inviting a teammate. Each step waits for you to do 
 | --- | --- |
 | Move on when the user does something | `advanceOn: "change"` |
 | Only move on when it's done right | `advanceOn: { event, when }` |
+| Make it clear the user has to act | `popover.action` |
 | Move on when your app finishes something | `onHighlighted` + `moveNext()` |
 | Block clicks elsewhere and give a hint | `onInteraction` + `nudge()` |
 | Let the user use a menu the step opens | `allowedElements` |
@@ -123,6 +124,104 @@ Give `advanceOn` an event name and the step completes when that event happens on
 </ActionDrivenSample>
 
 Any DOM event works, like `"click"`, `"input"`, `"dblclick"` or `"contextmenu"`. Pass a list to accept any of them: `advanceOn: ["dblclick", "contextmenu"]`.
+
+## Show That the User Has To Act
+
+Hiding the Next button on an action step leaves a popover that looks like any other, and users look for the button that isn't there. Put the instruction in `action` instead. It gets its own row under the description, and a "Waiting for you" status takes the place of the Next button. Try clicking Calendar first.
+
+<ActionDrivenSample scenario="action" client:load>
+  ```js
+  const driverObj = driver({
+    onInteraction: (element, step, { region, driver }) => {
+      if (region !== "outside" || !step.popover?.action) {
+        return;
+      }
+
+      driver.nudge({ action: "Not that one. Click <b>Inbox</b> on the toolbar." });
+      return false;
+    },
+    steps: [
+      {
+        element: "#toolbar",
+        popover: { title: "The toolbar", description: "Everything you use daily is one click away." },
+      },
+      {
+        element: "#inbox",
+        advanceOn: "click",
+        popover: {
+          title: "Open your inbox",
+          description: "New messages land here first.",
+          action: "Click <b>Inbox</b> on the toolbar to open it.",
+        },
+      },
+      {
+        element: "#inbox-panel",
+        waitForElement: 1000,
+        popover: { title: "Your inbox", description: "The tour moved on as soon as you clicked." },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
+
+- An action step can't be skipped: the Next button, the right arrow key and `overlayClickBehavior: "nextStep"` don't move it on. Previous and close keep working. On other steps, `"nextStep"` still moves on whatever `showButtons` and `disableButtons` say.
+- It moves on through `advanceOn`, or when your app calls `driverObj.moveNext()`, so it also works for steps that finish when a save or a route change does.
+- The status follows the Next button: leave `"next"` out of `showButtons` and the status goes too. Change its text with `actionStatusText`.
+- `updatePopover({ action })` and `nudge({ action })` change the instruction, and screen readers hear the change. Clearing it with `updatePopover({ action: "" })` turns the step back into a normal step with its Next button.
+
+### Show Success Before Moving On
+
+To confirm the action before the next step, show it in the popover and move on a moment later. On an `advanceOn` step, do it in `onNextClick`: with no Next button on the step, only `advanceOn` calls it. Keep the timer outside the step and clear it in `onDeselected`, so leaving the step, coming back to it or closing the tour cancels it, and ignore repeated events while it runs:
+
+```js
+let successTimer;
+
+const openInbox = {
+  element: "#inbox",
+  advanceOn: "click",
+  onDeselected: () => {
+    clearTimeout(successTimer);
+    successTimer = undefined;
+  },
+  popover: {
+    title: "Open your inbox",
+    action: "Click <b>Inbox</b> to open it.",
+    onNextClick: (element, step, { driver }) => {
+      if (successTimer) {
+        return;
+      }
+
+      driver.updatePopover({ actionStatusText: "Opened", popoverClass: "tour-step-done" });
+      successTimer = setTimeout(() => {
+        successTimer = undefined;
+        driver.moveNext();
+      }, 600);
+    },
+  },
+};
+```
+
+When your app completes the step with `moveNext()`, `onNextClick` doesn't run. Show the success in your own handler instead, and cancel the timer with the step's `signal`:
+
+```js
+{
+  element: "#save",
+  onHighlighted: (element, step, { signal, driver }) => {
+    const onSaved = () => {
+      driver.updatePopover({ actionStatusText: "Saved", popoverClass: "tour-step-done" });
+      const timer = setTimeout(() => driver.moveNext(), 600);
+      signal.addEventListener("abort", () => clearTimeout(timer));
+    };
+
+    window.addEventListener("profile-saved", onSaved, { signal, once: true });
+  },
+  popover: { title: "Save your profile", action: "Click <b>Save</b>." },
+}
+```
+
+Style `.tour-step-done .driver-popover-action-text` however you like.
 
 ## Only Move On When It's Right
 
