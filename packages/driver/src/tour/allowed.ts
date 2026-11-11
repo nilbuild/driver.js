@@ -1,10 +1,10 @@
 import type { AllowedElements, Context } from "../core/context";
 import type { DriveStep } from "../types";
-import { redrawOverlayCutouts } from "../overlay/overlay";
+import { redrawOverlay } from "../overlay/overlay";
 import { stepOption } from "../core/options";
-import { isDummyElement } from "../core/utils";
+import { ALLOWED_CLASS, isDummyElement, isInsideAllowedElement, RAISED_CLASS } from "../core/utils";
 
-export const ALLOWED_CLASS = "driver-allowed-element";
+export { ALLOWED_CLASS };
 
 export function resolveAllowedSetting(ctx: Context, step: DriveStep): AllowedElements | undefined {
   return stepOption(ctx, step, "allowedElements");
@@ -56,6 +56,13 @@ export function trackAllowedElements(ctx: Context, step: DriveStep, signal: Abor
       }
     });
     marked = matches;
+
+    const active = ctx.getState("activeElement");
+    const isRaised = !!active && !isDummyElement(active) && isInsideAllowedElement(active);
+    if (active && isRaised !== active.classList.contains(RAISED_CLASS)) {
+      active.classList.toggle(RAISED_CLASS, isRaised);
+      redrawOverlay(ctx, true);
+    }
   };
 
   const schedule = () => {
@@ -66,7 +73,7 @@ export function trackAllowedElements(ctx: Context, step: DriveStep, signal: Abor
     frame = window.requestAnimationFrame(() => {
       frame = undefined;
       sync();
-      redrawOverlayCutouts(ctx);
+      redrawOverlay(ctx);
     });
   };
 

@@ -9,8 +9,10 @@ import {
   bringInView,
   DUMMY_ELEMENT_ID,
   isDummyElement,
+  isInsideAllowedElement,
   isScrollable,
   moveToLayerOf,
+  RAISED_CLASS,
   resolveElement,
 } from "../core/utils";
 
@@ -224,11 +226,11 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
 
 const classGuards = new WeakMap<Element, MutationObserver>();
 
-function guardClasses(element: Element, classes: string[]) {
+function guardClasses(element: Element, classesToKeep: () => string[]) {
   classGuards.get(element)?.disconnect();
 
   const observer = new MutationObserver(() => {
-    const missing = classes.filter(name => !element.classList.contains(name));
+    const missing = classesToKeep().filter(name => !element.classList.contains(name));
     if (missing.length > 0) {
       element.classList.add(...missing);
     }
@@ -240,7 +242,7 @@ function guardClasses(element: Element, classes: string[]) {
 function clearActiveElement(element: Element) {
   classGuards.get(element)?.disconnect();
   classGuards.delete(element);
-  element.classList.remove("driver-active-element", "driver-no-interaction");
+  element.classList.remove("driver-active-element", "driver-no-interaction", RAISED_CLASS);
   restoreAria(element);
 }
 
@@ -280,7 +282,12 @@ function markActiveElement(ctx: Context, element: Element, step: DriveStep) {
   element.classList.add("driver-active-element");
   if (!isDummyElement(element)) {
     setPopoverAria(element);
-    guardClasses(element, isBlocked ? ["driver-active-element", "driver-no-interaction"] : ["driver-active-element"]);
+    element.classList.toggle(RAISED_CLASS, isInsideAllowedElement(element));
+    guardClasses(element, () => [
+      "driver-active-element",
+      ...(isBlocked ? ["driver-no-interaction"] : []),
+      ...(isInsideAllowedElement(element) ? [RAISED_CLASS] : []),
+    ]);
   }
 }
 

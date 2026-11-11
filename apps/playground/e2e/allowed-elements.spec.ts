@@ -210,3 +210,111 @@ test.describe("class guard with allowed elements", () => {
     expect(await activeIndex(page)).toBe(1);
   });
 });
+
+test.describe("a highlighted element inside an allowed element", () => {
+  const MENU = `
+    <div id="menu" style="position:absolute;left:300px;top:200px;width:160px;padding:0;background:#fff;border:1px solid #999">
+      <button type="button" data-item="profile" style="display:block;width:100%;margin:0;appearance:none;border:0;background:#fff;padding:6px 10px;text-align:left">Profile</button>
+      <button type="button" data-item="settings" style="display:block;width:100%;margin:0;appearance:none;border:0;background:#fff;padding:6px 10px;text-align:left">Settings</button>
+      <button type="button" data-item="logout" style="display:block;width:100%;margin:0;appearance:none;border:0;background:#fff;padding:6px 10px;text-align:left">Log out</button>
+    </div>`;
+
+  async function startInMenu(page: Page, inDialog = false) {
+    await page.evaluate(
+      ({ html, inDialog }) => {
+        const host = inDialog ? document.createElement("dialog") : document.body;
+        if (inDialog) {
+          (host as HTMLDialogElement).style.cssText = "width:600px;height:400px;padding:0";
+          document.body.appendChild(host);
+          (host as HTMLDialogElement).showModal();
+        }
+        host.insertAdjacentHTML("beforeend", html);
+
+        window.tour = window.driverjs.driver({
+          animate: false,
+          allowedElements: "#menu",
+          steps: [
+            { element: "#menu [data-item=settings]", popover: { title: "Settings", side: "right" } },
+            { element: "#one", popover: { title: "After" } },
+          ],
+        });
+        window.tour.drive();
+      },
+      { html: MENU, inDialog }
+    );
+    await expect(title(page)).toHaveText("Settings");
+    await settle(page);
+  }
+
+  const item = (page: Page) => page.locator("[data-item=settings]");
+
+  for (const inDialog of [false, true]) {
+    test(`is marked and leaves no hole around the menu${inDialog ? " (in a dialog)" : ""}`, async ({ page }) => {
+      await startInMenu(page, inDialog);
+
+      await expect(item(page)).toHaveClass(/driver-active-element-raised/);
+      await expect(item(page)).toHaveCSS("outline-style", "solid");
+      await expect(item(page)).toHaveCSS("outline-width", "2px");
+      expect(await item(page).evaluate(element => getComputedStyle(element).boxShadow)).toContain("inset");
+      await expect(page.locator("[data-item=profile]")).not.toHaveClass(/driver-active-element-raised/);
+
+      const menu = await box(page.locator("#menu"));
+      const settings = await box(item(page));
+      for (const [x, y] of [
+        [menu.x - 4, settings.y + settings.height / 2],
+        [menu.x + menu.width + 4, settings.y + settings.height / 2],
+        [menu.x + menu.width + 4, menu.y + 2],
+      ]) {
+        expect(await topElementAt(page, x, y), `${x},${y}`).toBe("overlay");
+      }
+
+      await record(page, "[data-item=logout]", ["click"]);
+      await page.locator("[data-item=logout]").click();
+      expect(await log(page)).toEqual(["click@[data-item=logout]"]);
+
+      await page.evaluate(() => window.tour.moveNext());
+      await expect(title(page)).toHaveText("After");
+      await expect(item(page)).not.toHaveClass(/driver-active-element/);
+
+      await page.evaluate(() => window.tour.movePrevious());
+      await expect(item(page)).toHaveClass(/driver-active-element-raised/);
+      await page.evaluate(() => window.tour.destroy());
+      await expect(item(page)).toHaveAttribute("class", "");
+      await expect(page.locator("#menu")).toHaveAttribute("class", "");
+    });
+  }
+
+  test("keeps its mark when the app rewrites className, and loses it when the menu is no longer allowed", async ({
+    page,
+  }) => {
+    await startInMenu(page);
+
+    expect(await classesAfterRewrite(page, "[data-item=settings]", "app-item")).toBe(
+      "app-item driver-active-element driver-active-element-raised"
+    );
+
+    await page.evaluate(() => {
+      const menu = document.querySelector("#menu")!;
+      menu.id = "menu-renamed";
+    });
+    await expect(item(page)).not.toHaveClass(/driver-active-element-raised/);
+    await expect(item(page)).toHaveClass(/driver-active-element/);
+  });
+
+  test("an element that is not inside an allowed element gets no mark and keeps its padding", async ({ page }) => {
+    await page.evaluate(() => {
+      window.tour = window.driverjs.driver({
+        animate: false,
+        allowedElements: "#side",
+        steps: [{ element: "#one", popover: { title: "One" } }],
+      });
+      window.tour.drive();
+    });
+    await expect(title(page)).toHaveText("One");
+    await settle(page);
+
+    await expect(page.locator("#one")).not.toHaveClass(/driver-active-element-raised/);
+    const one = await box(page.locator("#one"));
+    expect(await topElementAt(page, one.x - 5, one.y + one.height / 2)).not.toBe("overlay");
+  });
+});

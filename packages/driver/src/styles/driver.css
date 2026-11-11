@@ -25,6 +25,12 @@
   z-index: var(--driver-allowed-z-index, 10001);
 }
 
+.driver-active .driver-active-element-raised {
+  outline: var(--driver-raised-highlight-width, 2px) solid var(--driver-raised-highlight-color, #2563eb);
+  outline-offset: var(--driver-raised-highlight-offset, -2px);
+  box-shadow: inset 0 0 0 100vmax var(--driver-raised-highlight-background, rgb(37 99 235 / 0.1));
+}
+
 @keyframes animate-fade-in {
   0% {
     opacity: 0;

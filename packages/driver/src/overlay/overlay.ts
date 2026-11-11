@@ -1,4 +1,12 @@
-import { easeInOutQuad, isDummyElement, layerFor, moveToLayerOf, placeInLayer, removeFromLayer } from "../core/utils";
+import {
+  easeInOutQuad,
+  isDummyElement,
+  isInsideAllowedElement,
+  layerFor,
+  moveToLayerOf,
+  placeInLayer,
+  removeFromLayer,
+} from "../core/utils";
 import { destroyDriverClick, onDriverClick } from "../core/click";
 import { Context } from "../core/context";
 import {
@@ -121,17 +129,18 @@ function renderOverlay(ctx: Context, stagePosition: StageDefinition, element: El
   );
 }
 
-export function redrawOverlayCutouts(ctx: Context) {
+export function redrawOverlay(ctx: Context, isOutsideDialogToo = false) {
   const stagePosition = ctx.getState("__activeStagePosition");
   const element = ctx.getState("activeElement");
-  if (stagePosition && element && ctx.getState("__overlaySvg")?.closest("dialog")) {
+  const overlaySvg = ctx.getState("__overlaySvg");
+  if (stagePosition && element && overlaySvg && (isOutsideDialogToo || overlaySvg.closest("dialog"))) {
     renderOverlay(ctx, stagePosition, element);
   }
 }
 
 function stageOptions(ctx: Context) {
   const element = ctx.getState("activeElement");
-  if (element && isDummyElement(element)) {
+  if (element && (isDummyElement(element) || isInsideAllowedElement(element))) {
     return { padding: 0, radius: 0 };
   }
 

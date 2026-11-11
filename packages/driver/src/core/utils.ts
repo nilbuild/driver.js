@@ -18,6 +18,13 @@ export function isDummyElement(element: Element | undefined): boolean {
   return !element || element.id === DUMMY_ELEMENT_ID;
 }
 
+export const ALLOWED_CLASS = "driver-allowed-element";
+export const RAISED_CLASS = "driver-active-element-raised";
+
+export function isInsideAllowedElement(element: Element): boolean {
+  return !!element.closest(`.${ALLOWED_CLASS}`);
+}
+
 export function isScrollable(element: Element) {
   const style = window.getComputedStyle(element);
   return [style.overflow, style.overflowX, style.overflowY].some(value => {
