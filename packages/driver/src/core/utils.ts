@@ -39,31 +39,39 @@ export function easeInOutQuad(elapsed: number, initialValue: number, amountOfCha
   return (-amountOfChange / 2) * (--elapsed * (elapsed - 2) - 1) + initialValue;
 }
 
-export function getFocusableElements(parentEls: Element[] | HTMLElement[]) {
-  const focusableQuery = [
-    "a[href]",
-    "area[href]",
-    "button:not([disabled])",
-    'input:not([disabled]):not([type="hidden"])',
-    "select:not([disabled])",
-    "textarea:not([disabled])",
-    "summary",
-    "audio[controls]",
-    "video[controls]",
-    '[contenteditable]:not([contenteditable="false"])',
-    '[tabindex]:not([tabindex="-1"]):not([disabled])',
-  ].join(", ");
+const FOCUSABLE_QUERY = [
+  "a[href]",
+  "area[href]",
+  "button:not([disabled])",
+  'input:not([disabled]):not([type="hidden"])',
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "summary",
+  "audio[controls]",
+  "video[controls]",
+  '[contenteditable]:not([contenteditable="false"])',
+  '[tabindex]:not([tabindex="-1"]):not([disabled])',
+].join(", ");
 
-  return parentEls
-    .flatMap(parentEl => {
-      const isParentFocusable = parentEl.matches(focusableQuery);
-      const focusableEls: HTMLElement[] = Array.from(parentEl.querySelectorAll(focusableQuery));
+function focusableCandidates(parentEls: Element[]): HTMLElement[] {
+  return parentEls.flatMap(parentEl => {
+    const isParentFocusable = parentEl.matches(FOCUSABLE_QUERY);
+    const focusableEls: HTMLElement[] = Array.from(parentEl.querySelectorAll(FOCUSABLE_QUERY));
 
-      return [...(isParentFocusable ? [parentEl as HTMLElement] : []), ...focusableEls];
-    })
-    .filter(el => {
-      return getComputedStyle(el).pointerEvents !== "none" && isElementVisible(el);
-    });
+    return [...(isParentFocusable ? [parentEl as HTMLElement] : []), ...focusableEls];
+  });
+}
+
+function isFocusable(el: HTMLElement) {
+  return getComputedStyle(el).pointerEvents !== "none" && isElementVisible(el);
+}
+
+export function getFocusableElements(parentEls: Element[]) {
+  return focusableCandidates(parentEls).filter(isFocusable);
+}
+
+export function getFirstFocusableElement(parentEls: Element[]): HTMLElement | undefined {
+  return focusableCandidates(parentEls).find(isFocusable);
 }
 
 export function bringInView(element: Element, shouldSmoothScroll?: boolean) {

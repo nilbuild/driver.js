@@ -6,6 +6,8 @@ import { ALLOWED_CLASS, isDummyElement, isInsideAllowedElement, RAISED_CLASS } f
 
 export { ALLOWED_CLASS };
 
+const DRIVER_UI = ".driver-layer, .driver-overlay, .driver-popover";
+
 export function resolveAllowedSetting(ctx: Context, step: DriveStep): AllowedElements | undefined {
   return stepOption(ctx, step, "allowedElements");
 }
@@ -77,13 +79,23 @@ export function trackAllowedElements(ctx: Context, step: DriveStep, signal: Abor
     });
   };
 
-  const observer = new MutationObserver(() => {
-    marked.forEach(element => {
-      if (!element.classList.contains(ALLOWED_CLASS)) {
-        element.classList.add(ALLOWED_CLASS);
+  const observer = new MutationObserver(records => {
+    let isRelevant = false;
+    records.forEach(record => {
+      const target = record.target as Element;
+      if (target.closest?.(DRIVER_UI)) {
+        return;
+      }
+
+      isRelevant = true;
+      if (record.attributeName === "class" && marked.has(target) && !target.classList.contains(ALLOWED_CLASS)) {
+        target.classList.add(ALLOWED_CLASS);
       }
     });
-    schedule();
+
+    if (isRelevant) {
+      schedule();
+    }
   });
 
   const isLookup = typeof setting === "function" || [setting].flat().some(entry => typeof entry === "string");

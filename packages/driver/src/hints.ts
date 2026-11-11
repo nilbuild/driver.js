@@ -97,7 +97,6 @@ type MountedHint = {
   id: string;
   element: Element;
   beacon: HTMLButtonElement;
-  observer?: IntersectionObserver;
 };
 
 export function hints(config: HintsConfig = {}): Hints {
@@ -110,6 +109,7 @@ export function hints(config: HintsConfig = {}): Hints {
   let popover: PopoverDOM | undefined;
   let overlay: SVGSVGElement | undefined;
   let refreshTimeout: number | undefined;
+  let visibility: IntersectionObserver | undefined;
   let isVisible = false;
 
   function hintId(hint: DriverHint, index: number): string {
@@ -156,9 +156,26 @@ export function hints(config: HintsConfig = {}): Hints {
     return beacon;
   }
 
-  function positionBeacon(entry: MountedHint) {
+  function isTourActive() {
+    return document.body.classList.contains("driver-active");
+  }
+
+  function isBeaconShown(entry: MountedHint) {
+    return !entry.beacon.classList.contains("driver-hint-hidden");
+  }
+
+  function positionBeacons(entries: MountedHint[]) {
+    if (isTourActive()) {
+      return;
+    }
+
+    entries
+      .map(entry => ({ entry, rect: entry.element.getBoundingClientRect() }))
+      .forEach(({ entry, rect }) => placeBeacon(entry, rect));
+  }
+
+  function placeBeacon(entry: MountedHint, rect: DOMRect) {
     const { side = "top", align = "end", offsetX = 0, offsetY = 0 } = beaconConfig(entry.hint);
-    const rect = entry.element.getBoundingClientRect();
 
     let top: number;
     let left: number;
@@ -175,30 +192,50 @@ export function hints(config: HintsConfig = {}): Hints {
     entry.beacon.style.left = `${left + offsetX}px`;
   }
 
+  function onVisibilityChange(intersections: IntersectionObserverEntry[]) {
+    const shown: MountedHint[] = [];
+
+    intersections.forEach(intersection => {
+      mounted
+        .filter(entry => entry.element === intersection.target)
+        .forEach(entry => {
+          entry.beacon.classList.toggle("driver-hint-hidden", !intersection.isIntersecting);
+
+          if (intersection.isIntersecting) {
+            layerFor(entry.element);
+            shown.push(entry);
+          }
+
+          if (!intersection.isIntersecting && activeId === entry.id) {
+            close();
+          }
+        });
+    });
+
+    positionBeacons(shown);
+  }
+
   function observeVisibility(entry: MountedHint) {
     if (typeof IntersectionObserver === "undefined") {
       return;
     }
 
-    entry.observer = new IntersectionObserver(([intersection]) => {
-      entry.beacon.classList.toggle("driver-hint-hidden", !intersection.isIntersecting);
-
-      if (intersection.isIntersecting) {
-        layerFor(entry.element);
-      }
-
-      if (!intersection.isIntersecting && activeId === entry.id) {
-        close();
-      }
-    });
-
-    entry.observer.observe(entry.element);
+    visibility ??= new IntersectionObserver(onVisibilityChange);
+    visibility.observe(entry.element);
   }
 
-  function mountHint(hint: DriverHint, id: string) {
+  function unobserveVisibility(entry: MountedHint) {
+    if (mounted.some(other => other !== entry && other.element === entry.element)) {
+      return;
+    }
+
+    visibility?.unobserve(entry.element);
+  }
+
+  function mountHint(hint: DriverHint, id: string): MountedHint | undefined {
     const element = resolveElement(hint.element);
     if (!element) {
-      return;
+      return undefined;
     }
 
     const beacon = createBeacon(hint, id);
@@ -207,26 +244,28 @@ export function hints(config: HintsConfig = {}): Hints {
     const entry: MountedHint = { hint, id, element, beacon };
     mounted.push(entry);
 
-    positionBeacon(entry);
     observeVisibility(entry);
+
+    return entry;
   }
 
   function mountHints() {
-    (currentConfig.hints || []).forEach((hint, index) => {
+    const entries = (currentConfig.hints || []).flatMap((hint, index) => {
       const id = hintId(hint, index);
       if (dismissed.has(id) || find(id)) {
-        return;
+        return [];
       }
 
-      mountHint(hint, id);
+      return mountHint(hint, id) ?? [];
     });
+
+    positionBeacons(entries);
   }
 
   function unmountHints() {
-    mounted.forEach(entry => {
-      entry.observer?.disconnect();
-      removeFromLayer(entry.beacon);
-    });
+    visibility?.disconnect();
+    visibility = undefined;
+    mounted.forEach(entry => removeFromLayer(entry.beacon));
 
     mounted = [];
   }
@@ -279,12 +318,19 @@ export function hints(config: HintsConfig = {}): Hints {
       return;
     }
 
+    let wasTourActive = isTourActive();
     const tourObserver = new MutationObserver(() => {
-      if (!document.body.classList.contains("driver-active")) {
-        return;
+      const isActive = isTourActive();
+      const hasTourEnded = wasTourActive && !isActive;
+      wasTourActive = isActive;
+
+      if (hasTourEnded) {
+        requireRefresh();
       }
 
-      close();
+      if (isActive) {
+        close();
+      }
     });
 
     tourObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
@@ -450,7 +496,7 @@ export function hints(config: HintsConfig = {}): Hints {
 
     dismissed.add(entry.id);
 
-    entry.observer?.disconnect();
+    unobserveVisibility(entry);
     removeFromLayer(entry.beacon);
     mounted = mounted.filter(mountedEntry => mountedEntry !== entry);
 
@@ -470,7 +516,10 @@ export function hints(config: HintsConfig = {}): Hints {
       return;
     }
 
-    mountHint(list[index], key);
+    const entry = mountHint(list[index], key);
+    if (entry) {
+      positionBeacons([entry]);
+    }
   }
 
   function restoreAll() {
@@ -481,7 +530,7 @@ export function hints(config: HintsConfig = {}): Hints {
   }
 
   function refresh() {
-    mounted.forEach(positionBeacon);
+    positionBeacons(mounted.filter(isBeaconShown));
 
     const active = activeId ? find(activeId) : undefined;
     if (!active || !popover) {

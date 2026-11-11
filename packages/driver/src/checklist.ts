@@ -138,6 +138,7 @@ export function checklist(config: ChecklistConfig): Checklist {
   let isOpen = false;
   let openedFrom: Element | null = null;
   let hasCompleted = false;
+  let isRefreshing = false;
 
   warnAboutIds(currentConfig);
 
@@ -435,7 +436,9 @@ export function checklist(config: ChecklistConfig): Checklist {
 
   function notifyProgress() {
     currentConfig.onProgress?.(getProgress());
-    render();
+    if (!isRefreshing) {
+      render();
+    }
 
     if (!isAllDone() || hasCompleted) {
       return;
@@ -470,11 +473,16 @@ export function checklist(config: ChecklistConfig): Checklist {
   }
 
   function refresh() {
-    items().forEach(item => {
-      if (!completed.has(item.id) && item.completeWhen?.()) {
-        complete(item.id);
-      }
-    });
+    isRefreshing = true;
+    try {
+      items().forEach(item => {
+        if (!completed.has(item.id) && item.completeWhen?.()) {
+          complete(item.id);
+        }
+      });
+    } finally {
+      isRefreshing = false;
+    }
 
     render();
   }
@@ -596,7 +604,6 @@ export function checklist(config: ChecklistConfig): Checklist {
 
     hasCompleted = isAllDone();
 
-    render();
     refresh();
     emit("shown");
   }

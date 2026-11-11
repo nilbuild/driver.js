@@ -37,10 +37,18 @@ export function waitForStepElement(
   onSettled: (found: boolean) => void
 ) {
   const originating = ctx.getState("__activation");
+  let frame: number | undefined;
 
-  const settle = (found: boolean) => {
+  const stop = () => {
     observer.disconnect();
     window.clearTimeout(timer);
+    if (frame !== undefined) {
+      window.cancelAnimationFrame(frame);
+    }
+  };
+
+  const settle = (found: boolean) => {
+    stop();
     setElementWait(ctx);
     onSettled(found);
 
@@ -49,18 +57,20 @@ export function waitForStepElement(
     }
   };
 
-  const observer = new MutationObserver(() => {
+  const check = () => {
+    frame = undefined;
     if (resolveElement(step.element)) {
       settle(true);
     }
+  };
+
+  const observer = new MutationObserver(() => {
+    frame ??= window.requestAnimationFrame(check);
   });
 
   const timer = window.setTimeout(() => settle(false), timeout);
 
-  setElementWait(ctx, () => {
-    observer.disconnect();
-    window.clearTimeout(timer);
-  });
+  setElementWait(ctx, stop);
 
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
 }

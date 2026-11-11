@@ -1,6 +1,6 @@
 import { destroyDriverClick, onDriverClick } from "../core/click";
 import { PositionOptions, repositionPopover } from "./position";
-import { bringInView, getFocusableElements, layerFor, removeFromLayer } from "../core/utils";
+import { bringInView, getFirstFocusableElement, layerFor, removeFromLayer } from "../core/utils";
 
 export type Side = "top" | "right" | "bottom" | "left";
 export type Alignment = "start" | "center" | "end";
@@ -290,23 +290,32 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
   repositionOnImagesLoad(popover, anchor, options.position);
   bringInView(popoverWrapper, options.smoothScroll);
 
-  const focusableElement = options.keepFocus ? [] : getFocusableElements([popoverWrapper, anchor]);
-  if (focusableElement.length > 0) {
-    focusableElement[0].focus();
+  if (!options.keepFocus) {
+    getFirstFocusableElement([popoverWrapper, anchor])?.focus();
   }
 
   return popover;
 }
 
-function repositionOnImagesLoad(popover: PopoverDOM, anchor: Element, position: PositionOptions) {
-  const images = popover.wrapper.querySelectorAll("img");
+const imageTargets = new WeakMap<PopoverDOM, { anchor: Element; position: PositionOptions }>();
+const watchedImages = new WeakSet<HTMLImageElement>();
 
-  images.forEach(image => {
-    if (image.complete) {
+function repositionOnImagesLoad(popover: PopoverDOM, anchor: Element, position: PositionOptions) {
+  imageTargets.set(popover, { anchor, position });
+
+  popover.wrapper.querySelectorAll("img").forEach(image => {
+    if (image.complete || watchedImages.has(image)) {
       return;
     }
 
-    const reposition = () => repositionPopover(popover, anchor, position);
+    watchedImages.add(image);
+    const reposition = () => {
+      watchedImages.delete(image);
+      const target = imageTargets.get(popover);
+      if (target && popover.wrapper.isConnected) {
+        repositionPopover(popover, target.anchor, target.position);
+      }
+    };
 
     image.addEventListener("load", reposition, { once: true });
     image.addEventListener("error", reposition, { once: true });

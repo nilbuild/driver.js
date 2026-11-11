@@ -156,14 +156,21 @@ export function repositionPopover(popover: PopoverDOM, anchor: Element, options:
     popoverRenderedSide = "bottom";
   }
 
-  renderPopoverArrow(popover, noneOptimal ? "over" : popoverRenderedSide, requiredAlignment, anchor);
+  renderPopoverArrow(popover, noneOptimal ? "over" : popoverRenderedSide, requiredAlignment, elementDimensions);
 
+  const sideClass = `driver-popover-side-${popoverRenderedSide}`;
+  const alignClass = `driver-popover-align-${requiredAlignment}`;
   [...classList]
     .filter(className => className.startsWith("driver-popover-side-") || className.startsWith("driver-popover-align-"))
+    .filter(className => className !== sideClass && className !== alignClass)
     .forEach(className => classList.remove(className));
 
-  classList.add(`driver-popover-side-${popoverRenderedSide}`);
-  classList.add(`driver-popover-align-${requiredAlignment}`);
+  if (!classList.contains(sideClass)) {
+    classList.add(sideClass);
+  }
+  if (!classList.contains(alignClass)) {
+    classList.add(alignClass);
+  }
 }
 
 export const ARROW_SIZE = 10;
@@ -237,7 +244,7 @@ export function resolveArrowSide(
   return element.right <= popover.left ? "right" : "left";
 }
 
-function renderPopoverArrow(popover: PopoverDOM, side: Placement, alignment: Alignment, anchor: Element) {
+function renderPopoverArrow(popover: PopoverDOM, side: Placement, alignment: Alignment, elementRect: DOMRect) {
   const popoverArrow = popover.arrow;
 
   popoverArrow.className = "driver-popover-arrow";
@@ -251,14 +258,12 @@ function renderPopoverArrow(popover: PopoverDOM, side: Placement, alignment: Ali
     return;
   }
 
-  const elementRect = anchor.getBoundingClientRect();
   const popoverRect = popover.wrapper.getBoundingClientRect();
+  const arrowSize = popoverArrow.getBoundingClientRect().width || ARROW_SIZE;
 
   const arrowSide = resolveArrowSide(side, elementRect, popoverRect);
 
   popoverArrow.classList.add(`driver-popover-arrow-side-${arrowSide}`);
-
-  const arrowSize = popoverArrow.getBoundingClientRect().width || ARROW_SIZE;
 
   if (arrowSide === "left" || arrowSide === "right") {
     const target = calculateArrowTarget(

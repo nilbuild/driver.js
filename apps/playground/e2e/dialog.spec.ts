@@ -138,6 +138,23 @@ test.describe("steps inside a modal dialog", () => {
     expect(await hitAt(page, create.x + create.width / 2, create.y + create.height / 2)).toBe("overlay");
   });
 
+  test("stop redrawing the overlay once allowed elements settle", async ({ page }) => {
+    await start(page, { allowed: true });
+
+    const redraws = await page.evaluate(async () => {
+      let count = 0;
+      const path = document.querySelector(".driver-overlay path")!;
+      const observer = new MutationObserver(records => (count += records.length));
+      observer.observe(path, { attributes: true, attributeFilter: ["d"] });
+      await new Promise(resolve => setTimeout(resolve, 500));
+      observer.disconnect();
+
+      return count;
+    });
+
+    expect(redraws).toBe(0);
+  });
+
   test("move the overlay with the tour from the page into the dialog and back", async ({ page }) => {
     await start(page, { index: 0 });
     expect(await overlayHome(page)).toBe("body");

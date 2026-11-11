@@ -123,10 +123,12 @@ function renderOverlay(ctx: Context, stagePosition: StageDefinition, element: El
   }
 
   const options = stageOptions(ctx);
-  pathElement.setAttribute(
-    "d",
-    generateStageSvgPathString(stagePosition, options) + allowedCutouts(overlaySvg, stageCutout(stagePosition, options))
-  );
+  const path =
+    generateStageSvgPathString(stagePosition, options) +
+    allowedCutouts(overlaySvg, stageCutout(stagePosition, options));
+  if (pathElement.getAttribute("d") !== path) {
+    pathElement.setAttribute("d", path);
+  }
 }
 
 export function redrawOverlay(ctx: Context, isOutsideDialogToo = false) {
