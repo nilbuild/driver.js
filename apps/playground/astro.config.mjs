@@ -22,6 +22,11 @@ export default defineConfig({
       },
     },
     server: {
+      watch: {
+        // Test files are not part of the app: without this, saving a spec
+        // reloads every open page, including the ones a test run is driving.
+        ignored: ["**/e2e/**", "**/test-results/**", "**/playwright.config.ts"],
+      },
       fs: {
         // Allow importing the library source that lives outside this project.
         allow: ["../.."],

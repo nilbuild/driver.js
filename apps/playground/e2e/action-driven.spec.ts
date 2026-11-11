@@ -22,7 +22,8 @@ async function expectNudgeWithoutFade(page: Page) {
   await page.locator("#demo-file").click();
   await expect(popover(page)).toHaveClass(/driver-popover-nudge/);
   await expect(popover(page)).not.toHaveClass(/driver-popover-nudge/, { timeout: 2000 });
-  await page.waitForTimeout(600);
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.waitForFunction(() => document.querySelector(".driver-popover")?.getAnimations().length === 0);
 
   const minOpacity = await page.evaluate(() => (window as unknown as { minOpacity: number }).minOpacity);
   expect(minOpacity).toBe(1);

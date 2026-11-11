@@ -9,6 +9,7 @@
     "test": "pnpm --dir packages/driver test",
     "test:run": "turbo run test:run",
     "test:coverage": "turbo run test:coverage",
+    "test:e2e": "pnpm --dir apps/playground test:e2e",
     "lint:package": "turbo run lint:package",
     "format": "prettier . --write",
     "release": "GITHUB_TOKEN=$(gh auth token) pnpm --dir packages/driver release"

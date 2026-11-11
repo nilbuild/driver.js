@@ -1,0 +1,76 @@
+---
+// Bare fixture page for the Playwright suite (e2e/harness-*.spec.ts). It only
+// exposes the library on window; every test builds its own tour in the page.
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>driver.js e2e fixture</title>
+    <style is:global>
+      body {
+        margin: 0;
+        font:
+          14px/1.4 system-ui,
+          sans-serif;
+      }
+      #fixture {
+        padding: 120px 40px 40px 200px;
+      }
+      #fixture button,
+      #fixture input {
+        font: inherit;
+        padding: 6px 12px;
+      }
+      #hover {
+        display: inline-block;
+        padding: 8px 12px;
+        border: 1px solid #999;
+      }
+      #side {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        margin: 0;
+      }
+      #outside {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+      }
+      #spacer {
+        height: 1600px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="fixture">
+      <h1 id="heading">Heading</h1>
+      <p id="intro">Intro paragraph</p>
+      <p>
+        <button id="one" type="button">One</button>
+        <button id="two" type="button">Two</button>
+        <button id="three" type="button">Three</button>
+      </p>
+      <p><input id="field" type="text" /></p>
+      <p><span id="hover" tabindex="0">Hover me</span></p>
+      <p id="side">Side <button id="side-btn" type="button">Side button</button></p>
+      <button id="outside" type="button">Outside</button>
+      <div id="slot"></div>
+      <div id="spacer"></div>
+      <p id="far">Far away</p>
+    </div>
+
+    <script>
+      import { driver } from "driver.js";
+      import { hints } from "driver.js/hints";
+      import { checklist } from "driver.js/checklist";
+
+      Object.assign(window, { driverjs: { driver, hints, checklist }, log: [] });
+      document.documentElement.dataset.ready = "true";
+    </script>
+  </body>
+</html>
