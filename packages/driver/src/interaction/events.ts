@@ -23,13 +23,6 @@ function onActiveElementResize(ctx: Context) {
     return;
   }
 
-  const stage = ctx.getState("__activeStagePosition");
-  const isUnchanged =
-    stage && stage.x === rect.x && stage.y === rect.y && stage.width === rect.width && stage.height === rect.height;
-  if (isUnchanged) {
-    return;
-  }
-
   requireRefresh(ctx);
 }
 

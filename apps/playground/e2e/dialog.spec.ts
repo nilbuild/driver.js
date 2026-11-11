@@ -225,6 +225,41 @@ test.describe("steps inside a modal dialog", () => {
     expect(await overlayHome(page)).toBe("driver-layer");
     await expect(layers(page)).toHaveCount(1);
   });
+
+  test("bring the popover into a dialog that opens while the step animates in", async ({ page }) => {
+    await page.evaluate(() => {
+      const dialog = document.createElement("dialog");
+      dialog.innerHTML = `<input id="late-field" type="text" />`;
+      document.body.appendChild(dialog);
+
+      window.tour = window.driverjs.driver({
+        animate: true,
+        duration: 400,
+        steps: [
+          { element: "#intro", popover: { title: "Page" } },
+          { element: "dialog #late-field", popover: { title: "Field", side: "top" } },
+        ],
+      });
+      window.tour.drive();
+    });
+    await expect(title(page)).toHaveText("Page");
+    await settle(page);
+
+    await page.evaluate(() => {
+      window.tour.moveNext();
+      setTimeout(() => document.querySelector("dialog")!.showModal(), 150);
+    });
+    await expect(title(page)).toHaveText("Field");
+
+    await expect
+      .poll(() => page.evaluate(() => document.querySelector(".driver-popover")?.parentElement?.className))
+      .toBe("driver-layer");
+    const next = await box(nextButton(page));
+    await expect.poll(() => hitAt(page, next.x + next.width / 2, next.y + next.height / 2)).not.toBe("overlay");
+    const field = await box(page.locator("#late-field"));
+    const pop = await box(popover(page));
+    expect(pop.y + pop.height).toBeLessThanOrEqual(field.y);
+  });
 });
 
 test("a non-modal dialog gets the overlay in its layer as well", async ({ page }) => {
