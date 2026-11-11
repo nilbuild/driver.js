@@ -1,7 +1,7 @@
 ---
 title: "Tour Basics"
 description: "Build a multi-step product tour with Driver.js. Animate between steps or jump instantly, tune the animation speed, and show a step counter like 1 of 5."
-groupTitle: "Guides"
+groupTitle: "Tours"
 sort: 10
 ---
 
@@ -14,7 +14,6 @@ A tour is a list of steps. Each step highlights an element and describes it in a
 The highlight glides from one step to the next by default. Users move with the buttons or the arrow keys, and close with <kbd>Escape</kbd>.
 
 <CodeSample
-  heading={'Animated Tour'}
   config={{
     animate: true,
     showProgress: true,
@@ -65,7 +64,6 @@ The highlight glides from one step to the next by default. Users move with the b
 `duration` sets how long the move between steps and the fade-in take, in milliseconds. The default is `400`.
 
 <CodeSample
-  heading={'Animation Duration'}
   buttonText={"Fast: 150ms"}
   config={{
     animate: true,
@@ -118,7 +116,6 @@ The highlight glides from one step to the next by default. Users move with the b
 `animate: false` turns the animation off. The highlight jumps straight to each step.
 
 <CodeSample
-  heading={'Static Tour'}
   config={{
     animate: false,
   }}
@@ -150,7 +147,6 @@ The highlight glides from one step to the next by default. Users move with the b
 `showProgress: true` shows the step count in the popover's bottom left corner, as `{{current}} of {{total}}`. Change the text with `progressText`.
 
 <CodeSample
-  heading={'Tour Progress'}
   config={{
     showProgress: true,
     progressText: "Step {{current}} of {{total}}",

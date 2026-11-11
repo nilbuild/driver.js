@@ -7,6 +7,7 @@ type Scenario =
   | "invite"
   | "toggle"
   | "action"
+  | "success"
   | "strict"
   | "plan"
   | "save"
@@ -35,7 +36,11 @@ type FrameProps = {
 export const box = "flex flex-col gap-3 rounded-lg border border-gray-200 p-5";
 export const field = "rounded-md border border-gray-300 px-3 py-2 text-sm";
 export const primary = "cursor-pointer rounded-md bg-black px-4 py-2 text-sm text-white";
-export const secondary = "cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm";
+export const secondary = "cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm";
+
+// A raised allowed menu covers the step's cutout, so the item it holds
+// marks itself as the active one.
+export const menuItem = "rounded px-3 py-1.5 text-left text-sm hover:bg-gray-100";
 
 export function useTour() {
   const tour = useRef<Driver | null>(null);
@@ -270,6 +275,61 @@ function ActionDemo(props: DemoProps) {
           3 unread messages
         </div>
       )}
+    </div>
+  );
+
+  return <Frame ui={ui} code={props.code} onStart={onStart} />;
+}
+
+function SuccessDemo(props: DemoProps) {
+  const [isStarred, setIsStarred] = useState(false);
+  const start = useTour();
+
+  function onStart() {
+    setIsStarred(false);
+    start({
+      showButtons: ["next", "close"],
+      steps: [
+        {
+          element: "#ad-star",
+          advanceOn: "click",
+          advanceDelay: 1200,
+          popover: {
+            title: "Star the project",
+            description: "Watch the row and Next turn green before the tour moves on.",
+            instruction: "Click <b>Star</b>.",
+            side: "bottom",
+            align: "start",
+          },
+        },
+        {
+          element: "#ad-starred",
+          waitForElement: 1000,
+          popover: {
+            title: "Starred",
+            description: "The pause showed the step was done.",
+            showButtons: ["next"],
+            side: "bottom",
+            align: "start",
+          },
+        },
+      ],
+    });
+  }
+
+  const ui = (
+    <div className={box}>
+      <span className="text-lg font-semibold">Website redesign</span>
+      <div className="flex items-center gap-3">
+        <button id="ad-star" type="button" onClick={() => setIsStarred(true)} className={secondary}>
+          {isStarred ? "Starred" : "Star"}
+        </button>
+        {isStarred && (
+          <span id="ad-starred" className="text-sm text-gray-500">
+            Added to your starred projects
+          </span>
+        )}
+      </div>
     </div>
   );
 
@@ -661,7 +721,7 @@ function MenuDemo(props: DemoProps) {
                 setIsArchived(true);
                 setIsMenuOpen(false);
               }}
-              className="rounded px-3 py-1.5 text-left hover:bg-gray-100"
+              className={menuItem}
             >
               Archive
             </button>
@@ -670,7 +730,7 @@ function MenuDemo(props: DemoProps) {
               role="menuitem"
               data-action="delete"
               onClick={() => setIsMenuOpen(false)}
-              className="rounded px-3 py-1.5 text-left text-red-600 hover:bg-gray-100"
+              className={`${menuItem} text-red-600`}
             >
               Delete
             </button>
@@ -807,6 +867,7 @@ const demos = {
   invite: InviteDemo,
   toggle: ToggleDemo,
   action: ActionDemo,
+  success: SuccessDemo,
   strict: StrictDemo,
   plan: PlanDemo,
   save: SaveDemo,

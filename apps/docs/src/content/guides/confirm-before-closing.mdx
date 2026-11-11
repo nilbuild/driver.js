@@ -1,0 +1,82 @@
+---
+title: "Confirm Before Closing"
+description: "Ask users to confirm before a Driver.js tour closes early, or stop them from leaving a tour they have to finish."
+groupTitle: "Recipes"
+sort: 37
+---
+
+import { CodeSample } from "../../components/CodeSample.tsx";
+
+Use this when leaving halfway would lose something, like a setup the user has to finish. Ask before the tour closes early, or take the way out away entirely.
+
+## Confirm on Exit
+
+`onDestroyStarted` runs when the tour is about to end. Once you set it, the tour only ends when you call `destroy()`. The example only asks when the user leaves early.
+
+<CodeSample
+  config={{
+    animate: true,
+    showProgress: true,
+  }}
+  tour={[
+    { element: '.line:nth-child(9)', popover: { title: 'Try to Leave', description: 'Press Escape, the close button or the dimmed page. This hook asks before the tour ends.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(10)', popover: { title: 'Finishing Is Fine', description: 'The reason is "done" when the user finishes the tour, so there is no question then.', side: "bottom", align: 'start' }},
+    { popover: { title: 'Last Step', description: 'Press Done to finish without a question, or close it to get one.' } }
+  ]}
+  id={"confirm-destroy"}
+  client:load>
+  ```js
+  import { driver } from "driver.js";
+  import "driver.js/dist/driver.css";
+
+  const driverObj = driver({
+    steps: [
+      { element: "#search", popover: { title: "Search" } },
+      { element: "#export", popover: { title: "Export" } },
+    ],
+    onDestroyStarted: (element, step, { reason }) => {
+      if (reason === "done" || confirm("Are you sure?")) {
+        driverObj.destroy();
+      }
+    },
+  });
+
+  driverObj.drive();
+  ```
+</CodeSample>
+
+`reason` tells a finished tour (`"done"`) apart from one the user is leaving. Use your own modal instead of `confirm()` the same way: call `destroy()` when the user agrees.
+
+## Prevent Exit
+
+`allowClose: false` removes the close button and turns off Escape and overlay clicks, so the only way out is to finish the tour.
+
+<CodeSample
+  config={{
+    animate: true,
+    showProgress: true,
+    allowClose: false,
+  }}
+  tour={[
+    { element: '.line:nth-child(2)', popover: { title: 'No Way Out', description: 'There is no close button, and Escape and clicks on the dimmed page do nothing. Try them.', side: "bottom", align: 'start' }},
+    { popover: { title: 'Last Step', description: 'Press Done to finish the tour.' } }
+  ]}
+  id={"prevent-exit"}
+  client:load>
+  ```js
+  const driverObj = driver({
+    allowClose: false,
+    showProgress: true,
+    steps: [
+      { element: "#search", popover: { title: "Search" } },
+      { element: "#export", popover: { title: "Export" } },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</CodeSample>
+
+To keep the close button and only ignore clicks on the overlay, use `overlayClickBehavior: "none"` instead.
+
+**Uses**: [`onDestroyStarted`](/docs/configuration#hooks), [`reason`](/docs/configuration#why-a-tour-ended), [`allowClose`](/docs/configuration#driver-configuration), [`overlayClickBehavior`](/docs/configuration#overlayclickbehavior)

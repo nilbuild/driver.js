@@ -1,41 +1,79 @@
 ---
-import { getCollection, getEntry } from "astro:content";
-import { getFormattedStars } from "../lib/github";
-import { getAllGuides } from "../lib/guide";
+import type { SidebarGroup } from "../lib/guide";
 
 export interface Props {
-  activePath: string;
+  groups: SidebarGroup[];
+  activeGuideId: string;
 }
 
-const { activePath, groupedGuides, activeGuideTitle } = Astro.props;
+const { groups, activeGuideId } = Astro.props;
 ---
-<div id="docs-sidebar" class="hidden md:block w-[200px] lg:w-[350px] border-r border-gray-200 text-right min-h-screen flex-shrink-0">
-  <div class="relative sh:sticky top-0">
-    <div class="justify-end flex pt-10 pb-5 px-5">
-      <a href="/" class="block items-center justify-end mb-2">
-        <img src="/mascot-head.png" alt="driver.js logo" width="900" height="775" class="h-16 w-auto" />
-      </a>
-    </div>
 
-    {Object.keys(groupedGuides).map(groupTitle => {
-      const guides = groupedGuides[groupTitle];
+<aside id="docs-sidebar" transition:persist="docs-sidebar" class="hidden md:block w-[248px] xl:w-[320px] flex-shrink-0">
+  <div id="docs-sidebar-scroll" class="docs-sidebar-scroll sticky top-0 max-h-screen overflow-y-auto pl-8 xl:pl-20 pr-6 pt-12 xl:pt-20 pb-16">
+    <a href="/" class="inline-block mb-10" aria-label="driver.js home">
+      <img src="/mascot-head.png" alt="driver.js logo" width="900" height="775" class="h-12 w-auto" />
+    </a>
 
-      return (
-        <>
-          <h2 class="text-xl font-bold mb-2 pr-5 relative">{groupTitle}</h2>
-          <ul class="text-gray-400 mb-5">
-            {guides.map(guide => {
-              const guidePath = `/docs/${guide.id}`;
-              return (
-                <li class="mb-2">
-                  <a href={guidePath}
-                     class:list={["hover:text-black pr-5 py-2", { "text-black": activeGuideTitle === guide.data.title }]}>{guide.data.title}</a>
-                </li>
-              );
-            })}
+    <nav aria-label="Documentation" class="-mx-1.5 text-sm tracking-[-0.01em]">
+      {groups.map(group => (
+        <div class="docs-sidebar-group">
+          <h2 class="px-1.5 pt-1 pb-2 font-normal text-neutral-400">{group.title}</h2>
+          <ul>
+            {group.guides.map(guide => (
+              <li>
+                <a
+                  href={`/docs/${guide.id}`}
+                  aria-current={guide.id === activeGuideId ? "page" : undefined}
+                  class="inline-flex items-center gap-2 rounded-md px-1.5 py-1 leading-[1.2] text-black/60 transition-colors duration-100 hover:text-black aria-[current=page]:text-black">
+                  {guide.title}
+                  {guide.badge && <span class="docs-badge">{guide.badge}</span>}
+                </a>
+              </li>
+            ))}
           </ul>
-        </>
-      );
-    })}
+        </div>
+      ))}
+    </nav>
   </div>
-</div>
+</aside>
+
+<script>
+  let sidebarScrollTop = 0;
+
+  function saveSidebarScroll() {
+    sidebarScrollTop = document.getElementById("docs-sidebar-scroll")?.scrollTop ?? 0;
+  }
+
+  function syncSidebar() {
+    const scroller = document.getElementById("docs-sidebar-scroll");
+    if (scroller) {
+      scroller.scrollTop = sidebarScrollTop;
+    }
+
+    const links = document.querySelectorAll<HTMLAnchorElement>("#docs-sidebar nav a");
+    let active: HTMLAnchorElement | undefined;
+    for (const link of links) {
+      if (link.pathname !== location.pathname) {
+        link.removeAttribute("aria-current");
+        continue;
+      }
+
+      link.setAttribute("aria-current", "page");
+      active = link;
+    }
+
+    if (!active || !scroller) {
+      return;
+    }
+
+    const bounds = scroller.getBoundingClientRect();
+    const link = active.getBoundingClientRect();
+    if (link.top < bounds.top || link.bottom > bounds.bottom) {
+      active.scrollIntoView({ block: "nearest" });
+    }
+  }
+
+  document.addEventListener("astro:before-swap", saveSidebarScroll);
+  document.addEventListener("astro:after-swap", syncSidebar);
+</script>

@@ -1,11 +1,10 @@
 ---
 title: "Simple Highlight"
 description: "Highlight any element on the page with Driver.js. Spotlight a single element and show a popover to deliver contextual help, beyond just product tours."
-groupTitle: "Guides"
-sort: 14
+groupTitle: "Tours"
+sort: 12
 ---
 
-import { FormHelp } from "../../components/FormHelp.tsx";
 import { CodeSample } from "../../components/CodeSample.tsx";
 
 `highlight()` shows a single step without a tour. Use it for contextual help: explain a feature, guide a form, or dim the page around one element.
@@ -67,47 +66,15 @@ Leave out `element` and the popover shows in the middle of the screen, like a mo
 ```js
 driverObj.highlight({
   popover: {
-    description: "<img src='/welcome.webp' width='270' /><p>Yet another highlight example.</p>",
+    description:
+      "<img src='/welcome.webp' width='270' />" +
+      "<p>Yet another highlight example.</p>",
   },
 });
 ```
 
-## Help for a Form
+<a id="help-for-a-form"></a>
 
-Call `highlight()` again to move to another element. Focus the fields below.
-
-<form action="#" className='flex flex-col gap-2'>
-  <input id="name" type="text" placeholder="Enter your Name" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
-  <input id="education" type="text" placeholder="Your Education" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
-  <input id="age" type="number" placeholder="Your Age" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
-  <textarea id="address" placeholder="Your Address" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
-  <button id="submit-btn" type="button" className='w-full rounded-md bg-black p-2 text-white'>Submit</button>
-</form>
-
-<FormHelp client:only="react" />
-
-```js
-const driverObj = driver({
-  stagePadding: 0,
-  onDestroyed: () => document.activeElement?.blur(),
-});
-
-const help = {
-  "#name": { title: "Name", description: "Enter your name here" },
-  "#education": { title: "Education", description: "Enter your education here" },
-  "#age": { title: "Age", description: "Enter your age here" },
-  "#address": { title: "Address", description: "Enter your address here" },
-};
-
-Object.entries(help).forEach(([selector, popover]) => {
-  const element = document.querySelector(selector);
-
-  element.addEventListener("focus", () => {
-    driverObj.highlight({ element, popover });
-  });
-});
-
-document.querySelector("#submit-btn").addEventListener("focus", () => driverObj.destroy());
-```
+To show help as the user moves through a form, see [Teach a Form](/docs/teach-a-form).
 
 For help that sits on the page until the user asks for it, use [hints](/docs/hints).

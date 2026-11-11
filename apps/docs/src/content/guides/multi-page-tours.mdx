@@ -1,0 +1,98 @@
+---
+title: "Multi-Page Tours"
+description: "Continue a Driver.js tour across page loads or client-side routes: save the step, let the app navigate, and resume on the next page."
+groupTitle: "Recipes"
+sort: 36
+---
+
+import { MultiPageTourDemo } from "../../components/RecipeDemos.tsx";
+
+Use this when the tour has to follow the user to another page, like from the dashboard into settings. A driver lives on one page and a page load destroys it, so save the step to resume at, let the app navigate, and start the tour from that step on the next page.
+
+On the step whose click navigates, `advanceOn: "click"` completes the step and `onNextClick` saves the progress instead of moving on. The link's own click still navigates.
+
+Start the tour below. It walks over to Resume a Tour and continues there.
+
+<MultiPageTourDemo client:load>
+  ```js
+  import { driver } from "driver.js";
+  import "driver.js/dist/driver.css";
+
+  const TOUR_KEY = "app-tour";
+
+  function saveProgress(step, page) {
+    const progress = { step, page, savedAt: Date.now() };
+    sessionStorage.setItem(TOUR_KEY, JSON.stringify(progress));
+  }
+
+  export function createTour() {
+    let isNavigating = false;
+
+    const driverObj = driver({
+      steps: [
+        { element: "#reports", popover: { title: "Reports" } },
+        {
+          element: "#settings-link",
+          advanceOn: "click",
+          popover: {
+            title: "Open Settings",
+            instruction: "Click <b>Settings</b>.",
+            onNextClick: () => {
+              isNavigating = true;
+              saveProgress(2, "/settings");
+              driverObj.destroy();
+            },
+          },
+        },
+        // On the settings page
+        {
+          element: "#profile-form",
+          waitForElement: 5000,
+          popover: {
+            title: "Your Profile",
+            onPrevClick: () => {
+              isNavigating = true;
+              saveProgress(1, "/reports");
+              driverObj.destroy();
+              location.assign("/reports");
+            },
+          },
+        },
+        { element: "#save-settings", popover: { title: "Save" } },
+      ],
+      onDestroyed: () => {
+        if (!isNavigating) {
+          sessionStorage.removeItem(TOUR_KEY);
+        }
+      },
+    });
+
+    return driverObj;
+  }
+  ```
+</MultiPageTourDemo>
+
+Going back works the same way in reverse. On the first step of the new page, `onPrevClick` saves the step that sends the user over, the link step, and navigates back. It also runs for the left arrow key. Try Previous on "Same tour, new page" in the demo.
+
+On every page load, read the saved step once and resume only on the page it was saved for:
+
+```js
+const saved = JSON.parse(sessionStorage.getItem(TOUR_KEY));
+sessionStorage.removeItem(TOUR_KEY);
+
+const isFresh = saved && Date.now() - saved.savedAt < 300_000;
+if (isFresh && saved.page === location.pathname) {
+  createTour().drive(saved.step);
+}
+```
+
+- The saved step is read once and removed, so the tour never starts on a later visit, after a reload or after the browser's back button. Only the tour's own Previous takes it back a page.
+- The `page` and `savedAt` checks keep it from popping up when the user ends up somewhere else, or comes back after more than five minutes.
+- `sessionStorage` keeps it to this tab. Use `localStorage` if the next page may open in a new tab.
+- `waitForElement` on the first resumed step covers the time the new page takes to render.
+- `onDestroyed` clears the saved step when the tour is finished or closed before the user navigates.
+- In a single-page app, run the resume code where a page mounts: an effect in React or Vue, a route hook, or `document.addEventListener("astro:page-load", ...)` with Astro's client router. Navigate with your router instead of `location.assign()`. The `destroy()` before navigating matters there: without it the old page's tour stays on screen.
+
+To let users pick a tour up where they closed it, see [Resume a Tour](/docs/resume-a-tour).
+
+**Uses**: [`drive(index)`](/docs/api#starting-and-stopping), [`advanceOn`](/docs/configuration#advanceon), [`onNextClick` and `onPrevClick`](/docs/popover#event-handlers), [`waitForElement`](/docs/interactive-tours#wait-for-elements), [`onDestroyed`](/docs/configuration#hooks)

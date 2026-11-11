@@ -1,4 +1,4 @@
-import type { Config, DriveStep, PopoverDOM } from "driver.js";
+import type { Config, DriveStep } from "driver.js";
 import { driver } from "driver.js";
 import { useRef } from "react";
 import "driver.js/dist/driver.css";
@@ -16,17 +16,6 @@ type CodeSampleProps = {
   children?: any;
   buttonText?: string;
 };
-
-function attachFirstButton(popover: PopoverDOM) {
-  const firstButton = document.createElement("button");
-  firstButton.className = "driver-popover-footer-btn";
-  firstButton.innerText = "Go to First";
-  popover.footerButtons.appendChild(firstButton);
-
-  firstButton.addEventListener("click", () => {
-    window.driverObj.drive(0);
-  });
-}
 
 export function CodeSample(props: CodeSampleProps) {
   const { heading, id, children, buttonText = "Show me an Example", className, config, highlight, tour } = props;
@@ -70,10 +59,6 @@ export function CodeSample(props: CodeSampleProps) {
     });
   }
 
-  if (id === "demo-hook-theme") {
-    config!.onPopoverRender = attachFirstButton;
-  }
-
   function onClick() {
     resetCodeScroll();
 
@@ -90,20 +75,6 @@ export function CodeSample(props: CodeSampleProps) {
           if (reason === "done" || confirm("Are you sure?")) {
             driverObj.destroy();
           }
-        };
-      }
-
-      if (id === "destroy-reason") {
-        config!.onDestroyed = (element, step, { reason, index }) => {
-          driver().highlight({
-            element: `#${id}`,
-            popover: {
-              title: reason === "done" ? "Tour finished" : `Left at step ${index! + 1} of ${tour.length}`,
-              description: `onDestroyed received <code>reason: "${reason}"</code>.`,
-              side: "top",
-              align: "start",
-            },
-          });
         };
       }
 
@@ -133,18 +104,6 @@ export function CodeSample(props: CodeSampleProps) {
         };
         tour[1].onDeselected = () => removeDummyElement();
         config!.onDestroyed = () => removeDummyElement();
-      }
-
-      if (id === "async-tour") {
-        tour[0].popover!.onNextClick = () => {
-          mountDummyElement();
-          driverObj.moveNext();
-        };
-        tour[1].onDeselected = () => removeDummyElement();
-        tour[2].popover!.onPrevClick = () => {
-          mountDummyElement();
-          driverObj.movePrevious();
-        };
       }
 
       const steps = tour.map(scopeToSample);

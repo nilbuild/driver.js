@@ -18,7 +18,10 @@
   border-radius: 50%;
   background:
     radial-gradient(closest-side, #2d2d2d 78%, transparent 80% 100%),
-    conic-gradient(#22c55e var(--driver-checklist-progress), rgba(255, 255, 255, 0.2) 0);
+    conic-gradient(
+      #22c55e var(--driver-checklist-progress),
+      rgba(255, 255, 255, 0.2) 0
+    );
   font-size: 12px;
   font-weight: 600;
   color: #fff;

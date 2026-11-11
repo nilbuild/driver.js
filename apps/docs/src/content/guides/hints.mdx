@@ -1,11 +1,12 @@
 ---
 title: "Feature Hints"
 description: "Add pulsing hint beacons to your UI with Driver.js. Users click a beacon to open a popover explaining the feature. Style the beacons and popovers to match your product."
-groupTitle: "Guides"
-sort: 16
+groupTitle: "Hints & Checklists"
+sort: 20
 ---
 
 import { HintsSample } from "../../components/HintsSample.tsx";
+import { HintTourDemo, RememberedHintsDemo } from "../../components/RecipeDemos.tsx";
 
 Hints are pulsing beacons that sit on the page. The user clicks one to open a popover, in any order. Nothing is blocked, so the page stays usable.
 
@@ -36,7 +37,7 @@ Each hint points at an element and describes it in a popover. The demo also turn
       beacon: { side: "left", align: "center" },
       popover: {
         title: "Auto-generated summary",
-        description: "This paragraph is written for you from the quarter's numbers.",
+        description: "Written for you from the quarter's numbers.",
         side: "bottom",
       },
     },
@@ -63,7 +64,7 @@ const productHints = hints({
       beacon: { side: "left", align: "center" },
       popover: {
         title: "Auto-generated summary",
-        description: "This paragraph is written for you from the quarter's numbers.",
+        description: "Written for you from the quarter's numbers.",
         side: "bottom",
       },
     },
@@ -82,21 +83,24 @@ Only one hint is open at a time.
 
 ## Remembering dismissals
 
-Dismissals last until the page reloads. To keep them, give hints an `id` and save it in `onDismiss`:
+Dismissals last until the page reloads. To keep them, give hints an `id` and save it in `onDismiss`. Dismiss a hint below, then load the page again.
 
-```js
-const dismissed = new Set(JSON.parse(localStorage.getItem("hints") ?? "[]"));
+<RememberedHintsDemo storageKey="docs-hints-memory" client:load>
+  ```js
+  const saved = JSON.parse(localStorage.getItem("hints") ?? "[]");
+  const dismissed = new Set(saved);
 
-const productHints = hints({
-  hints: allHints.filter(hint => !dismissed.has(hint.id)),
-  onDismiss: (element, hint) => {
-    dismissed.add(hint.id);
-    localStorage.setItem("hints", JSON.stringify([...dismissed]));
-  },
-});
+  const productHints = hints({
+    hints: allHints.filter(hint => !dismissed.has(hint.id)),
+    onDismiss: (element, hint) => {
+      dismissed.add(hint.id);
+      localStorage.setItem("hints", JSON.stringify([...dismissed]));
+    },
+  });
 
-productHints.show();
-```
+  productHints.show();
+  ```
+</RememberedHintsDemo>
 
 ## Dimming the page
 
@@ -115,35 +119,37 @@ const productHints = hints({
 
 ## Using hints alongside a tour
 
-While a tour runs, the beacons hide. They come back when it ends. A hint can also start a tour from its button:
+While a tour runs, the beacons hide. They come back when it ends. A hint can also start a tour from its button. Open the beacon below and take the tour.
 
-```js
-const tour = driver({
-  steps: [
-    // ...
-  ],
-});
+<HintTourDemo client:load>
+  ```js
+  const tour = driver({
+    steps: [
+      // ...
+    ],
+  });
 
-const productHints = hints({
-  hints: [
-    {
-      element: "#whats-new",
-      id: "whats-new",
-      popover: {
-        title: "New dashboard",
-        description: "Want a quick walkthrough?",
-        buttonText: "Take the tour",
-        onButtonClick: (element, hint, { hints: instance }) => {
-          instance.close();
-          tour.drive();
+  const productHints = hints({
+    hints: [
+      {
+        element: "#whats-new",
+        id: "whats-new",
+        popover: {
+          title: "New dashboard",
+          description: "Want a quick walkthrough?",
+          buttonText: "Take the tour",
+          onButtonClick: (element, hint, { hints: instance }) => {
+            instance.close();
+            tour.drive();
+          },
         },
       },
-    },
-  ],
-});
-```
+    ],
+  });
+  ```
+</HintTourDemo>
 
-For more buttons or your own markup, use `onPopoverRender`, like in [tours](/docs/popover#custom-buttons).
+For more buttons or your own markup, use `onPopoverRender`, like in [tours](/docs/custom-buttons).
 
 ## Styling
 
@@ -165,7 +171,7 @@ const productHints = hints({
 
 ### Beacon color and size
 
-Beacons read two CSS variables. Set them on `.driver-hint` for all beacons, or on a class you give one beacon with `className`.
+Beacons read CSS variables for their color and size. Set them on `.driver-hint` for all beacons, or on a class you give one beacon with `className`. All beacon variables and classes are in [Theming](/docs/theming#hints).
 
 <HintsSample
   idPrefix="styled"

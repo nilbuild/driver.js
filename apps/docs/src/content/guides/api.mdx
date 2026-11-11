@@ -1,8 +1,8 @@
 ---
 title: "API Reference"
 description: "Complete Driver.js API reference: every method available on the driver, hints and checklist instances, with examples."
-groupTitle: "Introduction"
-sort: 4
+groupTitle: "Reference"
+sort: 51
 ---
 
 `driver()` returns an object with the methods below. The options it takes are in [Configuration](/docs/configuration).
@@ -53,9 +53,14 @@ driverObj.advance(); // Complete the current step
   element: "#save",
   advanceDelay: 600,
   onHighlighted: (element, step, { signal, driver }) => {
-    window.addEventListener("profile-saved", () => driver.advance(), { signal });
+    window.addEventListener("profile-saved", () => driver.advance(), {
+      signal,
+    });
   },
-  popover: { title: "Save your profile", instruction: "Click <b>Save</b>." },
+  popover: {
+    title: "Save your profile",
+    instruction: "Click <b>Save</b>.",
+  },
 }
 ```
 
@@ -64,7 +69,7 @@ driverObj.advance(); // Complete the current step
 ## The Current Step
 
 ```js
-driverObj.getActiveIndex(); // Index of the active step, undefined in highlight()
+driverObj.getActiveIndex(); // Active step index, undefined in highlight()
 driverObj.getActiveStep(); // The active step
 driverObj.getActiveElement(); // The highlighted element
 
@@ -83,9 +88,13 @@ These account for steps that [`skipMissingElement`](/docs/configuration#missing-
 ## Changing the Popover
 
 ```js
-// Change the visible popover. Changes merge and last until the step is left.
+// Change the visible popover. Changes merge, and last until the step
+// is left.
 driverObj.updatePopover({ description: "Almost there." });
-driverObj.updatePopover({ nextBtnText: "Continue", disableButtons: ["previous"] });
+driverObj.updatePopover({
+  nextBtnText: "Continue",
+  disableButtons: ["previous"],
+});
 
 // Restore the step's own popover
 driverObj.updatePopover();
@@ -119,7 +128,9 @@ driverObj.getState(); // The current state, see Configuration
 driverObj.getState("activeIndex"); // One key of it
 
 // Replace the steps
-driverObj.setSteps([{ element: "#billing", popover: { title: "Billing" } }]);
+driverObj.setSteps([
+  { element: "#billing", popover: { title: "Billing" } },
+]);
 
 // Replace the configuration
 driverObj.setConfig({ ...driverObj.getConfig(), showProgress: true });
@@ -162,10 +173,13 @@ import { hints } from "driver.js/hints";
 import "driver.js/dist/hints.css";
 
 const productHints = hints({
-  hints: [{ element: "#export", id: "export", popover: { title: "Export your data" } }],
+  hints: [
+    { element: "#export", id: "export", popover: { title: "Export" } },
+  ],
 });
 
-productHints.show(); // Show the beacons. Call again to pick up elements that appeared since
+// Show the beacons. Call again to pick up elements that appeared since
+productHints.show();
 productHints.hide(); // Remove the beacons
 productHints.isVisible();
 
@@ -195,7 +209,11 @@ import "driver.js/dist/checklist.css";
 const onboarding = checklist({
   id: "onboarding",
   items: [
-    { id: "tour", title: "Take the tour", tour: [{ element: "#search", popover: { title: "Search" } }] },
+    {
+      id: "tour",
+      title: "Take the tour",
+      tour: [{ element: "#search", popover: { title: "Search" } }],
+    },
     { id: "github", title: "Connect GitHub" },
   ],
 });

@@ -1,0 +1,46 @@
+---
+title: "Resume a Tour"
+description: "Save the step a user was on when they closed a Driver.js tour, and pick up from there the next time."
+groupTitle: "Recipes"
+sort: 35
+---
+
+import { InteractiveSample } from "../../components/InteractiveSample.tsx";
+import { MultiPageTourResume } from "../../components/RecipeDemos.tsx";
+
+<MultiPageTourResume client:load />
+
+Use this for a long tour people may not finish in one go. Save the step they were on when they left, and start from it next time.
+
+Close the tour below on any step, then start it again.
+
+<InteractiveSample scenario="resume" client:load>
+  ```js
+  const STEP_KEY = "tour-step";
+
+  const driverObj = driver({
+    showProgress: true,
+    steps: [
+      { element: "#overview", popover: { title: "Overview" } },
+      { element: "#reports", popover: { title: "Reports" } },
+      { element: "#team", popover: { title: "Team" } },
+      { element: "#settings", popover: { title: "Settings" } },
+    ],
+    onDestroyed: (element, step, { reason, index }) => {
+      if (reason === "done") {
+        localStorage.removeItem(STEP_KEY);
+      } else {
+        localStorage.setItem(STEP_KEY, String(index));
+      }
+    },
+  });
+
+  driverObj.drive(Number(localStorage.getItem(STEP_KEY) ?? 0));
+  ```
+</InteractiveSample>
+
+`onDestroyed` gets the `index` of the step the user was on and the `reason` the tour ended. A finished tour clears the saved step, so it starts from the beginning next time.
+
+For a tour that continues on another page, see [Multi-Page Tours](/docs/multi-page-tours).
+
+**Uses**: [`drive(index)`](/docs/api#starting-and-stopping), [`onDestroyed`](/docs/configuration#hooks), [`reason`](/docs/configuration#why-a-tour-ended)

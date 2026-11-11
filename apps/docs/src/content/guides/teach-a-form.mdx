@@ -1,0 +1,107 @@
+---
+title: "Teach a Form"
+description: "Explain a form field by field with Driver.js highlights, or walk users through filling it in with steps that only move on when each field is valid."
+groupTitle: "Recipes"
+sort: 31
+---
+
+import { FormHelp } from "../../components/FormHelp.tsx";
+import { RecipeSample } from "../../components/RecipeSample.tsx";
+
+Two ways to help with a form: explain each field as the user reaches it, or walk them through filling it in and only move on when a field is right.
+
+## Explain Each Field
+
+Call `highlight()` on focus to show help next to the field the user is in. Focus the fields below.
+
+<form action="#" className='flex flex-col gap-2'>
+  <input id="name" type="text" placeholder="Enter your Name" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
+  <input id="education" type="text" placeholder="Your Education" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
+  <input id="age" type="number" placeholder="Your Age" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
+  <textarea id="address" placeholder="Your Address" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
+  <button id="submit-btn" type="button" className='w-full rounded-md bg-black p-2 text-white'>Submit</button>
+</form>
+
+<FormHelp client:only="react" />
+
+```js
+const driverObj = driver({
+  stagePadding: 0,
+  onDestroyed: () => document.activeElement?.blur(),
+});
+
+const help = {
+  "#name": { title: "Name", description: "Your full name" },
+  "#education": { title: "Education", description: "Degree" },
+  "#age": { title: "Age", description: "In years" },
+  "#address": { title: "Address", description: "Street, city" },
+};
+
+Object.entries(help).forEach(([selector, popover]) => {
+  const element = document.querySelector(selector);
+
+  element.addEventListener("focus", () => {
+    driverObj.highlight({ element, popover });
+  });
+});
+
+document
+  .querySelector("#submit-btn")
+  .addEventListener("focus", () => driverObj.destroy());
+```
+
+## Fill It In Step by Step
+
+`advanceOn` with `when` checks the field on every event, so the step completes the moment the value is valid. `advanceDelay` shows the done state before moving on.
+
+<RecipeSample scenario="form" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["next", "close"],
+    steps: [
+      {
+        element: "#password",
+        advanceOn: {
+          event: "input",
+          when: element => element.value.length >= 8,
+        },
+        advanceDelay: 800,
+        popover: {
+          title: "Choose a password",
+          instruction: "Type at least 8 characters.",
+        },
+      },
+      {
+        element: "#terms",
+        advanceOn: "change",
+        popover: {
+          title: "The fine print",
+          instruction: "Accept the terms.",
+        },
+      },
+      {
+        element: "#submit",
+        advanceOn: "click",
+        popover: {
+          title: "Create the account",
+          instruction: "Click <b>Create account</b>.",
+        },
+      },
+      {
+        element: "#created",
+        waitForElement: 1000,
+        popover: {
+          title: "Account created",
+          showButtons: ["next"],
+        },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</RecipeSample>
+
+To say what's wrong instead of waiting, call `driver.nudge("...")` from `when` and return `false`, like the email step in [Action-Driven Tours](/docs/action-driven-tours).
+
+**Uses**: [`highlight()`](/docs/simple-highlight), [`advanceOn`](/docs/configuration#advanceon), [`popover.instruction`](/docs/action-driven-tours#make-the-user-act), [`advanceDelay`](/docs/action-driven-tours#show-success-before-moving-on)

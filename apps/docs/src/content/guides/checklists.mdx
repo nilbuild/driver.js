@@ -1,11 +1,12 @@
 ---
 title: "Checklists"
 description: "Add an onboarding checklist to your app with Driver.js. Items launch product tours, follow links or wait for the user to do something, and tick themselves off as users make progress."
-groupTitle: "Guides"
-sort: 17
+groupTitle: "Hints & Checklists"
+sort: 21
 ---
 
 import { ChecklistSample } from "../../components/ChecklistSample.tsx";
+import { ChecklistEventsDemo, OwnLauncherDemo, SavedChecklistDemo } from "../../components/RecipeDemos.tsx";
 
 A checklist is a "Get started" widget in the corner of your app. Each item is one thing you want new users to do. An item can start a tour, open a link or run your code, and it ticks itself off once the user has done it.
 
@@ -31,8 +32,14 @@ const onboarding = checklist({
       id: "tour",
       title: "Take the tour",
       tour: [
-        { element: "#new-project", popover: { title: "New Project", description: "..." } },
-        { element: "#connect-github", popover: { title: "Connect GitHub", description: "..." } },
+        {
+          element: "#new-project",
+          popover: { title: "New Project", description: "..." },
+        },
+        {
+          element: "#connect-github",
+          popover: { title: "Connect GitHub", description: "..." },
+        },
       ],
     },
     {
@@ -81,7 +88,13 @@ For tasks done in your app, give the item a `completeWhen` function. The checkli
 ```js
 const onboarding = checklist({
   id: "onboarding",
-  items: [{ id: "github", title: "Connect GitHub", completeWhen: () => user.githubConnected }],
+  items: [
+    {
+      id: "github",
+      title: "Connect GitHub",
+      completeWhen: () => user.githubConnected,
+    },
+  ],
 });
 
 // After the user connects GitHub somewhere in your app
@@ -108,7 +121,12 @@ checklist({
   items: [
     { id: "video", title: "Watch the intro video", href: "/intro" },
     // Only ticked by finishing the tour, even with manual completion on.
-    { id: "tour", title: "Take the tour", tour: steps, allowManualComplete: false },
+    {
+      id: "tour",
+      title: "Take the tour",
+      tour: steps,
+      allowManualComplete: false,
+    },
   ],
 });
 ```
@@ -119,18 +137,20 @@ An item's own `allowManualComplete` wins. From code, use `complete(id)` and `unc
 
 The checklist stores nothing. Pass the ids that are already done as `completed`, and save them in `onProgress`, which runs on every change. Keep them in localStorage, your API or the user record.
 
-```js
-const onboarding = checklist({
-  id: "onboarding",
-  items,
-  completed: JSON.parse(localStorage.getItem("onboarding") ?? "[]"),
-  onProgress: ({ completed, done, total }) => {
-    localStorage.setItem("onboarding", JSON.stringify(completed));
-  },
-});
+<SavedChecklistDemo client:load>
+  ```js
+  const onboarding = checklist({
+    id: "onboarding",
+    items,
+    completed: JSON.parse(localStorage.getItem("onboarding") ?? "[]"),
+    onProgress: ({ completed, done, total }) => {
+      localStorage.setItem("onboarding", JSON.stringify(completed));
+    },
+  });
 
-onboarding.show();
-```
+  onboarding.show();
+  ```
+</SavedChecklistDemo>
 
 ## When everything is done
 
@@ -176,21 +196,24 @@ if (done < total) {
 
 ## Tracking events
 
-`onEvent` gets everything that happens in the checklist, ready to send to your analytics:
+`onEvent` gets everything that happens in the checklist, ready to send to your analytics. Open the checklist below, take the tour, and watch the events.
 
-```js
-checklist({
-  id: "onboarding",
-  items,
-  onEvent: event => {
-    // { kind: "checklist", id: "onboarding", type: "item_completed", itemId: "github", timestamp: 1760000000000 }
-    analytics.track(`checklist_${event.type}`, event);
-  },
-});
-```
+<ChecklistEventsDemo client:load>
+  ```js
+  checklist({
+    id: "onboarding",
+    items,
+    onEvent: event => {
+      // { kind: "checklist", id: "onboarding", type: "item_completed",
+      //   itemId: "github", timestamp: 1760000000000 }
+      analytics.track(`checklist_${event.type}`, event);
+    },
+  });
+  ```
+</ChecklistEventsDemo>
 
 The event types are `shown`, `hidden`, `opened`, `closed`, `item_started`,
-`item_completed`, `item_uncompleted`, `tour_ended` (with the tour's [`reason`](/docs/ending-a-tour#finished-or-closed)),
+`item_completed`, `item_uncompleted`, `tour_ended` (with the tour's [`reason`](/docs/configuration#why-a-tour-ended)),
 `completed` and `reset`.
 
 ## Customizing
@@ -271,14 +294,18 @@ checklist({
 
 ### Your Own Launcher
 
-`launcher: false` hides the floating button. Open the panel from your own:
+`launcher: false` hides the floating button. Open the panel from your own button:
 
-```js
-const onboarding = checklist({ id: "onboarding", launcher: false, items });
+<OwnLauncherDemo client:load>
+  ```js
+  const onboarding = checklist({ id: "onboarding", launcher: false, items });
 
-onboarding.show();
-document.querySelector("#help-button").addEventListener("click", () => onboarding.toggle());
-```
+  onboarding.show();
+  document
+    .querySelector("#help-button")
+    .addEventListener("click", () => onboarding.toggle());
+  ```
+</OwnLauncherDemo>
 
 ## Reference
 

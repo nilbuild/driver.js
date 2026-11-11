@@ -11,16 +11,16 @@ const items = headings.filter(heading => heading.depth >= 2 && heading.depth <= 
 ---
 
 {items.length >= 2 && (
-  <nav id="docs-toc" aria-label="On this page" class="hidden xl:block w-[240px] flex-shrink-0 py-12 pr-6">
-    <div class="sticky top-12">
-      <h2 class="text-sm font-semibold mb-3">On this page</h2>
-      <ul class="text-sm text-gray-400 border-l border-gray-200">
+  <nav id="docs-toc" aria-label="On this page" class="hidden min-[1200px]:block w-[240px] xl:w-[260px] flex-shrink-0 pr-8 xl:pr-16 pt-12 xl:pt-20">
+    <div class="sticky top-20 text-[13px] leading-[1.3] tracking-[-0.01em]">
+      <h2 class="mb-2 font-normal text-neutral-400">On this page</h2>
+      <ul>
         {items.map(heading => (
           <li>
             <a
               href={`#${heading.slug}`}
               data-toc-link={heading.slug}
-              class:list={["block py-1 -ml-px border-l border-transparent hover:text-black data-[active]:border-black data-[active]:text-black", heading.depth === 2 ? "pl-4" : "pl-7"]}>
+              class:list={["block py-1 text-black/50 transition-colors duration-100 hover:text-black data-[active]:text-black", { "pl-3": heading.depth > 2 }]}>
               {heading.text}
             </a>
           </li>
@@ -31,20 +31,31 @@ const items = headings.filter(heading => heading.depth >= 2 && heading.depth <= 
 )}
 
 <script>
-  const links = [...document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")];
-  const headings = links
-    .map(link => document.getElementById(link.dataset.tocLink!))
-    .filter((heading): heading is HTMLElement => heading !== null);
+  let controller: AbortController | undefined;
 
-  function markActive() {
-    const current = headings.filter(heading => heading.getBoundingClientRect().top < 120).at(-1) ?? headings[0];
-    links.forEach(link => {
-      link.toggleAttribute("data-active", link.dataset.tocLink === current?.id);
-    });
-  }
+  function trackActiveHeading() {
+    controller?.abort();
+    controller = undefined;
 
-  if (links.length) {
+    const links = [...document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")];
+    const headings = links
+      .map(link => document.getElementById(link.dataset.tocLink!))
+      .filter((heading): heading is HTMLElement => heading !== null);
+    if (!links.length) {
+      return;
+    }
+
+    function markActive() {
+      const current = headings.filter(heading => heading.getBoundingClientRect().top < 120).at(-1) ?? headings[0];
+      links.forEach(link => {
+        link.toggleAttribute("data-active", link.dataset.tocLink === current?.id);
+      });
+    }
+
+    controller = new AbortController();
     markActive();
-    window.addEventListener("scroll", markActive, { passive: true });
+    window.addEventListener("scroll", markActive, { passive: true, signal: controller.signal });
   }
+
+  document.addEventListener("astro:page-load", trackActiveHeading);
 </script>

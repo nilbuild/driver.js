@@ -1,0 +1,70 @@
+---
+title: "Match Your Brand"
+description: "Give Driver.js popovers a dark theme or your brand colors with a popover class, a few CSS rules and the CSS variables."
+groupTitle: "Recipes"
+sort: 46
+sidebar: false
+---
+
+import { RecipeSample } from "../../components/RecipeSample.tsx";
+
+Use this to make tours look like part of your product. A class on the popover scopes the CSS, and the CSS variables cover the action-step parts. Pick a theme below and run the tour.
+
+<RecipeSample scenario="brand" client:load>
+  ```js
+  const driverObj = driver({
+    popoverClass: "brand-theme",
+    overlayColor: "#1e1b4b",
+    steps: [
+      // ...
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</RecipeSample>
+
+```css
+.driver-popover.brand-theme {
+  background: #4f46e5;
+  color: #e0e7ff;
+  border-radius: 12px;
+  --driver-instruction-background: #4338ca;
+  --driver-instruction-indicator-color: #fde047;
+}
+
+.brand-theme .driver-popover-title {
+  color: #fff;
+}
+
+/* The arrow is a border: color the side it points from */
+.brand-theme .driver-popover-arrow-side-top {
+  border-top-color: #4f46e5;
+}
+
+.brand-theme .driver-popover-arrow-side-bottom {
+  border-bottom-color: #4f46e5;
+}
+
+.brand-theme .driver-popover-arrow-side-left {
+  border-left-color: #4f46e5;
+}
+
+.brand-theme .driver-popover-arrow-side-right {
+  border-right-color: #4f46e5;
+}
+
+.brand-theme .driver-popover-footer-btn {
+  background: #fff;
+  color: #4338ca;
+  border: 0;
+  border-radius: 999px;
+  text-shadow: none;
+}
+```
+
+For a dark theme, use the same rules with dark colors: `#18181b` for the popover and arrow, `#27272a` for the buttons and the instruction row, and white text.
+
+Hints and checklists take the same approach with `--driver-hint-color` and `--driver-checklist-color`.
+
+**Uses**: [`popoverClass`](/docs/theming#popover), [CSS variables](/docs/theming#css-variables), [`overlayColor`](/docs/theming#overlay), [Checklist Themes](/docs/checklist-themes)

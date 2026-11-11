@@ -1,8 +1,9 @@
 ---
 title: "Action-Driven Tours"
 description: "Build Driver.js tours that only move on when the user performs the real action: type a value, pick an option, click, right-click. Block clicks elsewhere, give feedback on wrong actions and recover when the UI changes."
-groupTitle: "Guides"
-sort: 12
+groupTitle: "Tours"
+sort: 14
+badge: "New"
 ---
 
 import { ActionDrivenSample } from "../../components/ActionDrivenSample.tsx";
@@ -36,7 +37,10 @@ The tour below walks through inviting a teammate. Try doing the wrong thing too:
             return false;
           },
         },
-        popover: { title: "Who are you inviting?", instruction: "Type an email and press <b>Enter</b>." },
+        popover: {
+          title: "Who are you inviting?",
+          instruction: "Type an email and press <b>Enter</b>.",
+        },
       },
       {
         element: "#invite-role",
@@ -47,16 +51,22 @@ The tour below walks through inviting a teammate. Try doing the wrong thing too:
               return true;
             }
 
-            driver.nudge("Only editors can make changes. Choose <b>Editor</b>.");
+            driver.nudge("Only editors can edit. Choose <b>Editor</b>.");
             return false;
           },
         },
-        popover: { title: "Pick a role", instruction: "Choose <b>Editor</b>." },
+        popover: {
+          title: "Pick a role",
+          instruction: "Choose <b>Editor</b>.",
+        },
       },
       {
         element: "#invite-send",
         advanceOn: "click",
-        popover: { title: "Send it", instruction: "Click <b>Send invite</b>." },
+        popover: {
+          title: "Send it",
+          instruction: "Click <b>Send invite</b>.",
+        },
       },
       {
         element: "#invite-sent",
@@ -79,7 +89,7 @@ The tour below walks through inviting a teammate. Try doing the wrong thing too:
 | [Accept only the right gesture](#accept-only-the-right-gesture) | `advanceOn: { event, strict: true }` |
 | [Show success before moving on](#show-success-before-moving-on) | `advanceDelay` |
 | [Move on only when it's done right](#only-move-on-when-its-right) | `advanceOn: { event, when }` |
-| [Move on when your app finishes something](#move-on-when-your-app-is-done) | `onHighlighted` + `advance()` |
+| [Move on when your app finishes something](/docs/wait-for-a-save) | `onHighlighted` + `advance()` |
 | [Say what was wrong about a click](#give-a-specific-hint) | `onInteraction` + `nudge()` |
 | [Let the user hover an element but not click it](#let-the-user-hover-not-click) | `disableActiveInteraction: "clicks"` |
 | [Let the user use a menu the step opens](#let-the-user-use-a-menu) | `allowedElements` |
@@ -87,6 +97,14 @@ The tour below walks through inviting a teammate. Try doing the wrong thing too:
 | [Retry after a slow load](#recover-from-a-slow-load) | `onElementMissing` function |
 
 The reference for each option is in [Configuration](/docs/configuration#interaction).
+
+Recipes that teach a whole task this way:
+
+- [Teach a Form](/docs/teach-a-form): steps that move on once a field is valid
+- [Walk Through a Menu](/docs/walk-through-a-menu): open a dropdown and pick an item
+- [Steps Inside a Dialog](/docs/steps-inside-a-dialog): a task that happens in a modal
+- [Wait for a Save](/docs/wait-for-a-save): move on when your app is done
+- [Right-Click and Double-Click Steps](/docs/right-click-and-double-click): teach a gesture
 
 ## Move On When Something Happens
 
@@ -100,7 +118,10 @@ The reference for each option is in [Configuration](/docs/configuration#interact
       {
         element: "#notifications",
         advanceOn: "change",
-        popover: { title: "Turn on notifications", description: "Flip the switch." },
+        popover: {
+          title: "Turn on notifications",
+          description: "Flip the switch.",
+        },
       },
       {
         element: "#notifications",
@@ -125,7 +146,10 @@ A step with only `advanceOn` still has a Next button. Put the instruction in `po
     steps: [
       {
         element: "#toolbar",
-        popover: { title: "The toolbar", description: "Everything you use daily is one click away." },
+        popover: {
+          title: "The toolbar",
+          description: "Everything you use daily is one click away.",
+        },
       },
       {
         element: "#inbox",
@@ -139,7 +163,10 @@ A step with only `advanceOn` still has a Next button. Put the instruction in `po
       {
         element: "#inbox-panel",
         waitForElement: 1000,
-        popover: { title: "Your inbox", description: "The tour moved on as soon as you clicked." },
+        popover: {
+          title: "Your inbox",
+          description: "The tour moved on as soon as you clicked.",
+        },
       },
     ],
   });
@@ -167,7 +194,10 @@ On an action step the highlighted element stays fully usable: on a double-click 
       {
         element: "#file",
         advanceOn: { event: "dblclick", strict: true },
-        popover: { title: "Open the file", instruction: "Double-click <b>report.pdf</b>." },
+        popover: {
+          title: "Open the file",
+          instruction: "Double-click <b>report.pdf</b>.",
+        },
       },
       {
         element: "#opened",
@@ -185,16 +215,33 @@ On an action step the highlighted element stays fully usable: on a double-click 
 
 ### Show Success Before Moving On
 
-With `advanceDelay`, a completed step pauses before moving on. On an action step the instruction row turns green for the pause, its dot becomes a check mark, and Next turns green too.
+With `advanceDelay`, a completed step pauses before moving on. On an action step the instruction row turns green for the pause, its dot becomes a check mark, and Next turns green too. Click Star below.
 
-```js
-{
-  element: "#inbox",
-  advanceOn: "click",
-  advanceDelay: 600,
-  popover: { title: "Open your inbox", instruction: "Click <b>Inbox</b>." },
-}
-```
+<ActionDrivenSample scenario="success" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["next", "close"],
+    steps: [
+      {
+        element: "#star",
+        advanceOn: "click",
+        advanceDelay: 1200,
+        popover: {
+          title: "Star the project",
+          instruction: "Click <b>Star</b>.",
+        },
+      },
+      {
+        element: "#starred",
+        waitForElement: 1000,
+        popover: { title: "Starred", showButtons: ["next"] },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
 
 Repeated clicks during the pause are ignored, and leaving the step cancels it. `moveNext()` doesn't pause. To restyle the done state, see [Theming](/docs/theming#action-steps).
 
@@ -227,13 +274,21 @@ An event says something happened, not that it was right. `when` checks the resul
               return true;
             }
 
-            driver.nudge({ description: "That plan has no reports. Pick <b>Pro</b>." });
+            driver.nudge({
+            description: "That plan has no reports. Pick <b>Pro</b>.",
+          });
             return false;
           },
         },
-        popover: { title: "Pick a plan", description: "Choose <b>Pro</b> to get reports." },
+        popover: {
+          title: "Pick a plan",
+          description: "Choose <b>Pro</b> to get reports.",
+        },
       },
-      { element: "#plan", popover: { title: "Pro it is", showButtons: ["next"] } },
+      {
+        element: "#plan",
+        popover: { title: "Pro it is", showButtons: ["next"] },
+      },
     ],
   });
 
@@ -243,42 +298,9 @@ An event says something happened, not that it was right. `when` checks the resul
 
 `when` gets the highlighted element, the step and `{ event, driver, ... }`, so it can check a field's value, which key was pressed or what the app shows now.
 
-## Move On When Your App Is Done
+<a id="move-on-when-your-app-is-done"></a>
 
-When the click is not the end of it, like a save that has to finish, call `driverObj.advance()` once your app is done. `onHighlighted` gets a `signal` that aborts when the step is left, so the listener removes itself. The save below takes a second.
-
-<ActionDrivenSample scenario="save" client:load>
-  ```js
-  const driverObj = driver({
-    showButtons: ["next", "close"],
-    steps: [
-      {
-        element: "#save",
-        advanceDelay: 600,
-        onHighlighted: (element, step, { signal, driver }) => {
-          window.addEventListener("profile-saved", () => driver.advance(), { signal });
-        },
-        popover: { title: "Save your profile", instruction: "Click <b>Save</b>." },
-      },
-      {
-        element: "#saved",
-        popover: { title: "Saved", showButtons: ["next"] },
-      },
-    ],
-  });
-
-  driverObj.drive();
-  ```
-</ActionDrivenSample>
-
-Your app fires the event when the request comes back:
-
-```js
-async function saveProfile(profile) {
-  await fetch("/api/profile", { method: "POST", body: JSON.stringify(profile) });
-  window.dispatchEvent(new Event("profile-saved"));
-}
-```
+When a click starts something that takes time, like a save, call `driverObj.advance()` once your app is done. See [Wait for a Save](/docs/wait-for-a-save).
 
 ## Give a Specific Hint
 
@@ -298,7 +320,10 @@ async function saveProfile(profile) {
       {
         element: "#file",
         advanceOn: "dblclick",
-        popover: { title: "Open the file", instruction: "Double-click <b>report.pdf</b>." },
+        popover: {
+          title: "Open the file",
+          instruction: "Double-click <b>report.pdf</b>.",
+        },
       },
       {
         element: "#opened",
@@ -333,7 +358,10 @@ Clicks outside the highlighted element never reach your app. [How Clicks Are Han
       {
         element: "#appointment",
         disableActiveInteraction: "clicks",
-        popover: { title: "Appointment details", description: "Rest your mouse on it to see the details." },
+        popover: {
+          title: "Appointment details",
+          description: "Rest your mouse on it to see the details.",
+        },
       },
     ],
   });
@@ -364,14 +392,20 @@ When a step opens something outside the highlighted element, like a menu, list i
         element: "#more",
         advanceOn: "click",
         allowedElements: ".menu",
-        popover: { title: "Open the menu", instruction: "Click <b>More</b>." },
+        popover: {
+          title: "Open the menu",
+          instruction: "Click <b>More</b>.",
+        },
       },
       {
         element: ".menu [data-action=archive]",
         waitForElement: 500,
         advanceOn: "click",
         allowedElements: [".menu", "#more"],
-        popover: { title: "Archive it", instruction: "Choose <b>Archive</b>." },
+        popover: {
+          title: "Archive it",
+          instruction: "Choose <b>Archive</b>.",
+        },
       },
       {
         element: "#archived",
@@ -385,6 +419,8 @@ When a step opens something outside the highlighted element, like a menu, list i
   ```
 </ActionDrivenSample>
 
+Allowed elements are raised above the overlay so they stay clickable. When one holds the highlighted element, like the menu around Archive, the element gets a ring instead of a cutout. Restyle it with the [raised highlight variables](/docs/theming#css-variables).
+
 When the highlighted element leaves the page, `onElementMissing` decides what happens. `"previousAction"` goes back to the last action step whose element is still there, here the one that opens the menu. The other choices are in [Missing Elements](/docs/configuration#missing-elements).
 
 ## Recover From a Slow Load
@@ -397,7 +433,9 @@ When a step's `waitForElement` runs out, the tour shows that step without its el
     showButtons: ["close"],
     onElementMissing: (element, step, { cause, driver }) => {
       if (cause === "timeout") {
-        driver.nudge({ description: "Still loading. Click <b>Load report</b> again." });
+        driver.nudge({
+        description: "Still loading. Click <b>Load report</b> again.",
+      });
         return false;
       }
     },
@@ -405,7 +443,10 @@ When a step's `waitForElement` runs out, the tour shows that step without its el
       {
         element: "#load",
         advanceOn: "click",
-        popover: { title: "Load the report", description: "Click <b>Load report</b>." },
+        popover: {
+          title: "Load the report",
+          description: "Click <b>Load report</b>.",
+        },
       },
       {
         element: "#report",

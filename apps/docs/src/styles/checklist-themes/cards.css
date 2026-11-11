@@ -18,7 +18,10 @@
 
 /* A chevron on items that do something when clicked. */
 .driver-checklist.checklist-cards
-  .driver-checklist-item:has(button.driver-checklist-item-trigger, a.driver-checklist-item-trigger)::after {
+  .driver-checklist-item:has(
+    button.driver-checklist-item-trigger,
+    a.driver-checklist-item-trigger
+  )::after {
   content: "";
   flex-shrink: 0;
   width: 7px;
@@ -33,7 +36,8 @@
   .driver-checklist-item:has(
     button.driver-checklist-item-trigger:hover,
     a.driver-checklist-item-trigger:hover,
-    button.driver-checklist-check + div.driver-checklist-item-trigger:hover,
+    button.driver-checklist-check
+      + div.driver-checklist-item-trigger:hover,
     .driver-checklist-item-trigger:focus-visible
   ) {
   border-color: #d4d4d4;
@@ -45,6 +49,7 @@
   background-color: #f0fdf4;
 }
 
-.driver-checklist.checklist-cards .driver-checklist-item-done .driver-checklist-item-title {
+.driver-checklist.checklist-cards .driver-checklist-item-done
+  .driver-checklist-item-title {
   text-decoration: none;
 }

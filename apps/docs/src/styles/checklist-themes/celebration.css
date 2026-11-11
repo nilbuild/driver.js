@@ -3,16 +3,19 @@
   --driver-checklist-color: #16a34a;
 }
 
-.driver-checklist.checklist-celebration.driver-checklist-complete .driver-checklist-launcher {
+.driver-checklist.checklist-celebration.driver-checklist-complete
+  .driver-checklist-launcher {
   border-color: #16a34a;
   background-color: #16a34a;
 }
 
-.driver-checklist.checklist-celebration.driver-checklist-complete .driver-checklist-header {
+.driver-checklist.checklist-celebration.driver-checklist-complete
+  .driver-checklist-header {
   background-color: #f0fdf4;
 }
 
-.driver-checklist.checklist-celebration.driver-checklist-complete .driver-checklist-title {
+.driver-checklist.checklist-celebration.driver-checklist-complete
+  .driver-checklist-title {
   font-weight: 600;
   color: #15803d;
   animation: checklist-celebration-pop 400ms ease-out;

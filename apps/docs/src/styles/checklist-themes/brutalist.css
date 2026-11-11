@@ -72,7 +72,8 @@
   .driver-checklist-item:has(
     button.driver-checklist-item-trigger:hover,
     a.driver-checklist-item-trigger:hover,
-    button.driver-checklist-check + div.driver-checklist-item-trigger:hover,
+    button.driver-checklist-check
+      + div.driver-checklist-item-trigger:hover,
     .driver-checklist-item-trigger:focus-visible
   ) {
   background-color: #fef9c3;

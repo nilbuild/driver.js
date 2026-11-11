@@ -1,9 +1,8 @@
 ---
 title: "Migrate to 1.x"
 description: "Upgrade from Driver.js 0.x to 1.x with this step-by-step migration guide covering the new API, imports, and architecture changes in the 1.0 rewrite."
-groupTitle: "Releases"
-sort: 31
-hidden: true
+groupTitle: "Reference"
+sort: 53
 ---
 
 Driver.js 1.x has a new API. This page lists what changed since 0.x. The current options are in [Configuration](/docs/configuration), the methods in the [API Reference](/docs/api).
@@ -40,7 +39,7 @@ const config = {
 -  padding: 10,
 +  stagePadding: 10,
 -  showButtons: false,
-+  showButtons: ["next", "previous", "close"], // The buttons to show; [] for none
++  showButtons: ["next", "previous", "close"], // [] for none
 -  keyboardControl: true,
 +  allowKeyboardControl: true,
 
@@ -79,7 +78,7 @@ const config = {
 ```diff
 const step = {
 -  element: '.some-element', // Required
-+  element: '.some-element', // Optional: without it the popover is centered
++  element: '.some-element', // Optional: centered without it
   popover: {
 -    closeBtnText: 'Close', // Removed
 -    className: 'popover-class',
@@ -91,8 +90,9 @@ const step = {
 +    title: '', // Optional
 +    description: '', // Optional
 
--    // left, left-center, left-bottom, top, top-center, top-right, right,
--    // right-center, right-bottom, bottom, bottom-center, bottom-right, mid-center
+-    // left, left-center, left-bottom, top, top-center, top-right,
+-    // right, right-center, right-bottom, bottom, bottom-center,
+-    // bottom-right, mid-center
 -    position: 'left',
 +    side: "left", // "top" | "right" | "bottom" | "left"
 +    align: "start", // "start" | "center" | "end"
@@ -116,7 +116,7 @@ const step = {
 ## Methods
 
 ```diff
-- driverObj.preventMove(); // Removed: set onNextClick and call moveNext() when ready
+- driverObj.preventMove(); // Removed: use onNextClick + moveNext()
 - activeElement.getCalculatedPosition();
 - activeElement.hidePopover();
 - activeElement.showPopover();

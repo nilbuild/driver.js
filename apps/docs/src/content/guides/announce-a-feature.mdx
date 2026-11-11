@@ -1,0 +1,77 @@
+---
+title: "Announce a Feature"
+description: "Point out a new feature once with a Driver.js highlight, or leave a hint beacon on it that stays dismissed after the user has seen it."
+groupTitle: "Recipes"
+sort: 38
+---
+
+import { RecipeSample } from "../../components/RecipeSample.tsx";
+import { RememberedHintsDemo } from "../../components/RecipeDemos.tsx";
+
+Use this to tell existing users about something new without a full tour. Show it once and remember that they've seen it.
+
+## Highlight It Once
+
+Load the page below, close the popover, then load it again.
+
+<RecipeSample scenario="announce" client:load>
+  ```js
+  const SEEN_KEY = "seen-pdf-export";
+
+  if (!localStorage.getItem(SEEN_KEY)) {
+    const driverObj = driver({
+      onDestroyed: () => localStorage.setItem(SEEN_KEY, "1"),
+    });
+
+    driverObj.highlight({
+      element: "#export-pdf",
+      popover: {
+        title: "New: export to PDF",
+        description: "Download any report as a PDF.",
+        showButtons: ["close"],
+      },
+    });
+  }
+  ```
+</RecipeSample>
+
+The page is dimmed until the user closes the popover. The highlighted button still works, so they can try it right away.
+
+## Or Leave a Hint
+
+A hint doesn't interrupt. The beacon pulses on the new feature until the user dismisses it with _Got it_, and `onDismiss` keeps it dismissed. Load the page, dismiss a hint, then load it again.
+
+<RememberedHintsDemo storageKey="docs-announce-hints" client:load>
+  ```js
+  import { hints } from "driver.js/hints";
+  import "driver.js/dist/hints.css";
+
+  const KEY = "dismissed-hints";
+  const dismissed = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+
+  const newFeatures = [
+    {
+      id: "export-pdf",
+      element: "#export-pdf",
+      popover: {
+        title: "New: export to PDF",
+        description: "Download any report as a PDF.",
+      },
+    },
+  ];
+
+  const productHints = hints({
+    hints: newFeatures.filter(h => !dismissed.includes(h.id)),
+    onDismiss: (element, hint) => {
+      dismissed.push(hint.id);
+      localStorage.setItem(KEY, JSON.stringify(dismissed));
+    },
+  });
+
+  productHints.show();
+  ```
+</RememberedHintsDemo>
+
+Add the next feature to `newFeatures` with its own `id`, and only users who haven't seen it get a beacon.
+
+**Uses**: [`highlight()`](/docs/simple-highlight), [`onDestroyed`](/docs/configuration#hooks), [hints](/docs/hints#remembering-dismissals)

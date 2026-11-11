@@ -1,14 +1,14 @@
 ---
 title: "Interactive Tours"
-description: "Build Driver.js tours that react to your app: advance when users click the highlighted element, wait for elements that render on demand, run async logic between steps, and continue across pages."
-groupTitle: "Guides"
-sort: 11
+description: "Build Driver.js tours that react to your app: advance when users click the highlighted element, wait for elements that render on demand, skip optional steps and follow re-rendered elements."
+groupTitle: "Tours"
+sort: 13
 ---
 
 import { CodeSample } from "../../components/CodeSample.tsx";
 import { InteractiveSample } from "../../components/InteractiveSample.tsx";
 
-A tour can follow what happens in your app instead of the Next button. This page covers tours that advance on a click, wait for elements, skip optional steps, survive re-renders, run inside dialogs and continue on another page.
+A tour can follow what happens in your app instead of the Next button. This page covers tours that advance on a click, wait for elements, skip optional steps and survive re-renders.
 
 For tours where every step waits for a specific action and wrong actions get feedback, see [Action-Driven Tours](/docs/action-driven-tours).
 
@@ -17,7 +17,6 @@ For tours where every step waits for a specific action and wrong actions get fee
 `advanceOn: "click"` moves the tour on when the highlighted element is clicked, as if Next was pressed. The element's own click handler still runs. Set it for the whole tour or per step.
 
 <CodeSample
-  heading={'Advance on Click'}
   config={{
     animate: true,
     showProgress: true,
@@ -55,7 +54,6 @@ For tours where every step waits for a specific action and wrong actions get fee
 A click often leads to something that doesn't exist yet, like a modal. Give the next step a `waitForElement` time in milliseconds: the tour stays on the current step, with its popover in a waiting state, until the element appears. Below, Next renders the element about a second later.
 
 <CodeSample
-  heading={'Wait for Element'}
   config={{
     animate: true,
     showProgress: true,
@@ -99,13 +97,28 @@ Some elements only exist for some users. With `skipMissingElement: true`, a step
   ```js
   const driverObj = driver({
     steps: [
-      { element: "#stats", popover: { title: "Your numbers", description: "Updated every hour." } },
+      {
+        element: "#stats",
+        popover: {
+          title: "Your numbers",
+          description: "Updated every hour.",
+        },
+      },
       {
         element: "#trial-banner",
         skipMissingElement: true,
-        popover: { title: "Trial banner", description: "Only trial accounts see this step." },
+        popover: {
+          title: "Trial banner",
+          description: "Only trial accounts see this step.",
+        },
       },
-      { element: "#export", popover: { title: "Export", description: "Download the numbers as CSV." } },
+      {
+        element: "#export",
+        popover: {
+          title: "Export",
+          description: "Download the numbers as CSV.",
+        },
+      },
     ],
   });
 
@@ -125,7 +138,10 @@ Frameworks often replace an element instead of updating it. When the highlighted
     steps: [
       {
         element: "#sync-row",
-        popover: { title: "Sync status", description: "Click <b>Sync now</b> a few times." },
+        popover: {
+          title: "Sync status",
+          description: "Click <b>Sync now</b> a few times.",
+        },
       },
     ],
   });
@@ -136,153 +152,12 @@ Frameworks often replace an element instead of updating it. When the highlighted
 
 When the element is removed and nothing replaces it, [`onElementMissing`](/docs/configuration#missing-elements) decides what happens.
 
-## Steps Inside a Dialog
+## More Recipes
 
-Steps can point at elements inside an open `<dialog>`, including one opened with `showModal()`. The overlay and the popover render inside the dialog, so the rest of the dialog is dimmed like the page and the popover shows above it. `allowedElements` inside the dialog get their own cutout in the overlay. When the dialog closes mid-step, both move back to the page. Use `waitForElement` on the first step inside, since the dialog opens after the click.
+<a id="steps-inside-a-dialog"></a>
+<a id="async-steps"></a>
+<a id="multi-page-tours"></a>
 
-<InteractiveSample scenario="dialog" client:load>
-  ```js
-  const driverObj = driver({
-    showButtons: ["close"],
-    steps: [
-      {
-        element: "#new-project",
-        advanceOn: "click",
-        popover: { title: "Start a project", instruction: "Click <b>New project</b>." },
-      },
-      {
-        element: "dialog #project-name",
-        waitForElement: 1000,
-        popover: { title: "Name it", showButtons: ["next", "close"], side: "top" },
-      },
-      {
-        element: "dialog #create",
-        advanceOn: "click",
-        popover: { title: "Create it", instruction: "Click <b>Create</b>." },
-      },
-      {
-        element: "#created",
-        waitForElement: 1000,
-        popover: { title: "Created", showButtons: ["next"] },
-      },
-    ],
-  });
-
-  driverObj.drive();
-  ```
-</InteractiveSample>
-
-## Async Steps
-
-To do work before a step, like loading data, take over the Next button with `onNextClick` and call `moveNext()` when you are ready.
-
-<CodeSample
-  heading={'Asynchronous Tour'}
-  tour={[
-    { popover: { title: 'Next Step is Async', description: 'Next mounts an element first, then moves on to it.' } },
-    { element: '.dynamic-el', popover: { title: 'Async Element', description: 'This element was added by onNextClick. It is removed again when you leave this step.' } },
-    { popover: { title: 'Last Step', description: 'Previous mounts the element again before going back.' } }
-  ]}
-  id={"async-tour"}
-  client:load>
-  ```js
-  import { driver } from "driver.js";
-  import "driver.js/dist/driver.css";
-
-  const driverObj = driver({
-    steps: [
-      {
-        popover: {
-          title: "Next Step is Async",
-          description: "Next loads the report first.",
-          onNextClick: async () => {
-            await loadReport();
-            driverObj.moveNext();
-          },
-        },
-      },
-      {
-        element: "#report",
-        popover: { title: "Your Report" },
-        onDeselected: () => unloadReport(),
-      },
-      { popover: { title: "Last Step" } },
-    ],
-  });
-
-  driverObj.drive();
-  ```
-</CodeSample>
-
-`onNextClick` and `onPrevClick` replace the button's default action, so the tour only moves when you call `moveNext()` or `movePrevious()`. Set them on the driver to handle every step. To move on when something finishes without the user pressing Next, use [`advance()`](/docs/action-driven-tours#move-on-when-your-app-is-done).
-
-## Multi-Page Tours
-
-A driver lives on one page: a page load destroys it. For a tour that continues on another page, save the step to resume at, let the app navigate, and start the tour from that step on the next page.
-
-On the step whose click navigates, `advanceOn: "click"` completes the step and `onNextClick` saves the progress instead of moving on. The link's own click still navigates.
-
-```js
-import { driver } from "driver.js";
-import "driver.js/dist/driver.css";
-
-const TOUR_KEY = "app-tour-step";
-
-export function createTour() {
-  let isNavigating = false;
-
-  const driverObj = driver({
-    steps: [
-      {
-        element: "#reports-nav",
-        popover: { title: "Reports", description: "Your reports live here." },
-      },
-      {
-        element: "#settings-link",
-        advanceOn: "click",
-        popover: {
-          title: "Open Settings",
-          instruction: "Click <b>Settings</b>.",
-          onNextClick: () => {
-            isNavigating = true;
-            localStorage.setItem(TOUR_KEY, "2");
-            driverObj.destroy();
-          },
-        },
-      },
-      // On the settings page
-      {
-        element: "#profile-form",
-        waitForElement: 5000,
-        popover: { title: "Your Profile", description: "Update your details here." },
-      },
-      {
-        element: "#save-settings",
-        popover: { title: "Save", description: "Don't forget to save your changes." },
-      },
-    ],
-    onDestroyed: () => {
-      if (!isNavigating) {
-        localStorage.removeItem(TOUR_KEY);
-      }
-    },
-  });
-
-  return driverObj;
-}
-```
-
-On every page load, or in your router's mount hook, resume from the saved step:
-
-```js
-const savedStep = localStorage.getItem(TOUR_KEY);
-if (savedStep !== null) {
-  createTour().drive(Number(savedStep));
-}
-```
-
-- This works the same for full page loads and client-side routing. In a single-page app the `destroy()` matters: without it the old page's tour stays on screen.
-- `waitForElement` on the first resumed step covers the time the new page takes to render.
-- `onDestroyed` clears the saved step when the tour is finished or closed, so it doesn't come back on the next visit.
-
-To let users pick a tour up where they closed it, see [Resume a Tour](/docs/ending-a-tour#resume-a-tour).
+- [Steps Inside a Dialog](/docs/steps-inside-a-dialog): point steps at elements in an open `<dialog>`.
+- [Wait for a Save](/docs/wait-for-a-save): wait for your app between steps, or load something before one.
+- [Multi-Page Tours](/docs/multi-page-tours): continue a tour on another page.

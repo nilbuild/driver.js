@@ -1,0 +1,94 @@
+---
+title: "Wait for a Save"
+description: "Keep a Driver.js tour on a step until your app finishes a save or a request, show a done state, then move on. Or load data before the next step."
+groupTitle: "Recipes"
+sort: 34
+---
+
+import { ActionDrivenSample } from "../../components/ActionDrivenSample.tsx";
+import { LoadOnNextDemo } from "../../components/RecipeDemos.tsx";
+
+Use this when the click is not the end of it: a save, an upload or a request has to finish before the next step makes sense. The step waits for your app, shows a done state, then moves on.
+
+<ActionDrivenSample scenario="save" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["next", "close"],
+    steps: [
+      {
+        element: "#save",
+        advanceDelay: 600,
+        onHighlighted: (element, step, { signal, driver }) => {
+          window.addEventListener(
+            "profile-saved",
+            () => driver.advance(),
+            { signal }
+          );
+        },
+        popover: {
+          title: "Save your profile",
+          instruction: "Click <b>Save</b>.",
+        },
+      },
+      {
+        element: "#saved",
+        popover: { title: "Saved", showButtons: ["next"] },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
+
+Your app fires the event when the request comes back:
+
+```js
+async function saveProfile(profile) {
+  await fetch("/api/profile", {
+    method: "POST",
+    body: JSON.stringify(profile),
+  });
+  window.dispatchEvent(new Event("profile-saved"));
+}
+```
+
+- `advance()` completes the step as if the user did it. With `advanceDelay`, the instruction turns green for the pause first.
+- `onHighlighted` gets a `signal` that aborts when the step is left, so the listener removes itself.
+
+## When Next Does the Work
+
+To load something before the next step, take over the Next button with `onNextClick` and call `moveNext()` when you're ready. `updatePopover()` shows that it's loading in the meantime.
+
+<LoadOnNextDemo client:load>
+  ```js
+  const driverObj = driver({
+    steps: [
+      {
+        element: "#reports",
+        popover: {
+          title: "Your weekly report",
+          description: "Next loads the report first.",
+          onNextClick: async () => {
+            driverObj.updatePopover({
+              nextBtnText: "Loading…",
+              disableButtons: ["next"],
+            });
+            await loadReport();
+            driverObj.moveNext();
+          },
+        },
+      },
+      {
+        element: "#report",
+        popover: { title: "Here it is" },
+        onDeselected: () => unloadReport(),
+      },
+    ],
+  });
+  ```
+</LoadOnNextDemo>
+
+`onNextClick` replaces the button's default action, so the tour only moves when you call `moveNext()`. `onPrevClick` works the same way for going back.
+
+**Uses**: [`advance()`](/docs/api#navigation), [`advanceDelay`](/docs/action-driven-tours#show-success-before-moving-on), [`onHighlighted`](/docs/configuration#hooks), [`onNextClick`](/docs/popover#event-handlers), [`updatePopover()`](/docs/api#changing-the-popover)

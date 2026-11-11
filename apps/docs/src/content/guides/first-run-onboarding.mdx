@@ -1,0 +1,45 @@
+---
+title: "First-Run Onboarding"
+description: "Show a Driver.js tour once, on a user's first visit, remember that they've seen it, and give them a button to replay it."
+groupTitle: "Recipes"
+sort: 30
+---
+
+import { RecipeSample } from "../../components/RecipeSample.tsx";
+
+Use this for the welcome tour new users should see once. The tour starts on the first visit, never comes back on its own, and a button replays it on demand.
+
+Load the page below, close or finish the tour, then load it again.
+
+<RecipeSample scenario="onboarding" client:load>
+  ```js
+  import { driver } from "driver.js";
+  import "driver.js/dist/driver.css";
+
+  const SEEN_KEY = "onboarding-seen";
+
+  const tour = driver({
+    showProgress: true,
+    steps: [
+      { element: "#projects", popover: { title: "Projects" } },
+      { element: "#invite", popover: { title: "Invite" } },
+      { element: "#replay-tour", popover: { title: "Replay" } },
+    ],
+    onDestroyed: () => localStorage.setItem(SEEN_KEY, "1"),
+  });
+
+  if (!localStorage.getItem(SEEN_KEY)) {
+    tour.drive();
+  }
+
+  document
+    .querySelector("#replay-tour")
+    .addEventListener("click", () => tour.drive());
+  ```
+</RecipeSample>
+
+- `onDestroyed` runs however the tour ends, so closing it early counts as seen too. To show it again until it's finished, save only when `reason` is `"done"` (see [Track Tour Analytics](/docs/track-tour-analytics)).
+- For signed-in users, save the flag on the user record instead, so it follows them to other devices.
+- Start the tour once the page has rendered. In React or Vue, see [React and Vue](/docs/react-and-vue).
+
+**Uses**: [`drive()`](/docs/api#starting-and-stopping), [`onDestroyed`](/docs/configuration#hooks), [`showProgress`](/docs/tour-basics#tour-progress)

@@ -3,10 +3,10 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
 const fields = [
-  { id: "name", title: "Name", description: "Enter your name here" },
-  { id: "education", title: "Education", description: "Enter your education here" },
-  { id: "age", title: "Age", description: "Enter your age here" },
-  { id: "address", title: "Address", description: "Enter your address here" },
+  { id: "name", title: "Name", description: "Your full name" },
+  { id: "education", title: "Education", description: "Degree" },
+  { id: "age", title: "Age", description: "In years" },
+  { id: "address", title: "Address", description: "Street, city" },
 ];
 
 export function FormHelp() {

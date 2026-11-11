@@ -1,0 +1,59 @@
+---
+title: "Steps Inside a Dialog"
+description: "Run Driver.js tour steps inside a modal dialog: wait for it to open, dim the dialog like the page, and move back to the page when it closes."
+groupTitle: "Recipes"
+sort: 33
+---
+
+import { InteractiveSample } from "../../components/InteractiveSample.tsx";
+
+Use this when the task happens in a modal, like creating a project or confirming a payment. The tour opens the dialog with the user, works inside it, and comes back to the page when it closes.
+
+<InteractiveSample scenario="dialog" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["close"],
+    steps: [
+      {
+        element: "#new-project",
+        advanceOn: "click",
+        popover: {
+          title: "Start a project",
+          instruction: "Click <b>New project</b>.",
+        },
+      },
+      {
+        element: "dialog #project-name",
+        waitForElement: 1000,
+        popover: {
+          title: "Name it",
+          showButtons: ["next", "close"],
+          side: "top",
+        },
+      },
+      {
+        element: "dialog #create",
+        advanceOn: "click",
+        popover: {
+          title: "Create it",
+          instruction: "Click <b>Create</b>.",
+        },
+      },
+      {
+        element: "#created",
+        waitForElement: 1000,
+        popover: { title: "Created", showButtons: ["next"] },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</InteractiveSample>
+
+- The overlay and the popover render inside the dialog, including one opened with `showModal()`, so the rest of the dialog is dimmed like the page and the popover shows above it.
+- `waitForElement` on the first step inside covers the time the dialog takes to open.
+- `allowedElements` inside the dialog get their own cutout in the overlay.
+- When the dialog closes mid-step, the overlay and the popover move back to the page.
+
+**Uses**: [`waitForElement`](/docs/interactive-tours#wait-for-elements), [`advanceOn`](/docs/configuration#advanceon), [`popover.instruction`](/docs/action-driven-tours#make-the-user-act)

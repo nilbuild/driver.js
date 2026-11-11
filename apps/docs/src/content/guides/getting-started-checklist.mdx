@@ -1,0 +1,64 @@
+---
+title: "Getting-Started Checklist"
+description: "Build a Driver.js getting-started checklist whose items each launch a short tour and tick themselves off when the tour is finished."
+groupTitle: "Recipes"
+sort: 44
+sidebar: false
+---
+
+import { RecipeSample } from "../../components/RecipeSample.tsx";
+
+Use this instead of one long onboarding tour. Each item is a short tour of one task, users take them in any order, and finished tours tick their item.
+
+Open the checklist and start an item. Finish its tour to tick it, or close it early and the item stays open.
+
+<RecipeSample scenario="checklist" client:load>
+  ```js
+  import { checklist } from "driver.js/checklist";
+  import "driver.js/dist/driver.css";
+  import "driver.js/dist/checklist.css";
+
+  const KEY = "get-started";
+
+  const onboarding = checklist({
+    id: "get-started",
+    title: "Get started",
+    items: [
+      {
+        id: "project",
+        title: "Create a project",
+        tour: [
+          { element: "#new-project", popover: { title: "New" } },
+        ],
+      },
+      {
+        id: "invite",
+        title: "Invite your team",
+        tour: [
+          { element: "#invite", popover: { title: "Invite" } },
+          { element: "#members", popover: { title: "Members" } },
+        ],
+      },
+      {
+        id: "billing",
+        title: "Add billing details",
+        tour: [
+          { element: "#billing", popover: { title: "Billing" } },
+        ],
+      },
+    ],
+    completed: JSON.parse(localStorage.getItem(KEY) ?? "[]"),
+    onProgress: ({ completed }) => {
+      localStorage.setItem(KEY, JSON.stringify(completed));
+    },
+  });
+
+  onboarding.show();
+  ```
+</RecipeSample>
+
+- `tour` takes steps, a full driver configuration or a `driver()` instance. The checklist closes while the tour runs and opens again when it ends.
+- `completed` and `onProgress` keep the ticks across visits. The demo above leaves them out, so it starts fresh on reload.
+- For tasks done in your app rather than in a tour, use `completeWhen` instead. See [Checklists](/docs/checklists#completing-items-from-your-app).
+
+**Uses**: [Checklists](/docs/checklists), [saving progress](/docs/checklists#saving-progress), [Checklist Themes](/docs/checklist-themes)

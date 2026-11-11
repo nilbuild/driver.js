@@ -1,0 +1,89 @@
+---
+title: "Custom Buttons"
+description: "Add Skip and Restart buttons to Driver.js popovers, rename the built-in buttons, and translate them for other languages."
+groupTitle: "Recipes"
+sort: 45
+sidebar: false
+---
+
+import { RecipeSample } from "../../components/RecipeSample.tsx";
+import { TranslateDemo } from "../../components/RecipeDemos.tsx";
+
+Use this when Next, Previous and Done aren't enough: a way to skip the tour from any step, a restart at the end, or button text in the user's language.
+
+## Skip and Restart
+
+`onPopoverRender` gets the popover's DOM before it shows, so you can add your own buttons. The `driver-popover-footer-btn` class gives them the default button look.
+
+<RecipeSample scenario="buttons" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["next", "previous"],
+    steps: [
+      // ...
+    ],
+    onPopoverRender: (popover, { driver }) => {
+      const button = document.createElement("button");
+      button.className = "driver-popover-footer-btn";
+
+      if (driver.isLastStep()) {
+        button.innerText = "Restart";
+        button.addEventListener("click", () => driver.drive(0));
+      } else {
+        button.innerText = "Skip tour";
+        button.addEventListener("click", () => driver.destroy());
+      }
+
+      popover.footerButtons.prepend(button);
+    },
+  });
+
+  driverObj.drive();
+  ```
+</RecipeSample>
+
+The parts of the popover you can reach are listed in [Theming](/docs/theming#changing-the-popover-dom).
+
+## Rename and Translate
+
+The built-in buttons take their text from options, and HTML is allowed. Pick the strings for the user's language. Switch the language below and run the tour.
+
+<TranslateDemo client:load>
+  ```js
+  const labels = {
+    en: {
+      next: "Next",
+      prev: "Back",
+      done: "Done",
+      of: "of",
+      close: "Close tour",
+    },
+    de: {
+      next: "Weiter",
+      prev: "Zurück",
+      done: "Fertig",
+      of: "von",
+      close: "Tour schließen",
+    },
+  };
+
+  const lang = navigator.language.slice(0, 2);
+  const t = labels[lang] ?? labels.en;
+
+  const driverObj = driver({
+    showProgress: true,
+    nextBtnText: `${t.next} &rarr;`,
+    prevBtnText: `&larr; ${t.prev}`,
+    doneBtnText: t.done,
+    progressText: `{{current}} ${t.of} {{total}}`,
+    closeBtnLabel: t.close,
+    steps: [
+      // ...
+    ],
+  });
+  ```
+</TranslateDemo>
+
+Set them on a step's `popover` to change one step only, like "Let's go" on the first.
+
+**Uses**: [`onPopoverRender`](/docs/configuration#hooks), [button text](/docs/popover#change-button-text), [`progressText`](/docs/tour-basics#tour-progress), [API](/docs/api)

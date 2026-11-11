@@ -10,6 +10,9 @@ const guides = defineCollection({
     description: z.string().optional(),
     // Keep the page routable but omit it from the sidebar listing.
     hidden: z.boolean().optional(),
+    sidebar: z.boolean().optional(),
+    // Small label shown next to the sidebar link, e.g. "New".
+    badge: z.string().optional(),
   }),
 });
 

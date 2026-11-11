@@ -30,16 +30,18 @@ export default defineConfig({
     "/docs/static-tour": "/docs/tour-basics#static-tour",
     "/docs/tour-progress": "/docs/tour-basics#tour-progress",
     "/docs/interactive-tour": "/docs/interactive-tours",
-    "/docs/async-tour": "/docs/interactive-tours#async-steps",
-    "/docs/multi-page-tour": "/docs/interactive-tours#multi-page-tours",
-    "/docs/confirm-on-exit": "/docs/ending-a-tour#confirm-on-exit",
-    "/docs/prevent-destroy": "/docs/ending-a-tour#prevent-exit",
+    "/docs/async-tour": "/docs/wait-for-a-save",
+    "/docs/multi-page-tour": "/docs/multi-page-tours",
+    "/docs/confirm-on-exit": "/docs/confirm-before-closing",
+    "/docs/prevent-destroy": "/docs/confirm-before-closing#prevent-exit",
     "/docs/popover-position": "/docs/popover#position",
     "/docs/buttons": "/docs/popover#buttons",
     "/docs/styling-popover": "/docs/theming#popover",
     "/docs/styling-overlay": "/docs/theming#overlay",
     "/docs/styling-hints": "/docs/hints#styling",
     "/docs/styling": "/docs/theming",
+    // Ending a Tour was split into recipes.
+    "/docs/ending-a-tour": "/docs/recipes",
   },
   markdown: {
     // Use the pure-JS unified/remark processor instead of Astro 7's default
@@ -59,6 +61,27 @@ export default defineConfig({
     compress({
       CSS: false,
       JS: false,
+      HTML: {
+        "html-minifier-terser": {
+          // React island markup must reach the browser exactly as rendered:
+          // moving whitespace, dropping its empty <!-- --> text separators or
+          // minifying a <style> it renders makes hydration fail with error #418.
+          collapseWhitespace: false,
+          minifyCSS: false,
+          minifyJS: false,
+          ignoreCustomComments: [
+            /^\s*$/,
+            /^\s*#/,
+            /.*\$.*/,
+            /^\s*\[/,
+            /^\s*\]/,
+            /^\s*!/,
+            /^\s*\//,
+            /^\s*astro:.*/,
+            /^\s*astro:end/,
+          ],
+        },
+      },
     }),
   ],
 

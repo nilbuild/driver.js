@@ -1,0 +1,43 @@
+---
+title: "Track Tour Analytics"
+description: "Find out whether users finished a Driver.js tour or closed it, and on which step they left, and send it to your analytics."
+groupTitle: "Recipes"
+sort: 43
+sidebar: false
+---
+
+import { AnalyticsDemo } from "../../components/RecipeDemos.tsx";
+
+Use this to see whether people finish your tour, and where they give up when they don't. Run the tour below, then finish it or leave it early, and watch the events come in.
+
+<AnalyticsDemo client:load>
+  ```js
+  const driverObj = driver({
+    showProgress: true,
+    steps: [
+      // ...
+    ],
+    onHighlighted: (element, step, { index }) => {
+      analytics.track("tour_step_viewed", { step: index + 1 });
+    },
+    onDestroyed: (element, step, { reason, index }) => {
+      analytics.track("tour_ended", { reason, step: index + 1 });
+    },
+  });
+
+  driverObj.drive();
+  ```
+</AnalyticsDemo>
+
+`onDestroyed` gets a `reason`:
+
+- `"done"`: the user moved past the last step
+- `"close"`, `"escape"` or `"overlay"`: the user left early
+- `"replaced"`: another tour or highlight started
+- `"api"`: your code called `destroy()`
+
+A `destroy()` you call from a hook keeps the reason of the user action that started it, so a [Confirm on Exit](/docs/confirm-before-closing) hook still reports `"close"`, not `"api"`.
+
+Count `tour_ended` events with `reason: "done"` to get your completion rate, and the `step` of the others to see where people leave.
+
+**Uses**: [`onDestroyed`](/docs/configuration#hooks), [`reason`](/docs/configuration#why-a-tour-ended), [`onHighlighted`](/docs/configuration#hooks)

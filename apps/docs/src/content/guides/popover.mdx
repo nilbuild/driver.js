@@ -1,8 +1,8 @@
 ---
 title: "Popover"
 description: "Position Driver.js popovers with the side and align options, choose which buttons they show, change the button text, and add your own buttons and click handlers."
-groupTitle: "Guides"
-sort: 15
+groupTitle: "Tours"
+sort: 11
 ---
 
 import { CodeSample } from "../../components/CodeSample.tsx";
@@ -213,7 +213,6 @@ When the popover doesn't fit on that side, it moves to one where it does. Scroll
 
 <div className='flex flex-col gap-1'>
   <CodeSample
-    heading={"Buttons"}
     buttonText={"Next and Previous Only"}
     config={{
       showButtons: ['next', 'previous'],
@@ -274,7 +273,6 @@ When the popover doesn't fit on that side, it moves to one where it does. Scroll
 `nextBtnText`, `prevBtnText` and `doneBtnText` set the button text, and HTML is allowed. `closeBtnLabel` sets the screen reader label of the close button.
 
 <CodeSample
-  heading="Button Text"
   config={{
     showProgress: true,
     nextBtnText: 'Next &rarr;',
@@ -351,47 +349,8 @@ When the popover doesn't fit on that side, it moves to one where it does. Scroll
   ```
 </CodeSample>
 
-`onNextClick` also runs when the step is completed another way: the right arrow key, an overlay click with `overlayClickBehavior: "nextStep"`, [`advanceOn`](/docs/interactive-tours#advance-on-click) or `advance()`. For loading something before the next step, see [Async Steps](/docs/interactive-tours#async-steps).
+`onNextClick` also runs when the step is completed another way: the right arrow key, an overlay click with `overlayClickBehavior: "nextStep"`, [`advanceOn`](/docs/interactive-tours#advance-on-click) or `advance()`. For loading something before the next step, see [Wait for a Save](/docs/wait-for-a-save#when-next-does-the-work).
 
-### Custom Buttons
+<a id="custom-buttons"></a>
 
-`onPopoverRender` gets the popover's DOM before it shows, so you can add to it. This adds a button that restarts the tour. The `driver-popover-footer-btn` class gives it the default button look.
-
-<CodeSample
-  buttonText={"Run Example"}
-  config={{
-    showButtons: ['next', 'previous'],
-  }}
-  tour={[
-    { element: '#demo-hook-theme', popover: { title: 'A Fourth Button', description: 'Go on to the next step, then use Go to First.', side: 'left', align: 'start' } },
-    { element: '.line:nth-child(12)', popover: { title: 'The Popover DOM', description: 'footerButtons is the container of the Next and Previous buttons.', side: 'bottom', align: 'start' } },
-    { element: '.line:nth-child(14)', popover: { title: 'Your Own Handler', description: 'Buttons you add get their own click events.', side: 'bottom', align: 'start' } },
-  ]}
-  id={"demo-hook-theme"}
-  client:load
->
-  ```js
-  import { driver } from "driver.js";
-  import "driver.js/dist/driver.css";
-
-  const driverObj = driver({
-    steps: [
-      // ...
-    ],
-    onPopoverRender: popover => {
-      const firstButton = document.createElement("button");
-      firstButton.innerText = "Go to First";
-      firstButton.className = "driver-popover-footer-btn";
-      popover.footerButtons.appendChild(firstButton);
-
-      firstButton.addEventListener("click", () => {
-        driverObj.drive(0);
-      });
-    },
-  });
-
-  driverObj.drive();
-  ```
-</CodeSample>
-
-The parts of the popover you can reach are listed in [Theming](/docs/theming#changing-the-popover-dom).
+To add your own buttons, like Skip or Restart, or translate the built-in ones, see [Custom Buttons](/docs/custom-buttons).

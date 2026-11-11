@@ -1,8 +1,8 @@
 ---
 title: "Checklist Themes"
 description: "Ready-made themes for Driver.js checklists: dark mode, gradient header, GIF banner, numbered steps, progress ring, cards, compact and a completion celebration. Copy the CSS and go."
-groupTitle: "Styling"
-sort: 21
+groupTitle: "Hints & Checklists"
+sort: 22
 ---
 
 import { Code } from "astro:components";
@@ -185,7 +185,9 @@ checklist({
   id: "onboarding",
   className: "checklist-media",
   title: "Welcome to Foxbase",
-  description: '<img src="/welcome.gif" alt="" /><p>Four quick steps to get you going.</p>',
+  description:
+    '<img src="/welcome.gif" alt="" />' +
+    "<p>Four quick steps to get you going.</p>",
   items,
 });
 ```

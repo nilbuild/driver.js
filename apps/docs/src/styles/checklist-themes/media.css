@@ -1,5 +1,5 @@
-/* The image goes in the description, as HTML. These rules lift it above the
-   title as a banner, with the description text below. */
+/* The image goes in the description, as HTML. These rules lift it
+   above the title as a banner, with the description text below. */
 .driver-checklist.checklist-media .driver-checklist-header {
   display: flex;
   flex-direction: column;

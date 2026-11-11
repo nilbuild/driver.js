@@ -15,7 +15,6 @@ Driver.js does three things: tours, single highlights and hints. Each starts wit
 Pass `steps` to `driver()` and call `drive()`. Each step points at an element and describes it in a popover.
 
 <CodeSample
-  heading={'Basic Tour'}
   config={{
     showProgress: true,
   }}
@@ -60,7 +59,7 @@ More in [Tour Basics](/docs/tour-basics). To make steps wait for the user, see [
 
 `highlight()` takes one step and shows it on its own, without navigation buttons.
 
-<CodeSample heading='Highlight an Element' id={"some-element"} highlight={{
+<CodeSample id={"some-element"} highlight={{
   element: '#some-element',
   popover: {
     title: 'Title for the Popover',
@@ -123,11 +122,17 @@ const productHints = hints({
   hints: [
     {
       element: "#export-btn",
-      popover: { title: "Export your data", description: "Download this report as CSV or PDF." },
+      popover: {
+        title: "Export your data",
+        description: "Download this report as CSV or PDF.",
+      },
     },
     {
       element: "#summary",
-      popover: { title: "Auto-generated summary", description: "Written for you from the numbers." },
+      popover: {
+        title: "Auto-generated summary",
+        description: "Written for you from the numbers.",
+      },
     },
   ],
 });
@@ -137,68 +142,8 @@ productHints.show();
 
 More in the [Hints guide](/docs/hints). For onboarding task lists, see [Checklists](/docs/checklists).
 
-## With a Framework
+<a id="with-a-framework"></a>
 
-Driver.js works on plain DOM elements, so it needs no wrapper. Create the driver once the elements are on the page, and destroy it when the component goes away.
+Driver.js needs no wrapper for React, Vue or Next.js. See [React and Vue](/docs/react-and-vue) for the setup and cleanup.
 
-React:
-
-```jsx
-import { useEffect, useRef } from "react";
-import { driver } from "driver.js";
-import "driver.js/dist/driver.css";
-
-export function Dashboard() {
-  const driverRef = useRef(null);
-
-  useEffect(() => {
-    driverRef.current = driver({
-      steps: [
-        { element: "#new-project", popover: { title: "New project", description: "Start here." } },
-        { element: "#invite", popover: { title: "Invite", description: "Bring your team." } },
-      ],
-    });
-
-    return () => driverRef.current.destroy();
-  }, []);
-
-  return (
-    <header>
-      <button id="new-project">New project</button>
-      <button id="invite">Invite</button>
-      <button onClick={() => driverRef.current.drive()}>Take the tour</button>
-    </header>
-  );
-}
-```
-
-Vue:
-
-```vue
-<script setup>
-import { onBeforeUnmount } from "vue";
-import { driver } from "driver.js";
-import "driver.js/dist/driver.css";
-
-const driverObj = driver({
-  steps: [
-    { element: "#new-project", popover: { title: "New project", description: "Start here." } },
-    { element: "#invite", popover: { title: "Invite", description: "Bring your team." } },
-  ],
-});
-
-onBeforeUnmount(() => driverObj.destroy());
-</script>
-
-<template>
-  <header>
-    <button id="new-project">New project</button>
-    <button id="invite">Invite</button>
-    <button @click="driverObj.drive()">Take the tour</button>
-  </header>
-</template>
-```
-
-A step's `element` is looked up when the step starts, so selectors can point at elements that render later. When your framework replaces a highlighted element, the step [follows the new one](/docs/interactive-tours#elements-that-re-render).
-
-Next: every option is in [Configuration](/docs/configuration), every method in the [API Reference](/docs/api).
+Next: every option is in [Configuration](/docs/configuration), every method in the [API Reference](/docs/api). For ready-made solutions to common jobs, like first-run onboarding or a tour that resumes, see [All Recipes](/docs/recipes).

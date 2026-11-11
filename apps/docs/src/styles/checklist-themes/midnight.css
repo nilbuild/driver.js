@@ -45,11 +45,13 @@
   border-color: #4b5563;
 }
 
-.driver-checklist.checklist-midnight .driver-checklist-item-done .driver-checklist-check {
+.driver-checklist.checklist-midnight .driver-checklist-item-done
+  .driver-checklist-check {
   border-color: #a78bfa;
 }
 
-.driver-checklist.checklist-midnight .driver-checklist-item-done .driver-checklist-item-title {
+.driver-checklist.checklist-midnight .driver-checklist-item-done
+  .driver-checklist-item-title {
   color: #6b7280;
 }
 
@@ -57,7 +59,8 @@
   .driver-checklist-item:has(
     button.driver-checklist-item-trigger:hover,
     a.driver-checklist-item-trigger:hover,
-    button.driver-checklist-check + div.driver-checklist-item-trigger:hover,
+    button.driver-checklist-check
+      + div.driver-checklist-item-trigger:hover,
     .driver-checklist-item-trigger:focus-visible
   ) {
   background-color: #1f2937;

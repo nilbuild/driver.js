@@ -26,11 +26,14 @@
   content: counter(checklist-step);
 }
 
-/* Kept but hidden once done, so the circle still has a baseline to align by. */
-.driver-checklist.checklist-numbered .driver-checklist-item-done .driver-checklist-check::after {
+/* Kept but hidden once done, so the circle still has a baseline
+   to align by. */
+.driver-checklist.checklist-numbered .driver-checklist-item-done
+  .driver-checklist-check::after {
   color: transparent;
 }
 
-.driver-checklist.checklist-numbered .driver-checklist-item-done .driver-checklist-check {
+.driver-checklist.checklist-numbered .driver-checklist-item-done
+  .driver-checklist-check {
   border-color: var(--driver-checklist-color, #2d2d2d);
 }

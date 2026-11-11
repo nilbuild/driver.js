@@ -1,0 +1,56 @@
+---
+title: "Walk Through a Menu"
+description: "Guide users through a Driver.js tour that opens a dropdown and picks an item, keeps the menu usable, and recovers when the menu closes."
+groupTitle: "Recipes"
+sort: 32
+---
+
+import { RecipeSample } from "../../components/RecipeSample.tsx";
+
+Use this when the feature you're teaching sits behind a dropdown. The user opens the menu and picks the item themselves, and the tour goes back a step if the menu closes.
+
+<RecipeSample scenario="menu" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["next", "close"],
+    onElementMissing: "previousAction",
+    steps: [
+      {
+        element: "#account",
+        advanceOn: "click",
+        allowedElements: ".account-menu",
+        popover: {
+          title: "Your account",
+          instruction: "Click <b>Account</b>.",
+        },
+      },
+      {
+        element: ".account-menu [data-item=settings]",
+        waitForElement: 500,
+        advanceOn: "click",
+        allowedElements: [".account-menu", "#account"],
+        popover: {
+          title: "Open settings",
+          instruction: "Choose <b>Settings</b>.",
+        },
+      },
+      {
+        element: "#settings-title",
+        waitForElement: 1000,
+        popover: { title: "Settings", showButtons: ["next"] },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</RecipeSample>
+
+- `allowedElements` lets clicks reach the menu, which sits outside the highlighted element. Everything else on the page stays blocked.
+- The open menu sits above the overlay so it stays usable, and the item to pick gets a ring instead of a cutout. Restyle it with the [raised highlight variables](/docs/theming#css-variables).
+- `waitForElement` covers the time the menu takes to open.
+- When the highlighted item leaves the page, because the user picked another item or pressed Escape, `"previousAction"` goes back to the step that opens the menu.
+
+To block one item with a message, like Delete, see [Let the User Use a Menu](/docs/action-driven-tours#let-the-user-use-a-menu).
+
+**Uses**: [`allowedElements`](/docs/configuration#allowedelements), [`onElementMissing`](/docs/configuration#missing-elements), [`advanceOn`](/docs/configuration#advanceon), [`waitForElement`](/docs/interactive-tours#wait-for-elements)

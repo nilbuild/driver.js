@@ -1,0 +1,58 @@
+---
+title: "Start From a Help Menu"
+description: "Add a Take the tour item to your help menu that starts a Driver.js tour at the step for the screen the user is on."
+groupTitle: "Recipes"
+sort: 41
+sidebar: false
+---
+
+import { RecipeSample } from "../../components/RecipeSample.tsx";
+
+Use this for a tour people come back to. "Take the tour" in your help menu starts at the part that explains the screen they're on, not at step one.
+
+Pick a screen below, then take the tour.
+
+<RecipeSample scenario="help-menu" client:load>
+  ```js
+  const steps = [
+    {
+      element: "#tab-inbox",
+      data: { screen: "inbox" },
+      popover: { title: "Inbox" },
+    },
+    {
+      element: "#tab-reports",
+      data: { screen: "reports" },
+      popover: { title: "Reports" },
+    },
+    {
+      element: "#tab-settings",
+      data: { screen: "settings" },
+      popover: { title: "Settings" },
+    },
+  ];
+
+  const driverObj = driver({
+    showProgress: true,
+    steps,
+    onHighlighted: (element, step) => {
+      showScreen(step.data.screen);
+    },
+  });
+
+  document
+    .querySelector("#help-take-tour")
+    .addEventListener("click", () => {
+      const index = steps.findIndex(
+        step => step.data.screen === currentScreen()
+      );
+      driverObj.drive(Math.max(index, 0));
+    });
+  ```
+</RecipeSample>
+
+- A step's `data` holds anything you want to keep with it, here the screen it belongs to.
+- `drive(index)` starts at that step. Previous still goes back to the earlier ones.
+- If the tour is already running, `driverObj.moveTo(index)` jumps to a step without starting over.
+
+**Uses**: [`drive(index)` and `moveTo()`](/docs/api#navigation), [step `data`](/docs/configuration#step-configuration), [`onHighlighted`](/docs/configuration#hooks)

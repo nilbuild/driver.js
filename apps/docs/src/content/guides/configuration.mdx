@@ -1,8 +1,8 @@
 ---
 title: "Configuration"
 description: "Explore every Driver.js configuration option. Configure the driver globally, per step, or on the fly, with full TypeScript autocomplete and type safety."
-groupTitle: "Introduction"
-sort: 3
+groupTitle: "Reference"
+sort: 50
 ---
 
 Pass options to `driver()`. Options marked _step_ can also be set on a single step, where they override the driver's value.
@@ -15,8 +15,15 @@ const driverObj = driver({
   showProgress: true,
   overlayOpacity: 0.5,
   steps: [
-    { element: "#search", popover: { title: "Search", description: "Find anything." } },
-    { element: "#export", disableActiveInteraction: true, popover: { title: "Export", side: "left" } },
+    {
+      element: "#search",
+      popover: { title: "Search", description: "Find anything." },
+    },
+    {
+      element: "#export",
+      disableActiveInteraction: true,
+      popover: { title: "Export", side: "left" },
+    },
   ],
 });
 
@@ -38,13 +45,15 @@ type Config = {
 
   // Animate between steps. (default: true)
   animate?: boolean;
-  // Length of that animation and of the fade-in, in milliseconds. (default: 400)
+  // Length of that animation and of the fade-in, in milliseconds.
+  // (default: 400)
   duration?: number;
   // Any CSS color. (default: "#000")
   overlayColor?: string;
   // (default: 0.7)
   overlayOpacity?: number;
-  // Space between the element and the edge of the cutout, in pixels. (default: 10)
+  // Space between the element and the edge of the cutout, in pixels.
+  // (default: 10)
   stagePadding?: number;
   // Corner radius of the cutout, in pixels. (default: 5)
   stageRadius?: number;
@@ -66,8 +75,8 @@ type Config = {
 
   // --- Interaction (all step) ---
 
-  // Block the highlighted element: true turns off all pointer events on it,
-  // "clicks" keeps hover and blocks clicks. (default: false)
+  // Block the highlighted element: true turns off all pointer events
+  // on it, "clicks" keeps hover and blocks clicks. (default: false)
   disableActiveInteraction?: boolean | "clicks";
   // Complete the step when this event happens on the highlighted element.
   // (default: off)
@@ -76,7 +85,7 @@ type Config = {
   // before moving on. (default: 0)
   advanceDelay?: number;
   // Other elements the user may use during a step, like a menu it opens.
-  allowedElements?: string | Element | Array<string | Element> | (() => Element[] | NodeListOf<Element>);
+  allowedElements?: AllowedElements;
   // Called for every click during a step. Return false to block it.
   onInteraction?: InteractionHook;
   // Deprecated: use advanceOn: "click".
@@ -84,13 +93,14 @@ type Config = {
 
   // --- Missing elements (all step) ---
 
-  // Milliseconds to wait for a step's element to appear. (default: 0, no wait)
+  // Milliseconds to wait for a step's element to appear.
+  // (default: 0, no wait)
   waitForElement?: number;
   // Skip a step whose element is not on the page. (default: false)
   skipMissingElement?: boolean;
   // What to do when the highlighted element leaves the page for good, or a
   // wait runs out. (default: "stay")
-  onElementMissing?: "stay" | "previous" | "previousAction" | ElementMissingHook;
+  onElementMissing?: ElementMissing;
 
   // --- Popover defaults (see Popover Configuration) ---
 
@@ -131,7 +141,8 @@ A step is what you put in `steps` or pass to `highlight()`.
 ```typescript
 type DriveStep = {
   // What to highlight: a CSS selector (first match), an element, or a
-  // function returning one. Without it the popover is centered on the screen.
+  // function returning one. Without it the popover is centered on the
+  // screen.
   element?: string | Element | (() => Element);
 
   // The popover of this step. See Popover Configuration.
@@ -144,11 +155,11 @@ type DriveStep = {
   disableActiveInteraction?: boolean | "clicks";
   advanceOn?: false | string | string[] | AdvanceOnEvent;
   advanceDelay?: number;
-  allowedElements?: string | Element | Array<string | Element> | (() => Element[] | NodeListOf<Element>);
+  allowedElements?: AllowedElements;
   onInteraction?: InteractionHook;
   waitForElement?: number;
   skipMissingElement?: boolean;
-  onElementMissing?: "stay" | "previous" | "previousAction" | ElementMissingHook;
+  onElementMissing?: ElementMissing;
   advanceOnClick?: boolean;
 
   // Per-step hooks. They run instead of the driver's.
@@ -190,7 +201,8 @@ type Popover = {
 
   // Show the step count. (default: false)
   showProgress?: boolean;
-  // {{current}} and {{total}} are replaced. (default: "{{current}} of {{total}}")
+  // {{current}} and {{total}} are replaced.
+  // (default: "{{current}} of {{total}}")
   progressText?: string;
 
   // Extra class on the popover, for styling.
@@ -219,7 +231,10 @@ An action step is a step with `popover.instruction`. The instruction shows in it
 {
   element: "#inbox",
   advanceOn: "click",
-  popover: { title: "Open your inbox", instruction: "Click <b>Inbox</b>." },
+  popover: {
+    title: "Open your inbox",
+    instruction: "Click <b>Inbox</b>.",
+  },
 }
 ```
 
@@ -246,7 +261,11 @@ By default the user can use the highlighted element, and nothing else on the pag
 ```typescript
 type AdvanceOnEvent = {
   event: string | string[];
-  when?: (element: Element, step: DriveStep, opts: HookOpts & { event: Event }) => boolean;
+  when?: (
+    element: Element,
+    step: DriveStep,
+    opts: HookOpts & { event: Event }
+  ) => boolean;
   strict?: boolean;
 };
 ```
@@ -264,7 +283,10 @@ Completing a step runs `onNextClick` like the Next button does, or `onDoneClick`
 type InteractionHook = (
   element: Element | undefined,
   step: DriveStep,
-  opts: HookOpts & { event: MouseEvent; region: "element" | "allowed" | "outside" }
+  opts: HookOpts & {
+    event: MouseEvent;
+    region: "element" | "allowed" | "outside";
+  }
 ) => false | void;
 ```
 
@@ -272,7 +294,15 @@ Called for every `click`, `auxclick`, `contextmenu` and `dblclick` during a step
 
 ### allowedElements
 
-Selectors, elements, or a function returning elements. They stay clickable, sit above the overlay and take part in Tab navigation. Selectors and functions are evaluated again as the page changes, so elements that appear later are included. If one still sits under the overlay, set `--driver-allowed-z-index` or target its positioned wrapper.
+```typescript
+type AllowedElements =
+  | string
+  | Element
+  | Array<string | Element>
+  | (() => Element[] | NodeListOf<Element> | null | undefined);
+```
+
+Selectors, elements, or a function returning elements. They stay clickable, sit above the overlay and take part in Tab navigation. Selectors and functions are evaluated again as the page changes, so elements that appear later are included. If one still sits under the overlay, set `--driver-allowed-z-index` or target its positioned wrapper. When the highlighted element is inside an allowed element, like an item in an open menu, it gets the `driver-active-element-raised` class and a ring instead of the cutout; see [Theming](/docs/theming#css-variables).
 
 ### overlayClickBehavior
 
@@ -308,6 +338,12 @@ Only what the user does is stopped. Events your code dispatches, like `element.c
 With `waitForElement` set, a removed element first gets that long to come back. `"previous"` and `"previousAction"` also keep the current step when the next step's `waitForElement` runs out, instead of showing that step without its element.
 
 ```typescript
+type ElementMissing =
+  | "stay"
+  | "previous"
+  | "previousAction"
+  | ElementMissingHook;
+
 type ElementMissingHook = (
   element: Element | undefined,
   step: DriveStep,
@@ -322,7 +358,11 @@ Examples: [Wait for Elements](/docs/interactive-tours#wait-for-elements), [Optio
 ## Hooks
 
 ```typescript
-type DriverHook = (element: Element | undefined, step: DriveStep, opts: HookOpts) => void;
+type DriverHook = (
+  element: Element | undefined,
+  step: DriveStep,
+  opts: HookOpts
+) => void;
 
 type HookOpts = {
   config: Config;
@@ -332,7 +372,8 @@ type HookOpts = {
   index: number | undefined;
   // Why the tour is ending. Only in the destroy hooks.
   reason?: "done" | "close" | "escape" | "overlay" | "replaced" | "api";
-  // Aborts when the step is left. Only in onHighlightStarted and onHighlighted.
+  // Aborts when the step is left. Only in onHighlightStarted and
+  // onHighlighted.
   signal?: AbortSignal;
 };
 ```
@@ -368,7 +409,7 @@ type HookOpts = {
 | `"replaced"` | Another driver instance started |
 | `"api"` | Your code called `destroy()`, or `moveTo()` / `movePrevious()` outside the steps |
 
-A `destroy()` you call from a hook keeps the reason of the user action that started it. See [Ending a Tour](/docs/ending-a-tour) for examples.
+A `destroy()` you call from a hook keeps the reason of the user action that started it. See [Confirm Before Closing](/docs/confirm-before-closing) and [Track Tour Analytics](/docs/track-tour-analytics) for examples.
 
 ## State
 
@@ -413,7 +454,8 @@ type HintsConfig = {
   popoverClass?: string;
   popoverOffset?: number;
 
-  // Dim the page while a hint is open, with its element cut out. (default: false)
+  // Dim the page while a hint is open, with its element cut out.
+  // (default: false)
   overlay?: boolean;
   // (defaults: "#000" and 0.7)
   overlayColor?: string;
@@ -426,14 +468,19 @@ type HintsConfig = {
   onButtonClick?: HintHook;
 };
 
-type HintHook = (element: Element, hint: DriverHint, opts: { config: HintsConfig; hints: Hints }) => void;
+type HintHook = (
+  element: Element,
+  hint: DriverHint,
+  opts: { config: HintsConfig; hints: Hints }
+) => void;
 ```
 
 <a id="hint-configuration"></a>
 
 ```typescript
 type DriverHint = {
-  // A hint whose element is missing is skipped, and picked up on a later show().
+  // A hint whose element is missing is skipped, and picked up on a
+  // later show().
   element: string | Element | (() => Element);
 
   // Used by open(), dismiss() and restore(), and to save dismissals.
@@ -454,7 +501,10 @@ type DriverHint = {
     buttonText?: string;
     onButtonClick?: HintHook;
 
-    onPopoverRender?: (popover: PopoverDOM, opts: { hint: DriverHint; hints: Hints }) => void;
+    onPopoverRender?: (
+      popover: PopoverDOM,
+      opts: { hint: DriverHint; hints: Hints }
+    ) => void;
   };
 
   // Run instead of the hooks in HintsConfig.
@@ -501,10 +551,12 @@ type ChecklistConfig = {
   // {{done}}, {{total}}, {{remaining}} and {{percent}} are replaced.
   // (default: "{{done}} of {{total}}")
   progressText?: string;
-  // The count on the launcher. "" hides it. (default: "{{done}}/{{total}}")
+  // The count on the launcher. "" hides it.
+  // (default: "{{done}}/{{total}}")
   launcherProgressText?: string;
 
-  // false hides the launcher. Open the panel yourself with open() or toggle().
+  // false hides the launcher. Open the panel yourself with open() or
+  // toggle().
   // (default: true)
   launcher?: boolean;
   // (default: "bottom-right")
@@ -513,16 +565,24 @@ type ChecklistConfig = {
   offset?: { x?: number; y?: number };
   className?: string;
 
-  // Let users tick and untick items with the check circle. (default: false)
+  // Let users tick and untick items with the check circle.
+  // (default: false)
   allowManualComplete?: boolean;
 
   // Ids of the items that are already done.
   completed?: string[];
   // Called on every change.
-  onProgress?: (progress: { completed: string[]; done: number; total: number }) => void;
+  onProgress?: (progress: {
+    completed: string[];
+    done: number;
+    total: number;
+  }) => void;
 
   // Called when an item is ticked, and once when all are.
-  onItemComplete?: (item: ChecklistItem, opts: { checklist: Checklist }) => void;
+  onItemComplete?: (
+    item: ChecklistItem,
+    opts: { checklist: Checklist }
+  ) => void;
   onComplete?: (opts: { checklist: Checklist }) => void;
 
   // Called with every event. See the Checklists guide for the types.
