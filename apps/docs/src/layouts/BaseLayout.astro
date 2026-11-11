@@ -135,6 +135,22 @@ const canonical = new URL(permalink, Astro.site ?? "https://driverjs.com").href;
         border-bottom-color: #fde047;
       }
 
+      /* Action step theme used by the sample on the theming page. */
+      .docs-action-theme {
+        --driver-instruction-background: #eef2ff;
+        --driver-instruction-color: #3730a3;
+        --driver-instruction-radius: 999px;
+        --driver-instruction-padding: 8px 14px;
+        --driver-instruction-indicator-color: #6366f1;
+        --driver-instruction-indicator-size: 10px;
+        --driver-instruction-done-background: #dcfce7;
+        --driver-instruction-done-color: #166534;
+      }
+
+      .docs-action-theme.driver-popover-instruction-done .driver-popover-instruction {
+        font-weight: 600;
+      }
+
       .docs-checklist-green {
         --driver-checklist-color: #16a34a;
       }

@@ -12,11 +12,11 @@ import compress from "astro-compress";
 // reflected instantly with HMR — no build step in between. The CSS subpath is
 // aliased separately, and listed first so it matches before the bare specifier.
 const driverSource = fileURLToPath(new URL("../../packages/driver/src/driver.ts", import.meta.url));
-const driverCss = fileURLToPath(new URL("../../packages/driver/src/driver.css", import.meta.url));
+const driverCss = fileURLToPath(new URL("../../packages/driver/src/styles/driver.css", import.meta.url));
 const hintsSource = fileURLToPath(new URL("../../packages/driver/src/hints.ts", import.meta.url));
-const hintsCss = fileURLToPath(new URL("../../packages/driver/src/hints.css", import.meta.url));
+const hintsCss = fileURLToPath(new URL("../../packages/driver/src/styles/hints.css", import.meta.url));
 const checklistSource = fileURLToPath(new URL("../../packages/driver/src/checklist.ts", import.meta.url));
-const checklistCss = fileURLToPath(new URL("../../packages/driver/src/checklist.css", import.meta.url));
+const checklistCss = fileURLToPath(new URL("../../packages/driver/src/styles/checklist.css", import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
@@ -36,9 +36,10 @@ export default defineConfig({
     "/docs/prevent-destroy": "/docs/ending-a-tour#prevent-exit",
     "/docs/popover-position": "/docs/popover#position",
     "/docs/buttons": "/docs/popover#buttons",
-    "/docs/styling-popover": "/docs/styling#popover",
-    "/docs/styling-overlay": "/docs/styling#overlay",
+    "/docs/styling-popover": "/docs/theming#popover",
+    "/docs/styling-overlay": "/docs/theming#overlay",
     "/docs/styling-hints": "/docs/hints#styling",
+    "/docs/styling": "/docs/theming",
   },
   markdown: {
     // Use the pure-JS unified/remark processor instead of Astro 7's default

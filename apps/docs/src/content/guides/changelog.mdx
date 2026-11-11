@@ -1,26 +1,48 @@
 ---
 title: "Changelog"
 description: "Track what's new in Driver.js. See the latest features, changes, and fixes shipping in each release, plus what's currently in the works."
-groupTitle: "Introduction"
-sort: 7
+groupTitle: "Releases"
+sort: 30
 ---
 
-The _Unreleased_ section lists changes merged for the next release. Once it
-ships, these entries move under a versioned heading.
+_Unreleased_ lists what is merged for the next release.
 
 ## Unreleased
 
 ### Added
 
-- `popover.action` makes a step an action step: the instruction gets its own row, a "Waiting for you" status (`actionStatusText`) takes the place of the Next button, and the step can't be skipped with Next, the right arrow key or `overlayClickBehavior: "nextStep"`. It moves on through `advanceOn` or `moveNext()`, and `updatePopover()` / `nudge()` can change the instruction.
+- `popover.instruction` makes a step an [action step](/docs/action-driven-tours#make-the-user-act): the user has to do what it says. Next looks disabled until they do.
+- `advanceOn: { event, strict: true }` lets only that gesture through on the highlighted element.
+- `advanceDelay` pauses on a completed step before moving on. Action steps show a done state meanwhile.
+- `driverObj.advance()` completes the current step from your code, like `advanceOn` does.
+- `driverObj.nudge("message")` shows a line of feedback in the popover and shakes it.
+- `onElementMissing` takes `"stay"`, `"previous"` or `"previousAction"` as well as a function.
+- `disableActiveInteraction: "clicks"` blocks clicks on the highlighted element but keeps hover working.
+- `onHighlightStarted` gets the same `signal` as `onHighlighted`.
+- A console warning when `disableActiveInteraction` makes a step's `advanceOn` impossible.
+- CSS variables for the instruction row and the feedback line. See [Theming](/docs/theming#css-variables).
 
 ### Changed
 
-- `overlayClickBehavior: "nextStep"` no longer moves on while the popover waits for an element with `waitForElement`, matching the Next button and the right arrow key.
+- Clicks on the padding around the highlighted element, or on an element with `disableActiveInteraction`, no longer reach your app's `document` and `body` listeners. Use [`onInteraction`](/docs/configuration#oninteraction) to see them.
+- `disableActiveInteraction: true` also blocks Enter and Space on the highlighted element.
+- A highlighted element that your framework re-renders is followed automatically.
+- `overlayClickBehavior: "nextStep"` does nothing while the popover waits for an element.
+- `onDestroyStarted` gets the step being entered when the tour is closed during its first animation, not `undefined`.
+- The `State` type no longer lists the internal `__` keys added in 1.11.0.
 
 ### Fixed
 
-- The highlight now follows the highlighted element when its size changes, like a button whose label changes to "Saving...".
+- Steps inside a modal `<dialog>` now dim the dialog and cut out the highlighted element.
+- `moveNext()`, `drive()` and `destroy()` now work when called from `onHighlightStarted`, `onHighlighted` or `onDeselected`.
+- `moveTo()` starts the tour if it isn't running.
+- `setSteps()` on a running tour ends it cleanly. Call `drive()` to start the new steps.
+- A step's `showProgress: false` now wins over `showProgress: true` on the driver.
+- A fast double-click no longer skips a step that advances on click. `advanceOnClick` ignores clicks while a step animates in, as before 1.11.0.
+- The key that completes a step, like Enter, no longer presses a button in the next popover.
+- The highlight and popover stay on their element when it changes size, when a framework rewrites its `className`, and when the page resizes mid-step.
+- A highlighted element that is removed from the page no longer keeps driver.js classes and aria attributes.
+- `drive()` without steps no longer locks the page when `onDestroyStarted` is set.
 
 ## 1.11.0
 
@@ -42,6 +64,7 @@ ships, these entries move under a versioned heading.
 - `showButtons: []` in the driver config now hides all buttons instead of showing all of them.
 - Highlighting no longer overwrites an element's own `aria-haspopup`, `aria-expanded` or `aria-controls`.
 - `advanceOnClick` is deprecated in favor of `advanceOn: "click"`. It keeps working.
+- The tour ignores Escape and arrow keys whose `keydown` your app prevented or stopped.
 
 ### Fixed
 
@@ -282,6 +305,4 @@ For the release notes of other versions, see the
 
 ## Migrating from 0.x to 1.x
 
-Driver.js 1.x is a major release with a new API and architecture. See the
-[Migrate to 1.x](/docs/migrating-from-0x) guide for a step-by-step walkthrough
-of the import, configuration, and API changes.
+See [Migrate to 1.x](/docs/migrating-from-0x) for the import, configuration and API changes.

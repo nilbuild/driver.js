@@ -1,136 +1,244 @@
 ---
 title: "Theming"
 description: "Theme Driver.js to match your brand. Apply custom classes and CSS to the popover, buttons, overlay, hints and checklists, or restyle the driver from the ground up."
-groupTitle: "Introduction"
-sort: 5
+groupTitle: "Styling"
+sort: 20
 ---
 
-You can customize the look and feel of the driver by adding custom class to popover or applying CSS to different classes used by driver.js.
+import { CodeSample } from "../../components/CodeSample.tsx";
+import { ActionDrivenSample } from "../../components/ActionDrivenSample.tsx";
+import { ChecklistSample } from "../../components/ChecklistSample.tsx";
 
-## Styling Popover
+Driver.js is styled with plain CSS. Override its classes, set its CSS variables, or change the popover's DOM in a hook.
 
-You can set the `popoverClass` option globally in the driver configuration or at the step level to apply custom class to the popover and then use CSS to apply styles.
+## Popover
 
-```js
-const driverObj = driver({
-  popoverClass: "my-custom-popover-class",
-});
+Give the popover your own class with `popoverClass`, then style it. Set it on the driver for every popover, or on a step's `popover` for one.
 
-// or you can also have different classes for different steps
-const driverObj2 = driver({
-  steps: [
-    {
-      element: "#some-element",
-      popover: {
-        title: "Title",
-        description: "Description",
-        popoverClass: "my-custom-popover-class",
-      },
-    },
-  ],
-});
-```
+<CodeSample
+  buttonText={"Driver.js Website Theme"}
+  config={{
+    prevBtnText: '&larr; Previous',
+    nextBtnText: 'Next &rarr;',
+    doneBtnText: 'Done',
+    showButtons: ['next', 'previous'],
+    popoverClass: 'driverjs-theme'
+  }}
+  tour={[
+    { element: '#demo-theme', popover: { title: 'Style However You Want', description: 'This popover carries the driverjs-theme class.', side: 'left', align: 'start' } },
+    { element: '.line:nth-child(5)', popover: { title: 'One Option', description: 'popoverClass adds the class. The CSS below does the rest.', side: 'bottom', align: 'start' } },
+  ]}
+  id={"demo-theme"}
+  client:load
+>
+  ```js
+  import { driver } from "driver.js";
+  import "driver.js/dist/driver.css";
 
-Here is the list of classes applied to the popover which you can use in conjunction with `popoverClass` option to apply custom styles on the popover.
+  const driverObj = driver({
+    popoverClass: "driverjs-theme",
+    steps: [
+      // ...
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</CodeSample>
 
 ```css
-/* Class assigned to popover wrapper */
-.driver-popover {
+.driver-popover.driverjs-theme {
+  background-color: #fde047;
+  color: #000;
 }
 
-/* Arrow pointing towards the highlighted element */
-.driver-popover-arrow {
+.driver-popover.driverjs-theme .driver-popover-title {
+  font-size: 20px;
 }
 
-/* Rendered side and alignment of the popover. These reflect the actual
-   position after Driver.js flips the popover to fit it in the viewport,
-   so they may differ from the side/align you configured. */
-.driver-popover-side-top {
-}
-.driver-popover-side-right {
-}
-.driver-popover-side-bottom {
-}
-.driver-popover-side-left {
-}
-.driver-popover-align-start {
-}
-.driver-popover-align-center {
-}
-.driver-popover-align-end {
+.driver-popover.driverjs-theme .driver-popover-title,
+.driver-popover.driverjs-theme .driver-popover-description,
+.driver-popover.driverjs-theme .driver-popover-progress-text {
+  color: #000;
 }
 
-/* Title and description */
-.driver-popover-title {
-}
-.driver-popover-description {
-}
-
-/* Close button displayed on the top right corner */
-.driver-popover-close-btn {
-}
-
-/* Footer of the popover displaying progress and navigation buttons */
-.driver-popover-footer {
-}
-.driver-popover-progress-text {
-}
-.driver-popover-prev-btn {
-}
-.driver-popover-next-btn {
+.driver-popover.driverjs-theme button:not(.driver-popover-close-btn) {
+  flex: 1;
+  text-align: center;
+  background-color: #000;
+  color: #fff;
+  border: 2px solid #000;
+  text-shadow: none;
+  font-size: 14px;
+  padding: 5px 8px;
+  border-radius: 6px;
 }
 
-/* Shared style for the footer buttons. The built-in prev/next buttons carry it,
-   and you can add it to custom buttons created in onPopoverRender to give them
-   the default button look (or leave it off to apply your own styles). */
-.driver-popover-footer-btn {
+.driver-popover.driverjs-theme .driver-popover-navigation-btns {
+  justify-content: space-between;
+  gap: 3px;
 }
 
-/* Added to the next button on the last step, when it acts as the "Done" button */
-.driver-popover-next-btn.driver-popover-done-btn {
+.driver-popover.driverjs-theme .driver-popover-close-btn {
+  color: #9b9b9b;
 }
 
-/* Action steps (popover.action): the popover, the instruction row and the
-   status shown in place of the next button */
-.driver-popover.driver-popover-action {
+.driver-popover.driverjs-theme .driver-popover-close-btn:hover {
+  color: #000;
 }
-.driver-popover-action-text {
+
+/* The arrow is a border, one rule per side */
+.driver-popover.driverjs-theme .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: #fde047;
 }
-.driver-popover-action-status {
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: #fde047;
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: #fde047;
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: #fde047;
 }
 ```
 
-The action row and status also read CSS variables:
+### Popover Classes
+
+```css
+.driver-popover {}                 /* The popover */
+.driver-popover-arrow {}           /* The arrow pointing at the element */
+.driver-popover-title {}
+.driver-popover-description {}
+.driver-popover-close-btn {}       /* The close button in the top right corner */
+
+.driver-popover-footer {}          /* Holds the progress text and the buttons */
+.driver-popover-progress-text {}
+.driver-popover-navigation-btns {} /* Holds the buttons */
+.driver-popover-footer-btn {}      /* Shared look of the buttons. Add it to your own buttons */
+.driver-popover-prev-btn {}
+.driver-popover-next-btn {}
+.driver-popover-done-btn {}        /* Also on the next button on the last step */
+.driver-popover-btn-disabled {}    /* On a disabled button */
+
+/* Where the popover ended up, after flipping to fit the screen */
+.driver-popover-side-top {}        /* or -right, -bottom, -left */
+.driver-popover-align-start {}     /* or -center, -end */
+
+/* Action steps */
+.driver-popover-has-instruction {} /* On the popover of an action step */
+.driver-popover-instruction {}     /* The instruction row */
+.driver-popover-instruction-text {}       /* Its text */
+.driver-popover-instruction-indicator {}  /* The dot at its end; a check mark once done */
+.driver-popover-instruction-done {}       /* On the popover while it pauses for advanceDelay */
+.driver-popover-btn-disabled[aria-disabled] {}  /* Next while the step waits for the user */
+.driver-popover-feedback {}        /* The line shown by nudge("...") */
+
+/* States */
+.driver-popover-waiting {}         /* On the popover while it waits for an element */
+.driver-popover-nudge {}           /* On the popover while nudge() shakes it */
+```
+
+### CSS Variables
+
+Set them on `:root`, or on your `popoverClass` to scope them.
 
 ```css
 :root {
-  --driver-action-background: #f2f2f2;
-  --driver-action-color: inherit;
-  --driver-action-status-color: #727272;
+  /* Font of the popover, and of checklists */
+  --driver-popover-font-family: "Inter", sans-serif;
+
+  /* Action steps: the instruction row */
+  --driver-instruction-background: #f2f2f2;
+  --driver-instruction-color: inherit;
+  --driver-instruction-padding: 8px 10px;
+  --driver-instruction-radius: 4px;
+
+  /* Action steps: the dot at the end of the row, and the disabled Next */
+  --driver-instruction-indicator-color: #f59e0b;
+  --driver-instruction-indicator-size: 8px;
+  --driver-instruction-next-color: #a3a3a3;
+
+  /* Action steps: the done state, for the row, the check mark and Next */
+  --driver-instruction-done-background: #dcfce7;
+  --driver-instruction-done-color: #15803d;
+
+  /* The line shown by nudge("...") */
+  --driver-feedback-color: #b45309;
+
+  /* The shake of nudge(), and the flash shown instead with reduced motion */
+  --driver-nudge-distance: 6px;
+  --driver-nudge-duration: 500ms;
+  --driver-nudge-color: #f59e0b;
+
+  /* Stacking of allowedElements above the overlay */
+  --driver-allowed-z-index: 10001;
 }
 ```
 
-Visit the [example page](/docs/styling#popover) for an example that modifies the popover styles.
-
-## Custom Font
-
-The popover text uses the following font stack by default:
+The values above are the defaults, except the font. Its default is:
 
 ```css
 "Helvetica Neue", Inter, ui-sans-serif, "Apple Color Emoji", Helvetica, Arial, sans-serif;
 ```
 
-To use your own font, override the `--driver-popover-font-family` CSS variable. It's inherited, so you can set it anywhere above the popover (on `:root`, `body`, or a `popoverClass`) and it applies to the title, description, buttons, and progress text at once. [Checklists](/docs/checklists) read the same variable.
+### Action Steps
+
+An [action step](/docs/action-driven-tours#make-the-user-act) shows an instruction row that ends in a pulsing dot, and a Next button that looks disabled until the user has done it. While the step pauses for `advanceDelay` the dot becomes a check mark and the row and Next turn green. The dot and the check are drawn in CSS, don't animate with `prefers-reduced-motion`, and are hidden from screen readers. The variables cover the colors and sizes, and the classes the rest.
+
+<ActionDrivenSample scenario="themed" client:load>
+  ```js
+  const driverObj = driver({
+    popoverClass: "my-theme",
+    showButtons: ["next", "close"],
+    steps: [
+      {
+        element: "#publish",
+        advanceOn: "click",
+        advanceDelay: 1200,
+        popover: {
+          title: "Publish the page",
+          instruction: "Click <b>Publish</b>.",
+        },
+      },
+      // ...
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</ActionDrivenSample>
 
 ```css
-:root {
-  --driver-popover-font-family: "Inter", sans-serif;
+.my-theme {
+  --driver-instruction-background: #eef2ff;
+  --driver-instruction-color: #3730a3;
+  --driver-instruction-radius: 999px;
+  --driver-instruction-padding: 8px 14px;
+  --driver-instruction-indicator-color: #6366f1;
+  --driver-instruction-indicator-size: 10px;
+  --driver-instruction-done-background: #dcfce7;
+  --driver-instruction-done-color: #166534;
+}
+
+.my-theme.driver-popover-instruction-done .driver-popover-instruction {
+  font-weight: 600;
 }
 ```
 
-## Modifying Popover DOM
+To drop the dot and the check, hide the indicator. To change the row altogether, replace the content of `popover.instruction` in [`onPopoverRender`](#changing-the-popover-dom); driver.js leaves it alone from then on. `popover.instructionIndicator` is the dot itself.
 
-Alternatively, you can also use the `onPopoverRender` hook to modify the popover DOM before it is displayed. The hook is called with the popover DOM as the first argument.
+```css
+.driver-popover-instruction-indicator {
+  display: none;
+}
+```
+
+### Changing the Popover DOM
+
+`onPopoverRender` gets the popover's elements before it shows. Add, move or change anything. See [Custom Buttons](/docs/popover#custom-buttons) for a live example.
 
 ```typescript
 type PopoverDOM = {
@@ -140,52 +248,116 @@ type PopoverDOM = {
   description: HTMLElement;
   footer: HTMLElement;
   progress: HTMLElement;
-  previousButton: HTMLElement;
-  nextButton: HTMLElement;
-  closeButton: HTMLElement;
+  previousButton: HTMLButtonElement;
+  nextButton: HTMLButtonElement;
+  closeButton: HTMLButtonElement;
   footerButtons: HTMLElement;
 
-  // Only created once a step uses popover.action
-  action?: HTMLElement;
-  actionStatus?: HTMLElement;
+  // Only on steps with popover.instruction: the row, and the indicator at
+  // its end.
+  instruction?: HTMLElement;
+  instructionIndicator?: HTMLElement;
+
+  // Only after nudge("...") showed a message
+  feedback?: HTMLElement;
 };
-
-onPopoverRender?: (popover: PopoverDOM, opts: { config: Config; state: State }) => void;
 ```
 
-## Styling Page
+```js
+const driverObj = driver({
+  onPopoverRender: popover => {
+    const link = document.createElement("a");
+    link.href = "/help/tours";
+    link.textContent = "Learn more";
+    popover.description.append(" ", link);
+  },
+});
+```
 
-Following classes are applied to the page when the driver is active.
+## Overlay
+
+`overlayColor` takes any CSS color and `overlayOpacity` a number from 0 to 1. The defaults are `"#000"` and `0.7`.
+
+```js
+const driverObj = driver({
+  overlayColor: "red",
+  overlayOpacity: 0.3,
+});
+
+driverObj.highlight({
+  popover: { title: "A red overlay", description: "Any CSS color works." },
+});
+```
+
+<div className='flex flex-col gap-1 -mt-5'>
+  <CodeSample
+    buttonText={"Red Overlay"}
+    config={{
+      overlayColor: 'red',
+      overlayOpacity: 0.3
+    }}
+    highlight={{
+      popover: {
+        title: 'A red overlay',
+        description: 'Any CSS color works.',
+      }
+    }}
+    id={"overlay-red"}
+    client:load
+  />
+
+  <CodeSample
+    buttonText={"Blue Overlay"}
+    config={{
+      overlayColor: 'blue',
+      overlayOpacity: 0.3
+    }}
+    highlight={{
+      popover: {
+        title: 'A blue overlay',
+        description: 'Any CSS color works.',
+      }
+    }}
+    id={"overlay-blue"}
+    client:load
+  />
+
+  <CodeSample
+    buttonText={"Light Overlay"}
+    config={{
+      overlayColor: 'white',
+      overlayOpacity: 0.8
+    }}
+    highlight={{
+      popover: {
+        title: 'A light overlay',
+        description: 'For pages with a dark background.',
+      }
+    }}
+    id={"overlay-light"}
+    client:load
+  />
+</div>
+
+`stagePadding` and `stageRadius` set the size and corner radius of the cutout around the element.
+
+## Page and Element Classes
 
 ```css
-/* Applied to the `body` when the driver: */
-.driver-active {
-} /* is active */
-.driver-fade {
-} /* is animated */
-.driver-simple {
-} /* is not animated */
+/* On <body> while a tour or highlight is showing */
+.driver-active {}
+.driver-fade {}            /* With animate: true */
+.driver-simple {}          /* With animate: false */
+.driver-no-scroll {}       /* With allowScroll: false */
+
+.driver-overlay {}         /* The overlay, an <svg> */
+.driver-active-element {}  /* The highlighted element */
+.driver-allowed-element {} /* Each of the allowedElements */
 ```
 
-Following classes are applied to the overlay i.e. the lightbox displayed over the page.
+## Hints
 
-```css
-.driver-overlay {
-}
-```
-
-## Styling Highlighted Element
-
-Whenever an element is highlighted, the following classes are applied to it.
-
-```css
-.driver-active-element {
-}
-```
-
-## Styling Hints
-
-Hint popovers are regular Driver.js popovers, so everything above applies to them unchanged. The beacons read two CSS variables, settable globally or scoped to a class you pass through a hint's `beacon.className`:
+Hint popovers are regular popovers, so everything above applies. The beacons read two variables, set on `.driver-hint` or on a class you pass as `beacon.className`:
 
 ```css
 .driver-hint {
@@ -194,53 +366,88 @@ Hint popovers are regular Driver.js popovers, so everything above applies to the
 }
 ```
 
-See [Styling Hints](/docs/hints#styling) for live examples, including per-beacon classes, static beacons, and the overlay.
+See [Styling Hints](/docs/hints#styling) for live examples.
 
-## Styling Checklists
+## Checklist
 
-The checklist widget has its own stylesheet and classes. Set `--driver-checklist-color` to recolor the progress bar, the ticks and the focus rings, or pass `className` to the checklist and style its parts:
+[Checklists](/docs/checklists) have their own stylesheet and classes.
+
+### Accent Color
+
+`--driver-checklist-color` colors the progress bar, the ticks and the focus rings.
+
+<ChecklistSample
+  idPrefix="styling-checklist-color"
+  buttonText="Green Checklist"
+  config={{ className: "docs-checklist-green" }}
+  client:load
+/>
+
+```css
+:root {
+  --driver-checklist-color: #16a34a;
+}
+```
+
+### Custom Theme
+
+Pass `className` to put your own class on the widget, then style its parts. This is the theme of the driver.js homepage:
+
+<ChecklistSample
+  idPrefix="styling-checklist-theme"
+  buttonText="Themed Checklist"
+  config={{ className: "checklist-brutalist" }}
+  client:load
+/>
 
 ```js
 checklist({
   id: "onboarding",
-  className: "my-checklist",
+  className: "checklist-brutalist",
   items,
 });
 ```
 
+Its CSS, and more themes to copy, are on the [Checklist Themes](/docs/checklist-themes) page.
+
+### Checklist Classes
+
 ```css
-/* Accent color, globally or scoped to your class */
-.my-checklist {
-  --driver-checklist-color: #16a34a;
-}
+.driver-checklist {}                  /* The widget, positioned in a corner */
+.driver-checklist-bottom-right {}     /* or -bottom-left, -top-right, -top-left */
+.driver-checklist-complete {}         /* Added once every item is done */
 
-/* The button that opens the panel */
-.my-checklist .driver-checklist-launcher {
-  background-color: #16a34a;
-  border-color: #16a34a;
-}
+.driver-checklist-launcher {}         /* The button that opens the panel */
+.driver-checklist-launcher-text {}
+.driver-checklist-launcher-count {}   /* "1/4" */
 
-/* The panel, its header and the progress bar */
-.my-checklist .driver-checklist-panel {
-  border-radius: 4px;
-}
+.driver-checklist-panel {}
+.driver-checklist-header {}
+.driver-checklist-title {}
+.driver-checklist-description {}
+.driver-checklist-close-btn {}
 
-.my-checklist .driver-checklist-title {
-  font-size: 20px;
-}
+.driver-checklist-progress {}
+.driver-checklist-progress-bar {}
+.driver-checklist-progress-fill {}
+.driver-checklist-progress-text {}    /* "1 of 4" */
 
-.my-checklist .driver-checklist-progress-bar {
-  height: 6px;
-}
+.driver-checklist-items {}
+.driver-checklist-item {}
+.driver-checklist-item-done {}        /* Added to an item once it is done */
+.driver-checklist-check {}            /* The circle; a button with allowManualComplete */
+.driver-checklist-item-trigger {}     /* The item's link, button or plain row */
+.driver-checklist-item-title {}
+.driver-checklist-item-description {}
+```
 
-/* Items, and items once they are done */
-.my-checklist .driver-checklist-item-title {
-  font-weight: 500;
-}
+The widget also reads these variables:
 
-.my-checklist .driver-checklist-item-done .driver-checklist-item-title {
-  text-decoration: none;
+```css
+.driver-checklist {
+  --driver-checklist-offset-x: 20px; /* Distance from the screen edges */
+  --driver-checklist-offset-y: 20px;
 }
 ```
 
-See [Styling Checklists](/docs/styling#checklist) for live examples and the full list of class names.
+It sets `--driver-checklist-progress` to the progress as a percentage, for progress drawn in CSS like the [progress ring](/docs/checklist-themes#progress-ring). The font follows `--driver-popover-font-family`.

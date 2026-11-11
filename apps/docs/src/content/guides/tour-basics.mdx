@@ -1,34 +1,33 @@
 ---
 title: "Tour Basics"
 description: "Build a multi-step product tour with Driver.js. Animate between steps or jump instantly, tune the animation speed, and show a step counter like 1 of 5."
-groupTitle: "Examples"
-sort: 2
+groupTitle: "Guides"
+sort: 10
 ---
 
 import { CodeSample } from "../../components/CodeSample.tsx";
 
-A tour is a list of steps, each highlighting an element with a popover. Pass the steps to `driver()` and call `drive()` to start. The examples below cover the options that shape how a tour looks and moves.
+A tour is a list of steps. Each step highlights an element and describes it in a popover. Pass the steps to `driver()` and call `drive()`.
 
 ## Animated Tour
 
-Tours animate between steps by default. Click the button below the code sample to see the tour in action.
+The highlight glides from one step to the next by default. Users move with the buttons or the arrow keys, and close with <kbd>Escape</kbd>.
 
 <CodeSample
-  heading={'Basic Animated Tour'}
+  heading={'Animated Tour'}
   config={{
     animate: true,
     showProgress: true,
-    showButtons: ['next', 'previous'],
   }}
   tour={[
-    { element: '#tour-animated', popover: { title: 'Animated Tour Example', description: 'Here is the code example showing animated tour. Let\'s walk you through it.', side: "left", align: 'start' }},
-    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(4) span:nth-child(4)', popover: { title: 'Create Driver', description: 'Simply call the driver function to create a driver.js instance', side: "left", align: 'start' }},
-    { element: '.line:nth-child(17)', popover: { title: 'Start Tour', description: 'Call the drive method to start the tour and your tour will be started.', side: "top", align: 'start' }},
-    { element: '.line:nth-child(5)', popover: { title: 'Hide Progress', description: 'Progress shown in the bottom left is hidden by default. You can make driver show/hide the progress using this option.', side: "top", align: 'start' }},
-    { element: '#docs-sidebar a[href="/docs/configuration"]', popover: { title: 'More Configuration', description: 'Look at this page for all the configuration options you can pass.', side: "right", align: 'start' }},
-    { popover: { title: 'Happy Coding', description: 'And that is all, go ahead and start adding tours to your applications.' } }
+    { element: '#tour-animated', popover: { title: 'Animated Tour', description: 'This tour walks through the code that creates it.', side: "left", align: 'start' }},
+    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in plain JavaScript and in frameworks.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(2)', popover: { title: 'Import the CSS', description: 'The default styles for the popover and the overlay.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(7)', popover: { title: 'Steps', description: 'Each step has an element and a popover. side and align place the popover.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(9)', popover: { title: 'No Element', description: 'A step without an element is centered on the screen.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(13)', popover: { title: 'Start the Tour', description: 'drive() starts at the first step. Pass an index to start elsewhere.', side: "top", align: 'start' }},
+    { element: '#docs-sidebar a[href="/docs/configuration"]', popover: { title: 'More Options', description: 'Every option is listed on the Configuration page.', side: "right", align: 'start' }},
+    { popover: { title: 'Happy Coding', description: 'That is all it takes.' } }
   ]}
   id={"tour-animated"}
   client:load
@@ -40,14 +39,10 @@ Tours animate between steps by default. Click the button below the code sample t
   const driverObj = driver({
     showProgress: true,
     steps: [
-      { element: '#tour-example', popover: { title: 'Animated Tour Example', description: 'Here is the code example showing animated tour. Let\'s walk you through it.', side: "left", align: 'start' }},
-      { element: 'code .line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-      { element: 'code .line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-      { element: 'code .line:nth-child(4) span:nth-child(7)', popover: { title: 'Create Driver', description: 'Simply call the driver function to create a driver.js instance', side: "left", align: 'start' }},
-      { element: 'code .line:nth-child(18)', popover: { title: 'Start Tour', description: 'Call the drive method to start the tour and your tour will be started.', side: "top", align: 'start' }},
-      { element: 'a[href="/docs/configuration"]', popover: { title: 'More Configuration', description: 'Look at this page for all the configuration options you can pass.', side: "right", align: 'start' }},
-      { popover: { title: 'Happy Coding', description: 'And that is all, go ahead and start adding tours to your applications.' } }
-    ]
+      { element: ".page-header", popover: { title: "Header", description: "Search lives here.", side: "bottom", align: "start" } },
+      { element: ".sidebar", popover: { title: "Sidebar", description: "Jump between sections.", side: "right" } },
+      { popover: { title: "Happy Coding", description: "That is all it takes." } },
+    ],
   });
 
   driverObj.drive();
@@ -56,20 +51,20 @@ Tours animate between steps by default. Click the button below the code sample t
 
 ### Animation Duration
 
-Use the `duration` option to control how long the transition animation takes, in milliseconds. It controls both the speed at which the highlight moves between steps and the overlay/popover fade-in. It only applies when `animate` is `true` and defaults to `400`. Lower it for a snappier tour, or raise it for a more relaxed one.
+`duration` sets how long the move between steps and the fade-in take, in milliseconds. The default is `400`.
 
 <CodeSample
-  heading={'Fast Animation Duration'}
+  heading={'Animation Duration'}
+  buttonText={"Fast: 150ms"}
   config={{
     animate: true,
     duration: 150,
     showProgress: true,
-    showButtons: ['next', 'previous'],
   }}
   tour={[
-    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'Notice how quickly the highlight snaps over to this line.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(4) span:nth-child(4)', popover: { title: 'Create Driver', description: 'The popover fades in almost instantly at this speed.', side: "left", align: 'start' }},
-    { element: '.line:nth-child(6)', popover: { title: 'Fast Duration', description: 'A low duration makes the whole tour feel snappy.', side: "top", align: 'start' }},
+    { element: '.line:nth-child(1)', popover: { title: 'Fast', description: 'The highlight snaps from step to step.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(5)', popover: { title: 'Duration', description: 'This tour uses 150 milliseconds.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(11)', popover: { title: 'Done', description: 'Now try the slow one.', side: "top", align: 'start' }},
   ]}
   id={"duration-example-fast"}
   client:load
@@ -79,76 +74,47 @@ Use the `duration` option to control how long the transition animation takes, in
   import "driver.js/dist/driver.css";
 
   const driverObj = driver({
-    // Speed the whole transition up to 150ms (default is 400ms)
     duration: 150,
-    showProgress: true,
     steps: [
-      { element: '#some-element', popover: { title: 'Import the Library', description: 'Notice how quickly the highlight snaps over to this line.' }},
-      { element: '#another-element', popover: { title: 'Create Driver', description: 'The popover fades in almost instantly at this speed.' }},
-      { element: '#yet-another-element', popover: { title: 'Fast Duration', description: 'A low duration makes the whole tour feel snappy.' }},
-    ]
+      // ...
+    ],
   });
 
   driverObj.drive();
   ```
 </CodeSample>
 
+<div className="mb-1.5"></div>
+
 <CodeSample
-  heading={'Slow Animation Duration'}
+  buttonText={"Slow: 1200ms"}
   config={{
     animate: true,
     duration: 1200,
     showProgress: true,
-    showButtons: ['next', 'previous'],
   }}
   tour={[
-    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'Notice how slowly the highlight glides over to this line.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(4) span:nth-child(4)', popover: { title: 'Create Driver', description: 'The popover fade-in runs over the same duration as the slide.', side: "left", align: 'start' }},
-    { element: '.line:nth-child(6)', popover: { title: 'Slow Duration', description: 'This is the duration option that controls the whole transition.', side: "top", align: 'start' }},
+    { element: '#duration-example-fast .line:nth-child(1)', popover: { title: 'Slow', description: 'The highlight glides from step to step.', side: "bottom", align: 'start' }},
+    { element: '#duration-example-fast .line:nth-child(5)', popover: { title: 'Duration', description: 'The same option, set to 1200 for this tour.', side: "bottom", align: 'start' }},
+    { element: '#duration-example-fast .line:nth-child(11)', popover: { title: 'Done', description: 'The popover fades in over the same time.', side: "top", align: 'start' }},
   ]}
   id={"duration-example"}
-  className={"mt-10"}
   client:load
->
-  ```js
-  import { driver } from "driver.js";
-  import "driver.js/dist/driver.css";
-
-  const driverObj = driver({
-    // Slow the whole transition down to 1200ms (default is 400ms)
-    duration: 1200,
-    showProgress: true,
-    steps: [
-      { element: '#some-element', popover: { title: 'Import the Library', description: 'Notice how slowly the highlight glides over to this line.' }},
-      { element: '#another-element', popover: { title: 'Create Driver', description: 'The popover fade-in runs over the same duration as the slide.' }},
-      { element: '#yet-another-element', popover: { title: 'Slow Duration', description: 'This is the duration option that controls the whole transition.' }},
-    ]
-  });
-
-  driverObj.drive();
-  ```
-</CodeSample>
+/>
 
 ## Static Tour
 
-Set the `animate` option to `false` to make the tour static. The tour will not animate between steps and will just show the popover.
+`animate: false` turns the animation off. The highlight jumps straight to each step.
 
 <CodeSample
-  heading={'Basic Static Tour'}
+  heading={'Static Tour'}
   config={{
     animate: false,
-    showProgress: false,
-    showButtons: ['next', 'previous'],
   }}
   tour={[
-    { element: '#tour-static', popover: { title: 'Static Tour Example', description: 'Here is the code example showing a static tour. Let\'s walk you through it.', side: "left", align: 'start' }},
-    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(4) span:nth-child(4)', popover: { title: 'Create Driver', description: 'Simply call the driver function to create a driver.js instance', side: "left", align: 'start' }},
-    { element: '.line:nth-child(19)', popover: { title: 'Start Tour', description: 'Call the drive method to start the tour and your tour will be started.', side: "top", align: 'start' }},
-    { element: '.line:nth-child(6)', popover: { title: 'Hide Progress', description: 'Progress shown in the bottom left is hidden by default. You can make driver show/hide the progress using this option.', side: "top", align: 'start' }},
-    { element: '#docs-sidebar a[href="/docs/configuration"]', popover: { title: 'More Configuration', description: 'Look at this page for all the configuration options you can pass.', side: "right", align: 'start' }},
-    { popover: { title: 'Happy Coding', description: 'And that is all, go ahead and start adding tours to your applications.' } }
+    { element: '#tour-static', popover: { title: 'Static Tour', description: 'No gliding and no fade-in.', side: "left", align: 'start' }},
+    { element: '.line:nth-child(5)', popover: { title: 'animate: false', description: 'One option turns the animation off.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(11)', popover: { title: 'Start the Tour', description: 'Everything else works the same.', side: "top", align: 'start' }},
   ]}
   id={"tour-static"}
   client:load
@@ -159,17 +125,9 @@ Set the `animate` option to `false` to make the tour static. The tour will not a
 
   const driverObj = driver({
     animate: false,
-    showProgress: false,
-    showButtons: ['next', 'previous', 'close'],
     steps: [
-      { element: '#tour-example', popover: { title: 'Static Tour Example', description: 'Here is the code example showing a static tour. Let\'s walk you through it.', side: "left", align: 'start' }},
-      { element: 'code .line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-      { element: 'code .line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-      { element: 'code .line:nth-child(4) span:nth-child(7)', popover: { title: 'Create Driver', description: 'Simply call the driver function to create a driver.js instance', side: "left", align: 'start' }},
-      { element: 'code .line:nth-child(18)', popover: { title: 'Start Tour', description: 'Call the drive method to start the tour and your tour will be started.', side: "top", align: 'start' }},
-      { element: '#docs-sidebar a[href="/docs/configuration"]', popover: { title: 'More Configuration', description: 'Look at this page for all the configuration options you can pass.', side: "right", align: 'start' }},
-      { popover: { title: 'Happy Coding', description: 'And that is all, go ahead and start adding tours to your applications.' } }
-    ]
+      // ...
+    ],
   });
 
   driverObj.drive();
@@ -178,21 +136,18 @@ Set the `animate` option to `false` to make the tour static. The tour will not a
 
 ## Tour Progress
 
-You can use `showProgress` option to show the progress of the tour. It is shown in the bottom left corner of the popover. There is also `progressText` option which can be used to customize the text shown for the progress.
-
-Please note that `showProgress` is `false` by default. Also the default text for `progressText` is `{{current}} of {{total}}`. You can use `{{current}}` and `{{total}}` in your `progressText` template to show the current and total steps.
+`showProgress: true` shows the step count in the popover's bottom left corner, as `{{current}} of {{total}}`. Change the text with `progressText`.
 
 <CodeSample
+  heading={'Tour Progress'}
   config={{
     showProgress: true,
-    showButtons: ['next', 'previous'],
+    progressText: "Step {{current}} of {{total}}",
   }}
   tour={[
-    { element: '#tour-progress-example', popover: { title: 'Progress Example', description: 'Notice the text at the bottom left corner showing the progress', side: "left", align: 'start' }},
-    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(4) span:nth-child(4)', popover: { title: 'Create Driver', description: 'Simply call the driver function to create a driver.js instance', side: "left", align: 'start' }},
-    { element: '.line:nth-child(16)', popover: { title: 'Start Tour', description: 'Call the drive method to start the tour and your tour will be started.', side: "top", align: 'start' }},
+    { element: '#tour-progress-example', popover: { title: 'Progress', description: 'The step count is in the bottom left corner.', side: "left", align: 'start' }},
+    { element: '.line:nth-child(5)', popover: { title: 'showProgress', description: 'It is off by default.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(6)', popover: { title: 'progressText', description: 'A template with the current step and the total.', side: "bottom", align: 'start' }},
   ]}
   id={"tour-progress-example"}
   client:load
@@ -203,37 +158,14 @@ Please note that `showProgress` is `false` by default. Also the default text for
 
   const driverObj = driver({
     showProgress: true,
-    showButtons: ['next', 'previous'],
+    progressText: "Step {{current}} of {{total}}",
     steps: [
-      { element: '#tour-example', popover: { title: 'Animated Tour Example', description: 'Here is the code example showing animated tour. Let\'s walk you through it.', side: "left", align: 'start' }},
-      { element: 'code .line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-      { element: 'code .line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-      { element: 'code .line:nth-child(4) span:nth-child(7)', popover: { title: 'Create Driver', description: 'Simply call the driver function to create a driver.js instance', side: "left", align: 'start' }},
-      { element: 'code .line:nth-child(16)', popover: { title: 'Start Tour', description: 'Call the drive method to start the tour and your tour will be started.', side: "top", align: 'start' }},
-    ]
+      // ...
+    ],
   });
 
   driverObj.drive();
   ```
 </CodeSample>
 
-<div className="mb-1.5"></div>
-
-<CodeSample
-  buttonText={"Different Progress Text"}
-  config={{
-    stagePadding: 5,
-    progressText: "Step {{current}} of {{total}}",
-    showProgress: true,
-    showButtons: ['next', 'previous'],
-  }}
-  tour={[
-    { element: '#tour-progress-example', popover: { title: 'Progress Example', description: 'This tour sets progressText to "Step {{current}} of {{total}}". Notice the text at the bottom left corner.', side: "left", align: 'start' }},
-    { element: '#tour-progress-example .line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-    { element: '#tour-progress-example .line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-    { element: '#tour-progress-example .line:nth-child(4) span:nth-child(4)', popover: { title: 'Create Driver', description: 'Simply call the driver function to create a driver.js instance', side: "left", align: 'start' }},
-    { element: '#tour-progress-example .line:nth-child(16)', popover: { title: 'Start Tour', description: 'Call the drive method to start the tour and your tour will be started.', side: "top", align: 'start' }},
-  ]}
-  id={"tour-progress-text"}
-  client:load
-/>
+Both can be set per step in its `popover` as well.

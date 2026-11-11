@@ -81,30 +81,24 @@ export function CodeSample(props: CodeSampleProps) {
 
       if (id === "logger-events") {
         config!.onNextClick = () => {
-          console.log("next clicked");
-        };
-
-        config!.onNextClick = () => {
-          console.log("Next Button Clicked");
-          // Implement your own functionality here
+          console.log("Next clicked");
           driverObj.moveNext();
         };
         config!.onPrevClick = () => {
-          console.log("Previous Button Clicked");
-          // Implement your own functionality here
+          console.log("Previous clicked");
           driverObj.movePrevious();
         };
         config!.onCloseClick = () => {
-          console.log("Close Button Clicked");
-          // Implement your own functionality here
+          console.log("Close clicked");
+          driverObj.destroy();
+        };
+        config!.onDoneClick = () => {
+          console.log("Done clicked");
           driverObj.destroy();
         };
       }
 
-      if (id === "interactive-wait" && tour) {
-        // Stands in for an app rendering a modal on demand: pressing next
-        // mounts the element shortly after, while the tour is already
-        // waiting for it via waitForElement.
+      if (id === "interactive-wait") {
         tour[0].popover!.onNextClick = () => {
           window.setTimeout(mountDummyElement, 800);
           driverObj.moveNext();
@@ -113,29 +107,16 @@ export function CodeSample(props: CodeSampleProps) {
         config!.onDestroyed = () => removeDummyElement();
       }
 
-      if (tour?.[2]?.popover?.title === "Next Step is Async") {
-        tour[2].popover.onNextClick = () => {
+      if (id === "async-tour") {
+        tour[0].popover!.onNextClick = () => {
           mountDummyElement();
           driverObj.moveNext();
         };
-
-        if (tour?.[3]?.element === ".dynamic-el") {
-          tour[3].onDeselected = () => {
-            removeDummyElement();
-          };
-
-          // @ts-ignore
-          tour[4].popover.onPrevClick = () => {
-            mountDummyElement();
-            driverObj.movePrevious();
-          };
-
-          // @ts-ignore
-          tour[3].popover.onPrevClick = () => {
-            removeDummyElement();
-            driverObj.movePrevious();
-          };
-        }
+        tour[1].onDeselected = () => removeDummyElement();
+        tour[2].popover!.onPrevClick = () => {
+          mountDummyElement();
+          driverObj.movePrevious();
+        };
       }
 
       const driverObj = driver({

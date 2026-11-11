@@ -1,8 +1,8 @@
 ---
 title: "Checklist Themes"
 description: "Ready-made themes for Driver.js checklists: dark mode, gradient header, GIF banner, numbered steps, progress ring, cards, compact and a completion celebration. Copy the CSS and go."
-groupTitle: "Examples"
-sort: 10
+groupTitle: "Styling"
+sort: 21
 ---
 
 import { Code } from "astro:components";
@@ -36,9 +36,7 @@ export const items = [
 
 export const shortItems = items.map(({ description, ...item }) => item);
 
-Each theme below is plain CSS on top of the default
-[checklist](/docs/checklists) styles. To use one, copy its CSS into your
-stylesheet, then pass its class name to the checklist:
+Each theme is plain CSS on top of the default [checklist](/docs/checklists) styles. Copy its CSS into your stylesheet and pass its class name to the checklist:
 
 ```js
 import { checklist } from "driver.js/checklist";
@@ -53,9 +51,7 @@ checklist({
 }).show();
 ```
 
-The themes only change how the checklist looks, so you can mix their rules or
-use one as a starting point for your own. See [Styling](/docs/styling#class-names)
-for every class name you can target.
+Mix their rules or start your own from one. Every class name is listed in [Theming](/docs/theming#checklist-classes).
 
 ## Gradient Header
 

@@ -1,40 +1,38 @@
 ---
 title: "Migrate to 1.x"
 description: "Upgrade from Driver.js 0.x to 1.x with this step-by-step migration guide covering the new API, imports, and architecture changes in the 1.0 rewrite."
-groupTitle: "Introduction"
-sort: 6
+groupTitle: "Releases"
+sort: 31
 hidden: true
 ---
 
-Drivers 1.x is a major release that introduces a new API and a new architecture. This page will help you migrate your code from 0.x to 1.x.
+Driver.js 1.x has a new API. This page lists what changed since 0.x. The current options are in [Configuration](/docs/configuration), the methods in the [API Reference](/docs/api).
 
-> Change in how you import the library
+## Import
+
 ```diff
 - import Driver from 'driver.js';
 - import 'driver.js/dist/driver.min.css';
-+ import { driver } from 'driver.js';
++ import { driver } from "driver.js";
 + import "driver.js/dist/driver.css";
 ```
 
-> Change in how you initialize the library
+## Initialization
+
 ```diff
 - const driverObj = new Driver(config);
-- driverObj.setSteps(steps);
-
-+ // Steps can be passed in the constructor
-+ const driverObj = driver({
-+   ...config,
-+   steps
-+ });
+- driverObj.defineSteps(steps);
++ const driverObj = driver({ ...config, steps });
 ```
 
-> Changes in configuration
+## Configuration
 
 ```diff
 const config = {
--  overlayClickNext: false, // Option has been removed
--  closeBtnText: 'Close', // Option has been removed (close button is now an icon)
--  scrollIntoViewOptions: {}, // Option has been renamed
+-  overlayClickNext: false,
++  overlayClickBehavior: "close", // or "nextStep", "none", a function
+-  closeBtnText: 'Close', // Removed: the close button is an icon
+-  scrollIntoViewOptions: {}, // Removed: see smoothScroll
 -  opacity: 0.75,
 +  overlayOpacity: 0.75,
 -  className: 'scoped-class',
@@ -42,84 +40,83 @@ const config = {
 -  padding: 10,
 +  stagePadding: 10,
 -  showButtons: false,
-+  showButtons: ['next', 'prev', 'close'], // pass an array of buttons to show
++  showButtons: ["next", "previous", "close"], // The buttons to show; [] for none
 -  keyboardControl: true,
 +  allowKeyboardControl: true,
--  onHighlightStarted: (Element) {},
-+  onHighlightStarted?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
--  onHighlighted: (Element) {},
-+  onHighlighted?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
--  onDeselected: (Element) {}, // Called when element has been deselected
-+  onDeselected?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
 
--  onReset: (Element) {},        // Called when overlay is about to be cleared
-+  onDestroyStarted?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
-+  onDestroyed?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
-+  onCloseClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
+-  onHighlightStarted: (Element) => {},
+-  onHighlighted: (Element) => {},
+-  onDeselected: (Element) => {},
++  // Every hook now gets (element, step, { config, state, driver, index })
++  onHighlightStarted: (element, step, opts) => {},
++  onHighlighted: (element, step, opts) => {},
++  onDeselected: (element, step, opts) => {},
 
--  onNext: (Element) => {},      // Called when moving to next step on any step
--  onPrevious: (Element) => {},  // Called when moving to next step on any step
-+  // By overriding the default onNextClick and onPrevClick, you control the flow of the driver
-+  // Visit for more details: https://driverjs.com/docs/configuration
-+  onNextClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
-+  onPrevClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
+-  onReset: (Element) => {},
++  onDestroyStarted: (element, step, opts) => {},
++  onDestroyed: (element, step, opts) => {},
++  onCloseClick: (element, step, opts) => {},
 
-+  // New options added
-+  overlayColor?: string;
-+  stageRadius?: number;
-+  popoverOffset?: number;
-+  disableButtons?: ["next", "prev", "close"];
-+  showProgress?: boolean;
-+  progressText?: string;
-+  onPopoverRender?: (popover: PopoverDOM, options: { config: Config; state: State }) => void;
+-  onNext: (Element) => {},
+-  onPrevious: (Element) => {},
++  // These replace the default: call moveNext() / movePrevious() yourself
++  onNextClick: (element, step, opts) => {},
++  onPrevClick: (element, step, opts) => {},
+
++  // New
++  overlayColor: "#000",
++  stageRadius: 5,
++  popoverOffset: 10,
++  disableButtons: ["previous"],
++  showProgress: true,
++  progressText: "{{current}} of {{total}}",
++  onPopoverRender: (popover, opts) => {},
 }
 ```
 
-> Changes in step and popover definition
+## Steps and Popovers
 
 ```diff
-const stepDefinition = {
+const step = {
+-  element: '.some-element', // Required
++  element: '.some-element', // Optional: without it the popover is centered
   popover: {
--   closeBtnText: 'Close', // Removed, close button is an icon
--   element: '.some-element', // Required
-+   element: '.some-element', // Optional, if not provided, step will be shown as modal
--   className: 'popover-class',
-+   popoverClass: string;
--   showButtons: false,
-+   showButtons: ["next", "previous", "close"]; // Array of buttons to show
--   title: '';  // Required
-+   title: '';  // Optional
--   description: ''; // Required
-+   description: ''; // Optional
+-    closeBtnText: 'Close', // Removed
+-    className: 'popover-class',
++    popoverClass: 'popover-class',
+-    showButtons: false,
++    showButtons: ["next", "previous", "close"],
+-    title: '', // Required
+-    description: '', // Required
++    title: '', // Optional
++    description: '', // Optional
 
--   // position can be left, left-center, left-bottom, top,
--   // top-center, top-right, right, right-center, right-bottom,
--   // bottom, bottom-center, bottom-right, mid-center
--   position: 'left',
-+   // Now you need to specify the side and align separately
-+   side?: "top" | "right" | "bottom" | "left";
-+   align?: "start" | "center" | "end";
+-    // left, left-center, left-bottom, top, top-center, top-right, right,
+-    // right-center, right-bottom, bottom, bottom-center, bottom-right, mid-center
+-    position: 'left',
++    side: "left", // "top" | "right" | "bottom" | "left"
++    align: "start", // "start" | "center" | "end"
 
-+   // New options
-+   showProgress?: boolean;
-+   progressText?: string;
-+   onPopoverRender?: (popover: PopoverDOM, options: { config: Config; state: State }) => void;
-+   onNextClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void
-+   onPrevClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void
-+   onCloseClick?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void
-  }
++    // New
++    showProgress: true,
++    progressText: "{{current}} of {{total}}",
++    onPopoverRender: (popover, opts) => {},
++    onNextClick: (element, step, opts) => {},
++    onPrevClick: (element, step, opts) => {},
++    onCloseClick: (element, step, opts) => {},
+  },
 
-+ // New hook to control the flow of the driver
-+ onDeselected?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
-+ onHighlightStarted?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
-+ onHighlighted?: (element?: Element, step: DriveStep, options: { config: Config; state: State }) => void;
++  // New: per-step hooks
++  onHighlightStarted: (element, step, opts) => {},
++  onHighlighted: (element, step, opts) => {},
++  onDeselected: (element, step, opts) => {},
 };
 ```
 
-> Changes in API methods.
+## Methods
 
 ```diff
-- driverObj.preventMove();  // async support is built-in, no longer need to call this
+- driverObj.preventMove(); // Removed: set onNextClick and call moveNext() when ready
 - activeElement.getCalculatedPosition();
 - activeElement.hidePopover();
 - activeElement.showPopover();
@@ -128,17 +125,17 @@ const stepDefinition = {
 - const isActivated = driverObj.isActivated;
 + const isActivated = driverObj.isActive();
 
-- driverObj.start(stepNumber = 0);
-+ driverObj.drive(stepNumber = 0);
+- driverObj.start(stepNumber);
++ driverObj.drive(stepNumber);
 
-- driverObj.highlight(string|stepDefinition);
-+ driverObj.highlight(stepDefinition)
+- driverObj.highlight(string | stepDefinition);
++ driverObj.highlight(stepDefinition);
 
 - driverObj.reset();
 + driverObj.destroy();
 
 - driverObj.hasHighlightedElement();
-+ typeof driverObj.getActiveElement() !== 'undefined';
++ driverObj.getActiveElement() !== undefined;
 
 - driverObj.getHighlightedElement();
 + driverObj.getActiveElement();
@@ -146,10 +143,10 @@ const stepDefinition = {
 - driverObj.getLastHighlightedElement();
 + driverObj.getPreviousElement();
 
-+ // New options added
-+ driverObj.moveTo(stepIndex)
-+ driverObj.getActiveStep(); // returns the configured step definition
-+ driverObj.getPreviousStep(); // returns the previous step definition
++ // New
++ driverObj.moveTo(stepIndex);
++ driverObj.getActiveStep();
++ driverObj.getPreviousStep();
 + driverObj.isLastStep();
 + driverObj.isFirstStep();
 + driverObj.getState();
@@ -157,5 +154,3 @@ const stepDefinition = {
 + driverObj.setConfig(config);
 + driverObj.refresh();
 ```
-
-Please make sure to visit the [documentation](https://driverjs.com/docs/configuration) for more details.

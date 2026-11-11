@@ -1,22 +1,20 @@
 ---
 title: "Interactive Tours"
 description: "Build Driver.js tours that react to your app: advance when users click the highlighted element, wait for elements that render on demand, run async logic between steps, and continue across pages."
-groupTitle: "Examples"
-sort: 3
+groupTitle: "Guides"
+sort: 11
 ---
 
 import { CodeSample } from "../../components/CodeSample.tsx";
+import { InteractiveSample } from "../../components/InteractiveSample.tsx";
 
-Sometimes the best way forward in a tour is the product itself: click the button you are pointing at, not a "Next" in the popover. Two options make this work without any custom hooks:
+A tour can follow what happens in your app instead of the Next button. This page covers tours that advance on a click, wait for elements, skip optional steps, survive re-renders, run inside dialogs and continue on another page.
 
-- `advanceOn: "click"` advances the tour when the highlighted element is clicked, exactly as if the next button was pressed. The element's own click behavior still runs.
-- `waitForElement` makes a step wait up to the given number of milliseconds for its element to appear, staying on the current step in the meantime. The current popover stays visible in a waiting state, with its close button usable.
-
-Both can be set for the whole tour or per step. `advanceOnClick: true` from earlier versions still works but is deprecated. For tours where every step waits for a specific action, like a right-click or typing, and wrong actions get feedback, see [Action-Driven Tours](/docs/action-driven-tours).
+For tours where every step waits for a specific action and wrong actions get feedback, see [Action-Driven Tours](/docs/action-driven-tours).
 
 ## Advance on Click
 
-The tour below has `advanceOn: "click"` set, so you can click the highlighted lines to walk through it.
+`advanceOn: "click"` moves the tour on when the highlighted element is clicked, as if Next was pressed. The element's own click handler still runs. Set it for the whole tour or per step.
 
 <CodeSample
   heading={'Advance on Click'}
@@ -26,9 +24,9 @@ The tour below has `advanceOn: "click"` set, so you can click the highlighted li
     advanceOn: "click",
   }}
   tour={[
-    { element: '.line:nth-child(5)', popover: { title: 'Click to Advance', description: 'This tour advances on click. Click this highlighted line to move on; the next button works too.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(8)', popover: { title: 'Also per Step', description: 'Like most options, it can be set for the whole tour or per step. Click this line to continue.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(14)', popover: { title: 'Last Step', description: 'On the last step, clicking the highlighted element ends the tour, like the done button.', side: "top", align: 'start' }},
+    { element: '.line:nth-child(5)', popover: { title: 'Click to Advance', description: 'Click this highlighted line to move on. The Next button works too.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(8)', popover: { title: 'Per Step Too', description: 'Set it on a single step to use it only there. Click this line to continue.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(14)', popover: { title: 'Last Step', description: 'A click on the last step ends the tour, like the Done button.', side: "top", align: 'start' }},
   ]}
   id={"interactive-tour"}
   client:load>
@@ -40,9 +38,9 @@ The tour below has `advanceOn: "click"` set, so you can click the highlighted li
     advanceOn: "click",
     showProgress: true,
     steps: [
-      { element: '#pick-plan', popover: { title: 'Pick a Plan', description: 'Click the highlighted card to continue.' } },
-      { element: '#billing-toggle', popover: { title: 'Billing', description: 'Clicking advances the tour; the toggle still flips.' } },
-      { element: '#checkout-btn', popover: { title: 'Checkout', description: 'Clicking the last element ends the tour.' } },
+      { element: "#pick-plan", popover: { title: "Pick a Plan", description: "Click the card to continue." } },
+      { element: "#billing-toggle", popover: { title: "Billing", description: "The toggle still flips." } },
+      { element: "#checkout", popover: { title: "Checkout", description: "A click here ends the tour." } },
     ],
   });
 
@@ -50,11 +48,11 @@ The tour below has `advanceOn: "click"` set, so you can click the highlighted li
   ```
 </CodeSample>
 
-> **Tip**: For truly click-driven steps, hide the next button with `showButtons: ['close']` on the step's popover so the highlighted element is the only way forward. Note that clicks can't advance the tour on steps where `disableActiveInteraction` blocks clicks on the element.
+`advanceOn` takes any event, like `"change"` or `"dblclick"`. To remove the Next button so the click is the only way forward, make the step an [action step](/docs/action-driven-tours#make-the-user-act). `advanceOnClick: true` from earlier versions still works but is deprecated.
 
 ## Wait for Elements
 
-Click-driven tours usually lead somewhere new: the click opens a modal or a dropdown whose elements don't exist yet. Give the next step a `waitForElement` timeout and the tour waits for the element instead of falling back. In the demo below, pressing next renders the target element about a second later; watch the tour hold the current step, then follow.
+A click often leads to something that doesn't exist yet, like a modal. Give the next step a `waitForElement` time in milliseconds: the tour stays on the current step, with its popover in a waiting state, until the element appears. Below, Next renders the element about a second later.
 
 <CodeSample
   heading={'Wait for Element'}
@@ -63,8 +61,8 @@ Click-driven tours usually lead somewhere new: the click opens a modal or a drop
     showProgress: true,
   }}
   tour={[
-    { element: '.line:nth-child(19)', popover: { title: 'Press Next', description: 'The next element renders about a second after you press next. The tour waits on this step until it appears.', side: "bottom", align: 'start' }},
-    { element: '.dynamic-el', waitForElement: 5000, popover: { title: 'Worth the Wait', description: 'This element rendered on demand; the tour waited for it instead of showing the centered fallback.' }},
+    { element: '.line:nth-child(13)', popover: { title: 'Press Next', description: 'The next element renders about a second after you press Next. The tour waits here until it appears.', side: "bottom", align: 'start' }},
+    { element: '.dynamic-el', waitForElement: 5000, popover: { title: 'Worth the Wait', description: 'This element rendered on demand, and the tour waited for it.' }},
   ]}
   id={"interactive-wait"}
   client:load>
@@ -75,23 +73,14 @@ Click-driven tours usually lead somewhere new: the click opens a modal or a drop
   const driverObj = driver({
     steps: [
       {
-        element: '#open-modal-btn',
+        element: "#open-modal",
         advanceOn: "click",
-        popover: {
-          title: 'Open the Modal',
-          description: 'Clicking this button opens the modal and moves the tour on.',
-          showButtons: ['close'],
-        },
+        popover: { title: "Open the Modal", instruction: "Click <b>Open</b>." },
       },
       {
-        // Rendered on demand: the tour waits up to 5 seconds for it,
-        // staying on the previous step in the meantime.
-        element: '#modal-confirm',
+        element: "#modal-confirm",
         waitForElement: 5000,
-        popover: {
-          title: 'Confirm',
-          description: 'This step appeared once the modal rendered.',
-        },
+        popover: { title: "Confirm", description: "This step showed once the modal rendered." },
       },
     ],
   });
@@ -100,37 +89,99 @@ Click-driven tours usually lead somewhere new: the click opens a modal or a drop
   ```
 </CodeSample>
 
-If the element never appears, the wait times out into the usual missing-element behavior: the centered fallback popover, or a skip when `skipMissingElement` is set. To handle the timeout yourself, for example to show a hint and let the user try again, use [`onElementMissing`](/docs/action-driven-tours#recover-from-a-slow-load).
+If the element never appears, the step shows without it, centered on the screen. To keep the user on the current step instead, set [`onElementMissing`](/docs/action-driven-tours#recover-from-a-slow-load).
+
+## Optional Steps
+
+Some elements only exist for some users. With `skipMissingElement: true`, a step whose element is not on the page is skipped, forwards and backwards. Run the tour below with and without the banner.
+
+<InteractiveSample scenario="optional" client:load>
+  ```js
+  const driverObj = driver({
+    steps: [
+      { element: "#stats", popover: { title: "Your numbers", description: "Updated every hour." } },
+      {
+        element: "#trial-banner",
+        skipMissingElement: true,
+        popover: { title: "Trial banner", description: "Only trial accounts see this step." },
+      },
+      { element: "#export", popover: { title: "Export", description: "Download the numbers as CSV." } },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</InteractiveSample>
+
+Set it on the driver to apply it to every step. Steps without an `element` are never skipped. Combined with `waitForElement`, the step is skipped only after the wait runs out.
+
+## Elements That Re-render
+
+Frameworks often replace an element instead of updating it. When the highlighted element is replaced, the step moves to the new element that matches its selector. There is nothing to configure. A step that got an element object instead of a selector or function has nothing to look up, so prefer selectors.
+
+<InteractiveSample scenario="rerender" client:load>
+  ```js
+  const driverObj = driver({
+    steps: [
+      {
+        element: "#sync-row",
+        popover: { title: "Sync status", description: "Click <b>Sync now</b> a few times." },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</InteractiveSample>
+
+When the element is removed and nothing replaces it, [`onElementMissing`](/docs/configuration#missing-elements) decides what happens.
+
+## Steps Inside a Dialog
+
+Steps can point at elements inside an open `<dialog>`, including one opened with `showModal()`. The overlay and the popover render inside the dialog, so the rest of the dialog is dimmed like the page and the popover shows above it. `allowedElements` inside the dialog get their own cutout in the overlay. When the dialog closes mid-step, both move back to the page. Use `waitForElement` on the first step inside, since the dialog opens after the click.
+
+<InteractiveSample scenario="dialog" client:load>
+  ```js
+  const driverObj = driver({
+    showButtons: ["close"],
+    steps: [
+      {
+        element: "#new-project",
+        advanceOn: "click",
+        popover: { title: "Start a project", instruction: "Click <b>New project</b>." },
+      },
+      {
+        element: "dialog #project-name",
+        waitForElement: 1000,
+        popover: { title: "Name it", showButtons: ["next", "close"], side: "top" },
+      },
+      {
+        element: "dialog #create",
+        advanceOn: "click",
+        popover: { title: "Create it", instruction: "Click <b>Create</b>." },
+      },
+      {
+        element: "#created",
+        waitForElement: 1000,
+        popover: { title: "Created", showButtons: ["next"] },
+      },
+    ],
+  });
+
+  driverObj.drive();
+  ```
+</InteractiveSample>
 
 ## Async Steps
 
-When a step needs to load data or render something before the tour can move on, and `waitForElement` isn't enough, take over navigation yourself. Override `onNextClick`, do the work, then call `moveNext()`.
+To do work before a step, like loading data, take over the Next button with `onNextClick` and call `moveNext()` when you are ready.
 
 <CodeSample
   heading={'Asynchronous Tour'}
   tour={[
-    {
-      element: '.line:nth-child(14)',
-      popover: {
-        title: 'First Step',
-        description: 'You can add a function to override the default behavior of the next button i.e. to fetch some data from the server and then call moveNext()',
-      }
-    },
-    {
-      element: '.line:nth-child(17)',
-      popover: {
-        title: 'Manually Handle Next',
-        description: 'Here we are moving to the next step manually since driver.js does not know when the data is loaded dynamically.',
-      }
-    },
-    {
-      popover: {
-        title: 'Next Step is Async',
-        description: 'This is the first step. Next element will be loaded dynamically.',
-      },
-    },
-    { element: '.dynamic-el', popover: { title: 'Async Element', description: 'This element is loaded dynamically and will be removed as soon as we move away from this step' } },
-    { popover: { title: 'Last Step', description: 'This is the last step.' } }
+    { popover: { title: 'Next Step is Async', description: 'Next mounts an element first, then moves on to it.' } },
+    { element: '.dynamic-el', popover: { title: 'Async Element', description: 'This element was added by onNextClick. It is removed again when you leave this step.' } },
+    { popover: { title: 'Last Step', description: 'Previous mounts the element again before going back.' } }
   ]}
   id={"async-tour"}
   client:load>
@@ -139,56 +190,37 @@ When a step needs to load data or render something before the tour can move on, 
   import "driver.js/dist/driver.css";
 
   const driverObj = driver({
-    showProgress: true,
     steps: [
       {
         popover: {
-          title: 'First Step',
-          description: 'This is the first step. Next element will be loaded dynamically.'
-          // By passing onNextClick, you can override the default behavior of the next button.
-          // This will prevent the driver from moving to the next step automatically.
-          // You can then manually call driverObj.moveNext() to move to the next step.
-          onNextClick: () => {
-            // .. load element dynamically
-            // .. and then call
+          title: "Next Step is Async",
+          description: "Next loads the report first.",
+          onNextClick: async () => {
+            await loadReport();
             driverObj.moveNext();
           },
         },
       },
       {
-        element: '.dynamic-el',
-        popover: {
-          title: 'Async Element',
-          description: 'This element is loaded dynamically.'
-        },
-        // onDeselected is called when the element is deselected.
-        // Here we are simply removing the element from the DOM.
-        onDeselected: () => {
-          // .. remove element
-          document.querySelector(".dynamic-el")?.remove();
-        }
+        element: "#report",
+        popover: { title: "Your Report", description: "Loaded on demand." },
+        onDeselected: () => unloadReport(),
       },
-      { popover: { title: 'Last Step', description: 'This is the last step.' } }
-    ]
+      { popover: { title: "Last Step", description: "That's it." } },
+    ],
   });
 
   driverObj.drive();
   ```
 </CodeSample>
 
-> **Note**: By overriding `onNextClick`, and `onPrevClick` hooks you control the navigation of the driver. This means that user won't be able to navigate using the buttons and you will have to either call `driverObj.moveNext()` or `driverObj.movePrevious()` to navigate to the next/previous step.
->
-> You can use this to implement custom logic for navigating between steps. This is also useful when you are dealing with dynamic content and want to highlight the next/previous element based on some logic.
->
-> `onNextClick` and `onPrevClick` hooks can be configured at driver level as well as step level. When configured at the driver level, you control the navigation for all the steps. When configured at the step level, you control the navigation for that particular step only.
+`onNextClick` and `onPrevClick` replace the button's default action, so the tour only moves when you call `moveNext()` or `movePrevious()`. Set them on the driver to handle every step. To move on when something finishes without the user pressing Next, use [`advance()`](/docs/action-driven-tours#move-on-when-your-app-is-done).
 
 ## Multi-Page Tours
 
-A driver instance lives within a single page: a full page load destroys it, and even in single-page apps the next route's elements don't exist while the current route is showing. The reliable pattern for tours that span navigation is to treat the tour as resumable: persist the step to resume at, let the app navigate normally, and start a fresh tour from the saved step on the next page.
+A driver lives on one page: a page load destroys it. For a tour that continues on another page, save the step to resume at, let the app navigate, and start the tour from that step on the next page.
 
-### Saving Progress Before Navigating
-
-Define the tour in a function so every page can create it. On the step whose click navigates away, use `advanceOn: "click"` together with an `onNextClick` override: instead of moving to a step that lives on another page, save where to resume and tear the tour down. The link's own click keeps working, so navigation happens naturally.
+On the step whose click navigates, `advanceOn: "click"` completes the step and `onNextClick` saves the progress instead of moving on. The link's own click still navigates.
 
 ```js
 import { driver } from "driver.js";
@@ -207,23 +239,18 @@ export function createTour() {
       },
       {
         element: "#settings-link",
-        // Clicking the highlighted link continues the tour and navigates.
         advanceOn: "click",
         popover: {
           title: "Open Settings",
-          description: "Click this link to continue on the settings page.",
-          showButtons: ["close"],
+          instruction: "Click <b>Settings</b>.",
           onNextClick: () => {
-            // The next step lives on another page: save where to resume
-            // and let the click's navigation happen naturally.
             isNavigating = true;
             localStorage.setItem(TOUR_KEY, "2");
             driverObj.destroy();
           },
         },
       },
-      // These steps target elements on the settings page. waitForElement
-      // absorbs the rendering delay after a client-side route change.
+      // On the settings page
       {
         element: "#profile-form",
         waitForElement: 5000,
@@ -235,8 +262,6 @@ export function createTour() {
       },
     ],
     onDestroyed: () => {
-      // Finished or exited: clear the saved progress so the tour does not
-      // come back on the next visit. Skipped for the hand-off destroy above.
       if (!isNavigating) {
         localStorage.removeItem(TOUR_KEY);
       }
@@ -247,9 +272,7 @@ export function createTour() {
 }
 ```
 
-### Resuming on the Next Page
-
-On every page load (or in your router's mount hook), check for saved progress and resume from it:
+On every page load, or in your router's mount hook, resume from the saved step:
 
 ```js
 const savedStep = localStorage.getItem(TOUR_KEY);
@@ -258,10 +281,8 @@ if (savedStep !== null) {
 }
 ```
 
-`drive()` accepts the step index to start from, so the tour picks up exactly where it left off.
+- This works the same for full page loads and client-side routing. In a single-page app the `destroy()` matters: without it the old page's tour stays on screen.
+- `waitForElement` on the first resumed step covers the time the new page takes to render.
+- `onDestroyed` clears the saved step when the tour is finished or closed, so it doesn't come back on the next visit.
 
-### Notes
-
-- The pattern works the same for full page loads and client-side routing. On a full load the browser tears everything down anyway; the explicit `destroy()` in the hand-off matters for single-page apps, where the old page's tour would otherwise stay on screen.
-- The saved value here is a hardcoded index for clarity. In a larger tour, compute it with `driverObj.getActiveIndex() + 1`, or store a step id and look up its index when resuming, so reordering steps doesn't break saved progress.
-- If the destination page renders its content asynchronously, `waitForElement` on the first resumed step keeps the tour from falling back to the centered popover while the page hydrates. See [Wait for Elements](#wait-for-elements) above.
+To let users pick a tour up where they closed it, see [Resume a Tour](/docs/ending-a-tour#resume-a-tour).

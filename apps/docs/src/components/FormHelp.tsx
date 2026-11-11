@@ -2,67 +2,51 @@ import { useEffect } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
+const fields = [
+  { id: "name", title: "Name", description: "Enter your name here" },
+  { id: "education", title: "Education", description: "Enter your education here" },
+  { id: "age", title: "Age", description: "Enter your age here" },
+  { id: "address", title: "Address", description: "Enter your address here" },
+];
+
 export function FormHelp() {
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
     const driverObj = driver({
       popoverClass: "driverjs-theme",
       stagePadding: 0,
       onDestroyed: () => {
-        (document?.activeElement as any)?.blur();
+        (document.activeElement as HTMLElement | null)?.blur();
+      },
+    });
+
+    fields.forEach(field => {
+      const element = document.getElementById(field.id);
+      if (!element) {
+        return;
       }
-    });
 
-    const nameEl = document.getElementById("name");
-    const educationEl = document.getElementById("education");
-    const ageEl = document.getElementById("age");
-    const addressEl = document.getElementById("address");
-    const submitEl = document.getElementById("submit-btn");
-
-    nameEl!.addEventListener("focus", () => {
-      driverObj.highlight({
-        element: nameEl!,
-        popover: {
-          title: "Name",
-          description: "Enter your name here",
+      element.addEventListener(
+        "focus",
+        () => {
+          driverObj.highlight({
+            element,
+            popover: { title: field.title, description: field.description },
+          });
         },
-      });
+        { signal }
+      );
     });
 
-    educationEl!.addEventListener("focus", () => {
-      driverObj.highlight({
-        element: educationEl!,
-        popover: {
-          title: "Education",
-          description: "Enter your education here",
-        },
-      });
-    });
+    document.getElementById("submit-btn")?.addEventListener("focus", () => driverObj.destroy(), { signal });
 
-    ageEl!.addEventListener("focus", () => {
-      driverObj.highlight({
-        element: ageEl!,
-        popover: {
-          title: "Age",
-          description: "Enter your age here",
-        },
-      });
-    });
-
-    addressEl!.addEventListener("focus", () => {
-      driverObj.highlight({
-        element: addressEl!,
-        popover: {
-          title: "Address",
-          description: "Enter your address here",
-        },
-      });
-    });
-
-    submitEl!.addEventListener("focus", (e) => {
-      e.preventDefault();
+    return () => {
+      controller.abort();
       driverObj.destroy();
-    });
-  });
+    };
+  }, []);
 
-  return <></>;
+  return null;
 }

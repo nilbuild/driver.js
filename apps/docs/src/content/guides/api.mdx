@@ -5,181 +5,216 @@ groupTitle: "Introduction"
 sort: 4
 ---
 
-Here is the list of methods provided by `driver` when you initialize it.
+`driver()` returns an object with the methods below. The options it takes are in [Configuration](/docs/configuration).
 
-> **Note:** We have omitted the configuration options for brevity. Please look at the configuration section for the options. Links are provided in the description below.
-
-```javascript
+```js
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
-// Look at the configuration section for the options
-// https://driverjs.com/docs/configuration#driver-configuration
 const driverObj = driver({
-  /* ... */
+  steps: [
+    { element: "#search", popover: { title: "Search" } },
+    { element: "#export", popover: { title: "Export" } },
+  ],
 });
-
-// --------------------------------------------------
-// driverObj is an object with the following methods
-// --------------------------------------------------
-
-// Start the tour using `steps` given in the configuration
-driverObj.drive(); // Starts at step 0
-driverObj.drive(4); // Starts at step 4
-
-driverObj.moveNext(); // Move to the next step
-driverObj.movePrevious(); // Move to the previous step
-driverObj.moveTo(4); // Move to the step 4
-driverObj.hasNextStep(); // Is there a next step
-driverObj.hasPreviousStep(); // Is there a previous step
-
-driverObj.isFirstStep(); // Is the current step the first step
-driverObj.isLastStep(); // Is the current step the last step
-
-driverObj.getActiveIndex(); // Gets the active step index
-
-driverObj.getActiveStep(); // Gets the active step configuration
-driverObj.getPreviousStep(); // Gets the previous step configuration
-driverObj.getNextStep(); // Gets the next step configuration
-driverObj.getActiveElement(); // Gets the active HTML element
-driverObj.getPreviousElement(); // Gets the previous HTML element
-
-// Is the tour or highlight currently active
-driverObj.isActive();
-
-// Recalculate and redraw the highlight
-driverObj.refresh();
-
-// Look at the configuration section for configuration options
-// https://driverjs.com/docs/configuration#driver-configuration
-driverObj.getConfig();
-driverObj.setConfig({
-  /* ... */
-});
-
-driverObj.setSteps([
-  /* ... */
-]); // Set the steps
-
-// Look at the state section of configuration for format of the state
-// https://driverjs.com/docs/configuration#state
-driverObj.getState();
-
-// Look at the DriveStep section of configuration for format of the step
-// https://driverjs.com/docs/configuration/#drive-step-configuration
-driverObj.highlight({
-  /* ... */
-}); // Highlight an element
-
-// Change the visible popover in place, without re-rendering it. Changes
-// merge and only last while the current step is shown; call it without
-// arguments to restore the step's original popover. Changed text is
-// announced to screen readers.
-driverObj.updatePopover({ description: "Not quite. Choose Editor." });
-driverObj.updatePopover();
-
-// Draw attention to the popover with a short shake. Pass a change to
-// update the popover at the same time.
-driverObj.nudge();
-driverObj.nudge({ description: "Not quite. Choose Editor." });
-driverObj.nudge({ action: "Not that one. Click <b>Inbox</b>." });
-
-// Destroy the tour. The destroy hooks receive `options.reason` "api",
-// or the reason of the user action when called from inside a hook.
-// https://driverjs.com/docs/configuration#driver-configuration
-driverObj.destroy();
 ```
 
-> Each `driver()` call returns its own independent instance. You can create as many as you need on the same page, and their configuration, steps, and state never overlap. Only one instance can be on screen at a time, so starting a tour or highlight on one instance closes whichever instance is currently active.
+## Starting and Stopping
+
+```js
+driverObj.drive(); // Start the tour at the first step
+driverObj.drive(2); // Start at the third step
+
+// Show one step on its own, without a tour
+driverObj.highlight({
+  element: "#search",
+  popover: { title: "Search", description: "Find anything." },
+});
+
+driverObj.destroy(); // End the tour or highlight
+driverObj.isActive(); // true while a tour or highlight is showing
+```
+
+`destroy()` doesn't run `onDestroyStarted`, so you can call it from that hook. The other destroy hooks get the [reason](/docs/configuration#why-a-tour-ended) `"api"`, or the reason of the user action when you call it from a hook.
+
+## Navigation
+
+```js
+driverObj.moveNext(); // Go to the next step. Ends the tour on the last one
+driverObj.movePrevious(); // Go to the previous step
+driverObj.moveTo(3); // Go to the step with this index
+driverObj.advance(); // Complete the current step
+```
+
+`advance()` completes the step the way [`advanceOn`](/docs/configuration#advanceon) does: it waits for `advanceDelay`, then runs `onNextClick` or moves on. Use it when your app decides the step is done, like after a save. `moveNext()` moves right away and doesn't run `onNextClick`.
+
+```js
+{
+  element: "#save",
+  advanceDelay: 600,
+  onHighlighted: (element, step, { signal, driver }) => {
+    window.addEventListener("profile-saved", () => driver.advance(), { signal });
+  },
+  popover: { title: "Save your profile", instruction: "Click <b>Save</b>." },
+}
+```
+
+`movePrevious()` on the first step and `moveTo()` with an index that doesn't exist end the tour. `moveTo()` also starts the tour when it isn't running, like `drive()`. `moveNext()` and `movePrevious()` do nothing then.
+
+## The Current Step
+
+```js
+driverObj.getActiveIndex(); // Index of the active step, undefined in highlight()
+driverObj.getActiveStep(); // The active step
+driverObj.getActiveElement(); // The highlighted element
+
+driverObj.getPreviousStep(); // The step that was active before this one
+driverObj.getPreviousElement(); // And its element
+driverObj.getNextStep(); // The step moveNext() would show
+
+driverObj.isFirstStep(); // No step to go back to
+driverObj.isLastStep(); // No step to go on to
+driverObj.hasNextStep();
+driverObj.hasPreviousStep();
+```
+
+These account for steps that [`skipMissingElement`](/docs/configuration#missing-elements) would skip. `isFirstStep()` and `isLastStep()` return `false` when no tour is running.
+
+## Changing the Popover
+
+```js
+// Change the visible popover. Changes merge and last until the step is left.
+driverObj.updatePopover({ description: "Almost there." });
+driverObj.updatePopover({ nextBtnText: "Continue", disableButtons: ["previous"] });
+
+// Restore the step's own popover
+driverObj.updatePopover();
+```
+
+`updatePopover()` takes `title`, `description`, `instruction`, `showButtons`, `disableButtons`, `showProgress`, `progressText`, `nextBtnText`, `prevBtnText`, `closeBtnLabel` and `popoverClass`. Changed text is announced to screen readers. It can change the text of an [action step](/docs/configuration#action-steps), but not turn a step into one.
+
+```js
+// Shake the popover to draw attention to it
+driverObj.nudge();
+
+// Shake it and show a line of feedback under the instruction.
+// The line goes away with the next nudge() or step.
+driverObj.nudge("Not that one. Click <b>Inbox</b>.");
+
+// Shake it and change the popover like updatePopover() does
+driverObj.nudge({ description: "Not quite. Choose Editor." });
+```
+
+```js
+// Redraw the highlight and popover after a layout change.
+// Resizes, scrolling and size changes of the element are followed already.
+driverObj.refresh();
+```
+
+## Configuration
+
+```js
+driverObj.getConfig(); // The current configuration
+driverObj.getState(); // The current state, see Configuration
+driverObj.getState("activeIndex"); // One key of it
+
+// Replace the steps
+driverObj.setSteps([{ element: "#billing", popover: { title: "Billing" } }]);
+
+// Replace the configuration
+driverObj.setConfig({ ...driverObj.getConfig(), showProgress: true });
+```
+
+`setConfig()` replaces the whole configuration, including `steps`. Spread `getConfig()` to keep what you had. After `setSteps()` on a running tour, call `drive()` to show the new steps.
+
+## Types
+
+```ts
+import type {
+  Config,
+  DriveStep,
+  Popover,
+  Driver,
+  State,
+  PopoverDOM,
+  PopoverPatch,
+  DriverHook,
+  HookOpts,
+  DestroyReason,
+  AdvanceOn,
+  AdvanceOnEvent,
+  AllowedElements,
+  InteractionHook,
+  ElementMissing,
+  ElementMissingHook,
+  Side,
+  Alignment,
+  AllowedButtons,
+} from "driver.js";
+```
 
 ## Hints
 
-Hints ship as their own entry and factory. See the [Hints guide](/docs/hints) for an introduction, and the [Hints Configuration](/docs/configuration#hints-configuration) section for the options.
+`hints()` returns its own object. Options are in [Hints Configuration](/docs/configuration#hints-configuration), examples in the [Hints guide](/docs/hints).
 
-```javascript
+```js
 import { hints } from "driver.js/hints";
 import "driver.js/dist/hints.css";
 
-// Look at the configuration section for the options
-// https://driverjs.com/docs/configuration#hints-configuration
 const productHints = hints({
-  /* ... */
+  hints: [{ element: "#export", id: "export", popover: { title: "Export your data" } }],
 });
 
-// -----------------------------------------------------
-// productHints is an object with the following methods
-// -----------------------------------------------------
+productHints.show(); // Show the beacons. Call again to pick up elements that appeared since
+productHints.hide(); // Remove the beacons
+productHints.isVisible();
 
-// Mount the beacons. Calling it again picks up hints
-// whose elements have appeared since.
-productHints.show();
-// Remove the beacons and listeners; show() brings them back
-productHints.hide();
-
-// Hints are addressed by their `id`, or by their
-// index in the array when no id is set.
+// By id, or by index when the hint has no id
 productHints.open("export"); // Open a hint's popover
 productHints.close(); // Close the open popover, keeping its beacon
-productHints.dismiss("export"); // Remove the hint's beacon and fire onDismiss
+productHints.dismiss("export"); // Remove a hint's beacon and run onDismiss
 productHints.restore("export"); // Bring a dismissed hint back
-productHints.restoreAll(); // Bring every dismissed hint back
+productHints.restoreAll();
 
-productHints.setHints([
-  /* ... */
-]); // Replace the hints; resets dismissals
 productHints.getHints(); // The configured hints
 productHints.getActive(); // The hint whose popover is open, if any
+productHints.setHints([]); // Replace the hints. Dismissals are forgotten
 
-productHints.isVisible(); // Whether the beacons are currently shown
-
-// Reposition the beacons, the open popover and the
-// overlay after layout changes
-productHints.refresh();
+productHints.refresh(); // Reposition after a layout change
 ```
-
-> Like `driver()`, each `hints()` call is independent: its hints, dismissals, and overlay never affect another instance or a running tour.
 
 ## Checklists
 
-Checklists ship as their own entry and factory. See the [Checklists guide](/docs/checklists) for an introduction, and the [Checklist Configuration](/docs/configuration#checklist-configuration) section for the options.
+`checklist()` returns its own object. Options are in [Checklist Configuration](/docs/configuration#checklist-configuration), examples in the [Checklists guide](/docs/checklists).
 
-```javascript
+```js
 import { checklist } from "driver.js/checklist";
 import "driver.js/dist/driver.css";
 import "driver.js/dist/checklist.css";
 
-// Look at the configuration section for the options
-// https://driverjs.com/docs/configuration#checklist-configuration
 const onboarding = checklist({
-  /* ... */
+  id: "onboarding",
+  items: [
+    { id: "tour", title: "Take the tour", tour: [{ element: "#search", popover: { title: "Search" } }] },
+    { id: "github", title: "Connect GitHub" },
+  ],
 });
 
-// ---------------------------------------------------
-// onboarding is an object with the following methods
-// ---------------------------------------------------
-
-// Add the launcher to the page; hide() removes the widget
-onboarding.show();
-onboarding.hide();
+onboarding.show(); // Add the widget to the page
+onboarding.hide(); // Remove it
+onboarding.isVisible();
 
 onboarding.open(); // Open the panel
 onboarding.close(); // Close the panel, keeping the launcher
-onboarding.toggle(); // Open or close the panel
+onboarding.toggle();
+onboarding.isOpen();
 
-// Items are addressed by their `id`.
-onboarding.start("tour"); // Run the item's tour, link or action
+onboarding.start("tour"); // Run an item's tour, link or action
 onboarding.complete("github"); // Tick an item
-onboarding.uncomplete("github"); // Untick an item
+onboarding.uncomplete("github"); // Untick it
 onboarding.reset(); // Untick every item
+onboarding.refresh(); // Check every item's completeWhen again
 
-// Check every item's completeWhen again
-onboarding.refresh();
-
-onboarding.getProgress(); // { completed: ["tour"], done: 1, total: 4 }
+onboarding.getProgress(); // { completed: ["github"], done: 1, total: 2 }
 onboarding.getItems(); // The configured items
-
-onboarding.isVisible(); // Whether the widget is on the page
-onboarding.isOpen(); // Whether the panel is open
 ```
-
-> Tours started from a checklist run like any other tour, so starting one closes whichever tour is currently active. Items that are done can still be clicked to run their tour again.

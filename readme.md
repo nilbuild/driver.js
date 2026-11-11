@@ -15,63 +15,96 @@
 </p>
 
 <p align="center">
-  <b>Powerful, highly customizable library for Product Tours and Feature Introductions</b></br>
-  <sub>No external dependencies, light-weight, supports all major browsers and highly customizable </sub><br>
+  <b>Product tours, highlights, hints and onboarding checklists for the web</b><br>
+  <sub>No dependencies, written in TypeScript, works with any framework</sub>
 </p>
 
 <br />
 
-- **Simple**: is simple to use and has no external dependency at all
-- **Light-weight**: is just 5kb gzipped as compared to other libraries which are +12kb gzipped
-- **Highly customizable**: has a powerful API and can be used however you want
-- **Highlight anything**: highlight any (literally any) element on page
-- **Feature introductions**: create powerful feature introductions for your web applications
-- **Focus shifters**: add focus shifters for users
-- **User friendly**: Everything is controllable by keyboard
-- **TypeScript**: Written in TypeScript
-- **Consistent behavior**: usable across all browsers
-- **MIT Licensed**: free for personal and commercial use
+- **Tours**: walk users through your app step by step
+- **Action-driven steps**: wait for the user to click, type or pick, and give feedback on wrong actions
+- **Highlights**: dim the page around any element, with or without a popover
+- **Hints**: pulsing beacons that open a popover on click, without blocking the page
+- **Checklists**: an onboarding widget whose items start tours and tick themselves off
+- **Accessible**: keyboard control, focus management and screen reader announcements
+- **Themeable**: plain CSS classes and variables
+- **MIT licensed**: free for personal and commercial use
 
-<br />
+## Install
+
+```sh
+npm install driver.js
+```
+
+## Usage
+
+```js
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const driverObj = driver({
+  showProgress: true,
+  steps: [
+    { element: "#search", popover: { title: "Search", description: "Find anything from here." } },
+    { element: "#new-project", popover: { title: "New project", description: "Start your first project." } },
+  ],
+});
+
+driverObj.drive();
+```
+
+Highlight a single element:
+
+```js
+driverObj.highlight({
+  element: "#search",
+  popover: { title: "Search", description: "Find anything from here." },
+});
+```
+
+Make a step wait for the user:
+
+```js
+const driverObj = driver({
+  steps: [
+    {
+      element: "#new-project",
+      advanceOn: "click",
+      popover: { title: "Start a project", instruction: "Click <b>New project</b>." },
+    },
+    {
+      element: "#project-name",
+      waitForElement: 3000,
+      popover: { title: "Name it", description: "Give your project a name." },
+    },
+  ],
+});
+```
+
+Hints and checklists are separate entries: `driver.js/hints` and `driver.js/checklist`.
 
 ## Documentation
 
-For demos and documentation, visit [driverjs.com](https://driverjs.com)
-
-<br />
-
-## So, yet another tour library?
-
-**No**, it's more than a tour library. **Tours are just one of the many use-cases**. Driver.js can be used wherever you need some sort of overlay for the page; some common usecases could be: highlighting a page component when user is interacting with it to keep them focused, providing contextual help e.g. popover with dimmed background when user is filling a form, using it as a focus shifter to bring user's attention to some component on page, using it to simulate those "Turn off the Lights" widgets that you might have seen on video players online, usage as a simple modal, and of-course product tours etc.
-
-Driver.js is written in Vanilla TypeScript, has zero dependencies and is highly customizable. It has several options allowing you to change how it behaves and also **provides you the hooks** to manipulate the elements as they are highlighted, about to be highlighted, or deselected.
-
-> Also, comparing the size of Driver.js with other libraries, it's the most light-weight, it is **just ~5kb gzipped** while others are 12kb+.
-
-<br>
+Guides, live demos and the full reference are on [driverjs.com](https://driverjs.com/docs/installation).
 
 ## Developing locally
 
-The library lives in `src/`. To try your changes against a set of live examples, run the playground — an Astro app in `playground/` that imports the library straight from source, so edits hot-reload instantly:
+This is a pnpm monorepo. The library is in `packages/driver`, the playground in `apps/playground` and the docs site in `apps/docs`. Both apps import the library from source, so changes show up right away.
 
 ```sh
 pnpm install
-pnpm run playground:install
-pnpm dev
-```
-
-Each example lives in its own file under `playground/src/examples/` and shows up as a page in the sidebar. To add one, drop an entry into the relevant group (`highlight.ts`, `popover.ts`, `tour.ts`, `api.ts`).
-
-Other useful scripts:
-
-```sh
+pnpm dev        # Playground
+pnpm docs:dev   # Docs site
+pnpm test       # Unit tests, in watch mode
+pnpm test:e2e   # Playwright tests against the playground
 pnpm build
-pnpm test
 ```
+
+Playground examples live in `apps/playground/src/examples`.
 
 ## Contributions
 
-Feel free to submit pull requests, create issues or spread the word.
+Pull requests and issues are welcome.
 
 ## License
 

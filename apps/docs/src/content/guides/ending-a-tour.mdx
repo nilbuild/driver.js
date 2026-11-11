@@ -1,30 +1,29 @@
 ---
 title: "Ending a Tour"
 description: "Control how a Driver.js tour ends. Ask users to confirm before they leave, stop them from exiting early, and tell a finished tour apart from one that was closed."
-groupTitle: "Examples"
-sort: 4
+groupTitle: "Guides"
+sort: 13
 ---
 
 import { CodeSample } from "../../components/CodeSample.tsx";
+import { InteractiveSample } from "../../components/InteractiveSample.tsx";
 
-A tour ends when the user finishes the last step, or leaves early with the close button, the <kbd>Escape</kbd> key or a click on the overlay. The examples below show how to step in before the tour closes, and how to find out which way it ended.
+A tour ends when the user finishes the last step, or leaves early with the close button, the <kbd>Escape</kbd> key or a click on the overlay. You can step in before it closes, find out which way it ended, and let the user pick it up again later.
 
 ## Confirm on Exit
 
-You can use the `onDestroyStarted` hook to add a confirmation dialog or some other logic when the user tries to exit the tour. In the example below, we ask for confirmation only when the user leaves before finishing the tour.
+`onDestroyStarted` runs when the tour is about to end. Once you set it, the tour only ends when you call `destroy()`. The example asks only when the user leaves early.
 
 <CodeSample
   heading={'Confirm on Exit'}
   config={{
     animate: true,
     showProgress: true,
-    showButtons: ['next', 'previous'],
   }}
   tour={[
-    { element: '#confirm-destroy', popover: { title: 'Animated Tour Example', description: 'Here is the code example showing animated tour. Let\'s walk you through it.', side: "left", align: 'start' }},
-    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-    { popover: { title: 'Happy Coding', description: 'And that is all, go ahead and start adding tours to your applications.' } }
+    { element: '.line:nth-child(9)', popover: { title: 'Try to Leave', description: 'Press Escape, the close button or the dimmed page. This hook asks before the tour ends.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(10)', popover: { title: 'Finishing Is Fine', description: 'The reason is "done" when the user finishes the tour, so there is no question then.', side: "bottom", align: 'start' }},
+    { popover: { title: 'Last Step', description: 'Press Done to finish without a question, or close it to get one.' } }
   ]}
   id={"confirm-destroy"}
   client:load>
@@ -33,14 +32,10 @@ You can use the `onDestroyStarted` hook to add a confirmation dialog or some oth
   import "driver.js/dist/driver.css";
 
   const driverObj = driver({
-    showProgress: true,
     steps: [
-      { element: '#confirm-destroy-example', popover: { title: 'Animated Tour Example', description: 'Here is the code example showing animated tour. Let\'s walk you through it.', side: "left", align: 'start' }},
-      { element: 'code .line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-      { element: 'code .line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-      { popover: { title: 'Happy Coding', description: 'And that is all, go ahead and start adding tours to your applications.' } }
+      { element: "#search", popover: { title: "Search", description: "Find anything." } },
+      { element: "#export", popover: { title: "Export", description: "Download a CSV." } },
     ],
-    // onDestroyStarted is called when the user tries to exit the tour
     onDestroyStarted: (element, step, { reason }) => {
       if (reason === "done" || confirm("Are you sure?")) {
         driverObj.destroy();
@@ -52,13 +47,9 @@ You can use the `onDestroyStarted` hook to add a confirmation dialog or some oth
   ```
 </CodeSample>
 
-> **Note:** By overriding the `onDestroyStarted` hook, you are responsible for calling `driverObj.destroy()` to exit the tour.
-
 ## Prevent Exit
 
-You can also prevent the user from exiting the tour using `allowClose` option. This option is useful when you want to force the user to complete the tour before they can exit.
-
-In the example below, you won't be able to exit the tour until you reach the last step.
+`allowClose: false` removes the close button and turns off Escape and overlay clicks, so the only way out is to finish the tour.
 
 <CodeSample
   heading={'Prevent Exit'}
@@ -66,13 +57,10 @@ In the example below, you won't be able to exit the tour until you reach the las
     animate: true,
     showProgress: true,
     allowClose: false,
-    showButtons: ['next', 'previous'],
   }}
   tour={[
-    { element: '#prevent-exit', popover: { title: 'Animated Tour Example', description: 'Here is the code example showing animated tour. Let\'s walk you through it.', side: "left", align: 'start' }},
-    { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-    { popover: { title: 'Happy Coding', description: 'And that is all, go ahead and start adding tours to your applications.' } }
+    { element: '.line:nth-child(5)', popover: { title: 'No Way Out', description: 'There is no close button, and Escape and clicks on the dimmed page do nothing.', side: "bottom", align: 'start' }},
+    { popover: { title: 'Last Step', description: 'Press Done to finish the tour.' } }
   ]}
   id={"prevent-exit"}
   client:load>
@@ -81,13 +69,10 @@ In the example below, you won't be able to exit the tour until you reach the las
   import "driver.js/dist/driver.css";
 
   const driverObj = driver({
-    showProgress: true,
     allowClose: false,
     steps: [
-      { element: '#prevent-exit', popover: { title: 'Animated Tour Example', description: 'Here is the code example showing animated tour. Let\'s walk you through it.', side: "left", align: 'start' }},
-      { element: 'code .line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in vanilla JavaScript as well as frameworks.', side: "bottom", align: 'start' }},
-      { element: 'code .line:nth-child(2)', popover: { title: 'Importing CSS', description: 'Import the CSS which gives you the default styling for popover and overlay.', side: "bottom", align: 'start' }},
-      { popover: { title: 'Happy Coding', description: 'And that is all, go ahead and start adding tours to your applications.' } }
+      { element: "#search", popover: { title: "Search", description: "Find anything." } },
+      { element: "#export", popover: { title: "Export", description: "Download a CSV." } },
     ],
   });
 
@@ -95,16 +80,18 @@ In the example below, you won't be able to exit the tour until you reach the las
   ```
 </CodeSample>
 
+To keep the close button and only ignore clicks on the overlay, use `overlayClickBehavior: "none"` instead.
+
 ## Finished or Closed
 
-`onDestroyStarted` and `onDestroyed` receive `reason` in their options, telling you why the tour ended:
+`onDestroyStarted` and `onDestroyed` get a `reason`:
 
 - `"done"`: the user moved past the last step
-- `"close"`, `"escape"` or `"overlay"`: the user left early with the close button, the <kbd>Escape</kbd> key or a click on the overlay
+- `"close"`, `"escape"` or `"overlay"`: the user left early
 - `"replaced"`: another tour or highlight started
-- `"api"`: your own code called `destroy()`
+- `"api"`: your code called `destroy()`
 
-Use it to mark onboarding as complete only when the user actually finished it, or to log the step where users drop off. Finish the tour below, or leave it early, to see the reason.
+Use it to mark onboarding complete only when the user finished it, or to log where users drop off. Finish the tour below, or leave it early.
 
 <CodeSample
   heading={'Track Completion'}
@@ -114,8 +101,8 @@ Use it to mark onboarding as complete only when the user actually finished it, o
   }}
   tour={[
     { element: '#destroy-reason', popover: { title: 'Finish or Leave', description: 'Finish this tour, or leave it any way you like: close button, Escape or a click outside.', side: "left", align: 'start' }},
-    { element: '.line:nth-child(8)', popover: { title: 'Why It Ended', description: 'onDestroyed receives the reason along with the index of the step the user was on.', side: "bottom", align: 'start' }},
-    { popover: { title: 'Last Step', description: 'Press done to finish, or close it now to see the difference.' } }
+    { element: '.line:nth-child(8)', popover: { title: 'Why It Ended', description: 'onDestroyed gets the reason and the index of the step the user was on.', side: "bottom", align: 'start' }},
+    { popover: { title: 'Last Step', description: 'Press Done to finish, or close it now to see the difference.' } }
   ]}
   id={"destroy-reason"}
   client:load>
@@ -140,4 +127,35 @@ Use it to mark onboarding as complete only when the user actually finished it, o
   ```
 </CodeSample>
 
-> **Note:** A `destroy()` you call from a hook keeps the reason of the user action that started it. In the [Confirm on Exit](#confirm-on-exit) example above, `onDestroyed` gets `"close"`, not `"api"`.
+A `destroy()` you call from a hook keeps the reason of the user action that started it. In [Confirm on Exit](#confirm-on-exit), `onDestroyed` gets `"close"`, not `"api"`.
+
+## Resume a Tour
+
+`onDestroyed` also gets the `index` of the step the user was on. Save it when they leave early, and pass it to `drive()` next time. Close the tour below on any step, then start it again.
+
+<InteractiveSample scenario="resume" client:load>
+  ```js
+  const STEP_KEY = "tour-step";
+
+  const driverObj = driver({
+    showProgress: true,
+    steps: [
+      { element: "#overview", popover: { title: "Overview" } },
+      { element: "#reports", popover: { title: "Reports" } },
+      { element: "#team", popover: { title: "Team" } },
+      { element: "#settings", popover: { title: "Settings" } },
+    ],
+    onDestroyed: (element, step, { reason, index }) => {
+      if (reason === "done") {
+        localStorage.removeItem(STEP_KEY);
+      } else {
+        localStorage.setItem(STEP_KEY, String(index));
+      }
+    },
+  });
+
+  driverObj.drive(Number(localStorage.getItem(STEP_KEY) ?? 0));
+  ```
+</InteractiveSample>
+
+For a tour that continues on another page, see [Multi-Page Tours](/docs/interactive-tours#multi-page-tours).

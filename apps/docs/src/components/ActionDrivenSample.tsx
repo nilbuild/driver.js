@@ -3,51 +3,62 @@ import type { Config, Driver, DriveStep } from "driver.js";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
-type Scenario = "invite" | "toggle" | "action" | "plan" | "save" | "feedback" | "menu" | "load";
+type Scenario =
+  | "invite"
+  | "toggle"
+  | "action"
+  | "strict"
+  | "plan"
+  | "save"
+  | "feedback"
+  | "hover"
+  | "menu"
+  | "load"
+  | "themed";
 
 type ActionDrivenSampleProps = {
   scenario?: Scenario;
   children?: any;
 };
 
-type DemoProps = {
+export type DemoProps = {
   code?: any;
 };
 
-const box = "flex flex-col gap-3 rounded-lg border border-gray-200 p-5";
-const field = "rounded-md border border-gray-300 px-3 py-2 text-sm";
-const primary = "cursor-pointer rounded-md bg-black px-4 py-2 text-sm text-white";
-const secondary = "cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm";
-
-const blockOutside: Config["onInteraction"] = (element, step, opts) => {
-  if (opts.region !== "outside") {
-    return;
-  }
-
-  opts.driver.nudge({ description: step.data?.hint });
-  return false;
+type FrameProps = {
+  ui: any;
+  code?: any;
+  buttonText?: string;
+  onStart: () => void;
 };
 
-function useTour() {
+export const box = "flex flex-col gap-3 rounded-lg border border-gray-200 p-5";
+export const field = "rounded-md border border-gray-300 px-3 py-2 text-sm";
+export const primary = "cursor-pointer rounded-md bg-black px-4 py-2 text-sm text-white";
+export const secondary = "cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm";
+
+export function useTour() {
   const tour = useRef<Driver | null>(null);
 
   useEffect(() => {
     return () => tour.current?.destroy();
   }, []);
 
-  return (config: Config) => {
+  return (config: Config, stepIndex?: number) => {
     tour.current = driver({ animate: true, showButtons: ["close"], ...config });
-    tour.current.drive();
+    tour.current.drive(stepIndex);
   };
 }
 
-function Frame(props: { ui: any; code?: any; onStart: () => void }) {
+export function Frame(props: FrameProps) {
+  const { ui, code, buttonText = "Show me an Example", onStart } = props;
+
   return (
     <div className="my-6">
-      {props.ui}
-      {props.code && <div className="mt-4 -mb-4">{props.code}</div>}
-      <button type="button" onClick={props.onStart} className="mt-4 w-full rounded-md bg-black p-2 text-white">
-        Show me an Example
+      {ui}
+      {code && <div className="mt-4 -mb-4">{code}</div>}
+      <button type="button" onClick={onStart} className="mt-4 w-full rounded-md bg-black p-2 text-white">
+        {buttonText}
       </button>
     </div>
   );
@@ -68,14 +79,13 @@ const inviteSteps: DriveStep[] = [
           return true;
         }
 
-        opts.driver.nudge({ description: "That doesn't look like an email address yet." });
+        opts.driver.nudge("That doesn't look like an email address yet.");
         return false;
       },
     },
-    data: { hint: "Click the email field and type an address first." },
     popover: {
       title: "Who are you inviting?",
-      description: "Type your teammate's email and press <b>Enter</b>.",
+      instruction: "Type your teammate's email and press <b>Enter</b>.",
       side: "bottom",
       align: "start",
     },
@@ -89,14 +99,13 @@ const inviteSteps: DriveStep[] = [
           return true;
         }
 
-        opts.driver.nudge({ description: "Only editors can make changes. Choose <b>Editor</b>." });
+        opts.driver.nudge("Only editors can make changes. Choose <b>Editor</b>.");
         return false;
       },
     },
-    data: { hint: "Pick a role from the dropdown first." },
     popover: {
       title: "Pick a role",
-      description: "Choose <b>Editor</b> so they can make changes.",
+      instruction: "Choose <b>Editor</b> so they can make changes.",
       side: "bottom",
       align: "start",
     },
@@ -104,8 +113,7 @@ const inviteSteps: DriveStep[] = [
   {
     element: "#invite-send",
     advanceOn: "click",
-    data: { hint: "Click <b>Send invite</b> to finish." },
-    popover: { title: "Send it", description: "Click <b>Send invite</b>.", side: "bottom", align: "start" },
+    popover: { title: "Send it", instruction: "Click <b>Send invite</b>.", side: "bottom", align: "start" },
   },
   {
     element: "#invite-sent",
@@ -133,7 +141,7 @@ function InviteDemo(props: DemoProps) {
   function onStart() {
     formRef.current?.reset();
     setStatus("idle");
-    start({ onInteraction: blockOutside, steps: inviteSteps });
+    start({ showButtons: ["next", "close"], steps: inviteSteps });
   }
 
   const ui = (
@@ -209,14 +217,6 @@ function ActionDemo(props: DemoProps) {
     setIsOpen(false);
     start({
       showButtons: ["next", "previous", "close"],
-      onInteraction: (element, step, opts) => {
-        if (opts.region !== "outside" || !step.popover?.action) {
-          return;
-        }
-
-        opts.driver.nudge({ action: "Not that one. Click <b>Inbox</b> on the toolbar." });
-        return false;
-      },
       steps: [
         {
           element: "#ad-toolbar",
@@ -233,7 +233,7 @@ function ActionDemo(props: DemoProps) {
           popover: {
             title: "Open your inbox",
             description: "New messages land here first.",
-            action: "Click <b>Inbox</b> on the toolbar to open it.",
+            instruction: "Click <b>Inbox</b> on the toolbar to open it.",
             side: "bottom",
             align: "start",
           },
@@ -270,6 +270,71 @@ function ActionDemo(props: DemoProps) {
           3 unread messages
         </div>
       )}
+    </div>
+  );
+
+  return <Frame ui={ui} code={props.code} onStart={onStart} />;
+}
+
+function StrictDemo(props: DemoProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [rightClicks, setRightClicks] = useState(0);
+  const start = useTour();
+
+  function onStart() {
+    setIsOpen(false);
+    setRightClicks(0);
+    start({
+      steps: [
+        {
+          element: "#ad-strict-file",
+          advanceOn: { event: "dblclick", strict: true },
+          popover: {
+            title: "Open the file",
+            description: "Right-click it first: the popover shakes and the app never sees it.",
+            instruction: "Double-click <b>report.pdf</b>.",
+            side: "bottom",
+            align: "start",
+          },
+        },
+        {
+          element: "#ad-strict-opened",
+          waitForElement: 1000,
+          popover: {
+            title: "Opened",
+            description: "Only the double-click reached the app.",
+            showButtons: ["next"],
+            side: "bottom",
+            align: "start",
+          },
+        },
+      ],
+    });
+  }
+
+  const ui = (
+    <div className={box}>
+      <span className="text-lg font-semibold">Files</span>
+      <div className="flex items-center gap-4">
+        <button
+          id="ad-strict-file"
+          type="button"
+          onDoubleClick={() => setIsOpen(true)}
+          onContextMenu={event => {
+            event.preventDefault();
+            setRightClicks(count => count + 1);
+          }}
+          className={secondary}
+        >
+          report.pdf
+        </button>
+        {isOpen && (
+          <span id="ad-strict-opened" className="text-sm text-green-700">
+            Opened report.pdf
+          </span>
+        )}
+      </div>
+      <span className="text-sm text-gray-500">Right-clicks the app handled: {rightClicks}</span>
     </div>
   );
 
@@ -351,22 +416,24 @@ function SaveDemo(props: DemoProps) {
   function onStart() {
     setStatus("idle");
     start({
+      showButtons: ["next", "close"],
       steps: [
         {
           element: "#ad-save",
+          advanceDelay: 600,
           onHighlighted: (element, step, opts) => {
-            window.addEventListener("profile-saved", () => opts.driver.moveNext(), { signal: opts.signal });
+            window.addEventListener("profile-saved", () => opts.driver.advance(), { signal: opts.signal });
           },
           popover: {
             title: "Save your profile",
-            description: "Click <b>Save</b>. The tour moves on once the save finishes.",
+            description: "The tour moves on once the save finishes.",
+            instruction: "Click <b>Save</b>.",
             side: "bottom",
             align: "start",
           },
         },
         {
           element: "#ad-saved",
-          waitForElement: 1000,
           popover: {
             title: "Saved",
             description: "The tour waited for the app, not for the click.",
@@ -408,12 +475,7 @@ function FeedbackDemo(props: DemoProps) {
     start({
       onInteraction: (element, step, opts) => {
         if (opts.region === "element" && opts.event.type === "contextmenu") {
-          opts.driver.nudge({ description: "That was a right-click. <b>Double-click</b> instead." });
-          return false;
-        }
-
-        if (opts.region === "outside") {
-          opts.driver.nudge({ description: "Stay on the file. <b>Double-click</b> it." });
+          opts.driver.nudge("That was a right-click. <b>Double-click</b> instead.");
           return false;
         }
       },
@@ -423,7 +485,7 @@ function FeedbackDemo(props: DemoProps) {
           advanceOn: "dblclick",
           popover: {
             title: "Open the file",
-            description: "Double-click <b>report.pdf</b>.",
+            instruction: "Double-click <b>report.pdf</b>.",
             side: "bottom",
             align: "start",
           },
@@ -433,7 +495,7 @@ function FeedbackDemo(props: DemoProps) {
           waitForElement: 1000,
           popover: {
             title: "Opened",
-            description: "Right-clicks and clicks elsewhere were blocked with a hint.",
+            description: "Right-clicks got a hint, and clicks elsewhere shook the popover.",
             showButtons: ["next"],
             side: "bottom",
             align: "start",
@@ -462,6 +524,50 @@ function FeedbackDemo(props: DemoProps) {
   return <Frame ui={ui} code={props.code} onStart={onStart} />;
 }
 
+function HoverDemo(props: DemoProps) {
+  const [clicks, setClicks] = useState(0);
+  const start = useTour();
+
+  function onStart() {
+    setClicks(0);
+    start({
+      showButtons: ["next", "close"],
+      steps: [
+        {
+          element: "#ad-appointment",
+          disableActiveInteraction: "clicks",
+          popover: {
+            title: "Appointment details",
+            description: "Rest your mouse on it to see the details. Clicking it does nothing during this step.",
+            side: "bottom",
+            align: "start",
+          },
+        },
+      ],
+    });
+  }
+
+  const ui = (
+    <div className={box}>
+      <span className="text-lg font-semibold">Today</span>
+      <button
+        id="ad-appointment"
+        type="button"
+        onClick={() => setClicks(count => count + 1)}
+        className="group relative w-fit cursor-pointer rounded-md border border-gray-300 px-3 py-2 text-left text-sm hover:bg-gray-50"
+      >
+        10:30 Design review
+        <span className="absolute top-full left-0 z-10 mt-1 hidden w-48 rounded-md bg-black px-3 py-2 text-xs text-white group-hover:block">
+          Room 4, with Priya and Tom. 45 minutes.
+        </span>
+      </button>
+      <span className="text-sm text-gray-500">Clicks the app handled: {clicks}</span>
+    </div>
+  );
+
+  return <Frame ui={ui} code={props.code} onStart={onStart} />;
+}
+
 function MenuDemo(props: DemoProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isArchived, setIsArchived] = useState(false);
@@ -480,22 +586,13 @@ function MenuDemo(props: DemoProps) {
     setIsMenuOpen(false);
     setIsArchived(false);
     start({
+      showButtons: ["next", "close"],
+      onElementMissing: "previousAction",
       onInteraction: (element, step, opts) => {
         const isDelete = (opts.event.target as Element).closest("[data-action=delete]");
         if (isDelete) {
-          opts.driver.nudge({ description: "Not Delete. Choose <b>Archive</b>." });
+          opts.driver.nudge("Not Delete. Choose <b>Archive</b>.");
           return false;
-        }
-
-        if (opts.region === "outside") {
-          opts.driver.nudge({ description: step.data?.hint });
-          return false;
-        }
-      },
-      onElementMissing: (element, step, opts) => {
-        if (opts.cause === "removed") {
-          opts.driver.movePrevious();
-          opts.driver.updatePopover({ description: "The menu closed. Click <b>More</b> to open it again." });
         }
       },
       steps: [
@@ -503,18 +600,17 @@ function MenuDemo(props: DemoProps) {
           element: "#ad-more",
           advanceOn: "click",
           allowedElements: ".ad-menu",
-          data: { hint: "Click <b>More</b> to open the menu." },
-          popover: { title: "Open the menu", description: "Click <b>More</b>.", side: "bottom", align: "end" },
+          popover: { title: "Open the menu", instruction: "Click <b>More</b>.", side: "bottom", align: "end" },
         },
         {
           element: ".ad-menu [data-action=archive]",
           waitForElement: 500,
           advanceOn: "click",
           allowedElements: [".ad-menu", "#ad-more"],
-          data: { hint: "Choose <b>Archive</b> from the menu." },
           popover: {
             title: "Archive it",
-            description: "Choose <b>Archive</b>. Press Escape to see the tour recover.",
+            description: "Press Escape to see the tour recover.",
+            instruction: "Choose <b>Archive</b>.",
             side: "right",
             align: "start",
           },
@@ -652,15 +748,73 @@ function LoadDemo(props: DemoProps) {
   return <Frame ui={ui} code={props.code} onStart={onStart} />;
 }
 
+function ThemedDemo(props: DemoProps) {
+  const [isPublished, setIsPublished] = useState(false);
+  const start = useTour();
+
+  function onStart() {
+    setIsPublished(false);
+    start({
+      showButtons: ["next", "close"],
+      popoverClass: "docs-action-theme",
+      steps: [
+        {
+          element: "#ad-publish",
+          advanceOn: "click",
+          advanceDelay: 1200,
+          popover: {
+            title: "Publish the page",
+            instruction: "Click <b>Publish</b>.",
+            side: "bottom",
+            align: "start",
+          },
+        },
+        {
+          element: "#ad-published",
+          waitForElement: 1000,
+          popover: {
+            title: "Live",
+            description: "The instruction row, its dot and the done state all came from CSS variables.",
+            showButtons: ["next"],
+            side: "bottom",
+            align: "start",
+          },
+        },
+      ],
+    });
+  }
+
+  const ui = (
+    <div className={box}>
+      <span className="text-lg font-semibold">Landing page</span>
+      <div className="flex items-center gap-3">
+        <button id="ad-publish" type="button" onClick={() => setIsPublished(true)} className={primary}>
+          Publish
+        </button>
+        {isPublished && (
+          <span id="ad-published" className="text-sm text-green-700">
+            Published
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  return <Frame ui={ui} code={props.code} onStart={onStart} />;
+}
+
 const demos = {
   invite: InviteDemo,
   toggle: ToggleDemo,
   action: ActionDemo,
+  strict: StrictDemo,
   plan: PlanDemo,
   save: SaveDemo,
   feedback: FeedbackDemo,
+  hover: HoverDemo,
   menu: MenuDemo,
   load: LoadDemo,
+  themed: ThemedDemo,
 };
 
 export function ActionDrivenSample(props: ActionDrivenSampleProps) {

@@ -5,20 +5,51 @@ groupTitle: "Introduction"
 sort: 1
 ---
 
-Run one of the following commands to install the package:
+Install the package:
 
 ```bash
-# Using npm
 npm install driver.js
-
-# Using pnpm
-pnpm install driver.js
-
-# Using yarn
+# or
+pnpm add driver.js
+# or
 yarn add driver.js
 ```
 
-Alternatively, you can use CDN and include the script in your HTML file:
+Import the library and its stylesheet, then highlight an element:
+
+```js
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const driverObj = driver();
+
+driverObj.highlight({
+  element: "#some-element",
+  popover: {
+    title: "Title",
+    description: "Description",
+  },
+});
+```
+
+## Hints and Checklists
+
+[Hints](/docs/hints) and [checklists](/docs/checklists) are separate entries, so you only load them when you use them.
+
+```js
+import { hints } from "driver.js/hints";
+import "driver.js/dist/hints.css";
+```
+
+```js
+import { checklist } from "driver.js/checklist";
+import "driver.js/dist/driver.css";
+import "driver.js/dist/checklist.css";
+```
+
+Hints don't need `driver.css`. Checklists do, because their items run tours.
+
+## CDN
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script>
@@ -28,71 +59,19 @@ Alternatively, you can use CDN and include the script in your HTML file:
 <script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/hints.iife.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/hints.css" />
 
-<!-- Only if you use checklists -->
+<!-- Only if you use checklists. Load it after the main script. -->
 <script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/checklist.iife.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/checklist.css" />
 ```
 
-## Start Using
-
-Once installed, you can import the package in your project. The following example shows how to highlight an element:
-
-```js
-import { driver } from "driver.js";
-import "driver.js/dist/driver.css";
-
-const driverObj = driver();
-driverObj.highlight({
-  element: "#some-element",
-  popover: {
-    title: "Title",
-    description: "Description",
-  },
-});
-```
-
-[Hints](/docs/hints) ship as their own entry with a self-contained stylesheet, so import them only when you use them:
-
-```js
-import { hints } from "driver.js/hints";
-import "driver.js/dist/hints.css";
-```
-
-[Checklists](/docs/checklists) work the same way. Their items run tours, so keep `driver.css` alongside:
-
-```js
-import { checklist } from "driver.js/checklist";
-import "driver.js/dist/checklist.css";
-```
-
-### Note on CDN
-
-If you are using the CDN, you will have to use the package from the `window` object:
+The CDN builds expose globals instead of modules:
 
 ```js
 const driver = window.driver.js.driver;
+const hints = window.driverHints.hints;
+const checklist = window.driverChecklist.checklist;
 
 const driverObj = driver();
-
-driverObj.highlight({
-  element: "#some-element",
-  popover: {
-    title: "Title",
-    description: "Description",
-  },
-});
 ```
 
-The hints build exposes its own global:
-
-```js
-const hints = window.driverHints.hints;
-```
-
-And so does the checklist build. Load it after the main script, which it uses to run tours:
-
-```js
-const checklist = window.driverChecklist.checklist;
-```
-
-Continue reading the [Getting Started](/docs/basic-usage) guide to learn more about the package.
+Next: [Basic Usage](/docs/basic-usage).

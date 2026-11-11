@@ -1,16 +1,14 @@
 ---
 title: "Simple Highlight"
 description: "Highlight any element on the page with Driver.js. Spotlight a single element and show a popover to deliver contextual help, beyond just product tours."
-groupTitle: "Examples"
-sort: 5
+groupTitle: "Guides"
+sort: 14
 ---
 
 import { FormHelp } from "../../components/FormHelp.tsx";
 import { CodeSample } from "../../components/CodeSample.tsx";
 
-Product tours is not the only usecase for Driver.js. You can use it to highlight any element on the page and show a popover with a description. This is useful for providing contextual help to the user e.g. help the user fill a form or explain a feature.
-
-Example below shows how to highlight an element and simply show a popover.
+`highlight()` shows a single step without a tour. Use it for contextual help: explain a feature, guide a form, or dim the page around one element.
 
 <CodeSample
   id={"highlight-me"}
@@ -30,9 +28,10 @@ Example below shows how to highlight an element and simply show a popover.
   client:load
 />
 
-Here is the code for above example:
-
 ```js
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
 const driverObj = driver({
   popoverClass: "driverjs-theme",
   stagePadding: 4,
@@ -44,106 +43,71 @@ driverObj.highlight({
     side: "bottom",
     title: "This is a title",
     description: "This is a description",
-  }
-})
+  },
+});
 ```
 
-You can also use it to show a simple modal without highlighting any element.
+A highlight popover has no buttons unless you ask for them with `showButtons`. The user closes it with <kbd>Escape</kbd> or a click on the overlay, and your code closes it with `destroy()`. Leave out `popover` to only dim the page around the element.
+
+## Without an Element
+
+Leave out `element` and the popover shows in the middle of the screen, like a modal. The title and description take HTML.
 
 <CodeSample
-  id={"highlight-me"}
+  id={"show-popover"}
   buttonText={"Show Popover"}
   highlight={{
     popover: {
-      side: "bottom",
       description: "<img src='/animated-example.webp' style='height: 202.5px; width: 270px;' /><span style='font-size: 15px; display: block; margin-top: 10px; text-align: center;'>Yet another highlight example.</span>",
     },
   }}
   client:load
 />
 
-Here is the code for above example:
-
 ```js
-const driverObj = driver();
-
 driverObj.highlight({
   popover: {
-    description: "<img src='/animated-example.webp' style='height: 202.5px; width: 270px;' /><span style='font-size: 15px; display: block; margin-top: 10px; text-align: center;'>Yet another highlight example.</span>",
-  }
-})
+    description: "<img src='/welcome.webp' width='270' /><p>Yet another highlight example.</p>",
+  },
+});
 ```
 
-Focus on the input below and see how the popover is shown.
+## Help for a Form
+
+Call `highlight()` again to move to another element. Focus the fields below.
 
 <form action="#" className='flex flex-col gap-2'>
   <input id="name" type="text" placeholder="Enter your Name" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
   <input id="education" type="text" placeholder="Your Education" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
   <input id="age" type="number" placeholder="Your Age" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
   <textarea id="address" placeholder="Your Address" className='block w-full border rounded-md py-2 px-3 focus:outline-0' />
-  <button id="submit-btn" className='w-full rounded-md bg-black p-2 text-white'>Submit</button>
+  <button id="submit-btn" type="button" className='w-full rounded-md bg-black p-2 text-white'>Submit</button>
 </form>
 
-<FormHelp client:only />
-
-Here is the code for the above example.
+<FormHelp client:only="react" />
 
 ```js
 const driverObj = driver({
-  popoverClass: "driverjs-theme",
   stagePadding: 0,
-  onDestroyed: () => {
-    document?.activeElement?.blur();
-  }
+  onDestroyed: () => document.activeElement?.blur(),
 });
 
-const nameEl = document.getElementById("name");
-const educationEl = document.getElementById("education");
-const ageEl = document.getElementById("age");
-const addressEl = document.getElementById("address");
-const formEl = document.querySelector("form");
+const help = {
+  "#name": { title: "Name", description: "Enter your name here" },
+  "#education": { title: "Education", description: "Enter your education here" },
+  "#age": { title: "Age", description: "Enter your age here" },
+  "#address": { title: "Address", description: "Enter your address here" },
+};
 
-nameEl.addEventListener("focus", () => {
-  driverObj.highlight({
-    element: nameEl,
-    popover: {
-      title: "Name",
-      description: "Enter your name here",
-    },
+Object.entries(help).forEach(([selector, popover]) => {
+  const element = document.querySelector(selector);
+
+  element.addEventListener("focus", () => {
+    driverObj.highlight({ element, popover });
   });
 });
 
-educationEl.addEventListener("focus", () => {
-  driverObj.highlight({
-    element: educationEl,
-    popover: {
-      title: "Education",
-      description: "Enter your education here",
-    },
-  });
-});
-
-ageEl.addEventListener("focus", () => {
-  driverObj.highlight({
-    element: ageEl,
-    popover: {
-      title: "Age",
-      description: "Enter your age here",
-    },
-  });
-});
-
-addressEl.addEventListener("focus", () => {
-  driverObj.highlight({
-    element: addressEl,
-    popover: {
-      title: "Address",
-      description: "Enter your address here",
-    },
-  });
-});
-
-formEl.addEventListener("blur", () => {
-  driverObj.destroy();
-});
+document.querySelector("#submit-btn").addEventListener("focus", () => driverObj.destroy());
 ```
+
+For help that sits on the page until the user asks for it, use [hints](/docs/hints).

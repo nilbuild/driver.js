@@ -8,21 +8,22 @@ sort: 2
 import { CodeSample } from "../../components/CodeSample.tsx";
 import { HintsSample } from "../../components/HintsSample.tsx";
 
-Once installed, you can import and start using the library. There are several different configuration options available to customize the library. You can find more details about the options in the [configuration section](/docs/configuration). Given below are the basic steps to get started.
+Driver.js does three things: tours, single highlights and hints. Each starts with a few lines.
 
-Here is a simple example of how to create a tour with multiple steps.
+## A Tour
+
+Pass `steps` to `driver()` and call `drive()`. Each step points at an element and describes it in a popover.
 
 <CodeSample
-  heading={'Basic Tour Example'}
+  heading={'Basic Tour'}
   config={{
     showProgress: true,
   }}
   tour={[
-    { element: '#tour-example', popover: { title: 'Highlight Anything', description: 'You can highlight anything on the page.' }},
-    { element: '#tour-example pre', popover: { title: 'Control with Keyboard', description: 'You can use your keyboard to highlight elements.' }},
-    { popover: { title: 'Control with Keyboard', description: 'You can use your keyboard to highlight elements.' }},
-    { element: '#tour-example code .line:first-child', popover: { title: 'Control with Code', description: 'You can use the code to highlight elements.' }},
-    { element: '#tour-example code .line:nth-child(2)', popover: { title: 'Control with Code', description: 'You can use the code to highlight elements.', side: "bottom", align: 'start' }},
+    { element: '#tour-example pre', popover: { title: 'Highlight Anything', description: 'A step can point at any element on the page.' }},
+    { element: '#tour-example code .line:first-child', popover: { title: 'Import the Library', description: 'One import for the code.' }},
+    { element: '#tour-example code .line:nth-child(2)', popover: { title: 'Import the Styles', description: 'And one for the stylesheet.' }},
+    { popover: { title: 'No Element Needed', description: 'A step without an element shows in the middle of the screen. Use the arrow keys to move, Escape to close.' }},
   ]}
   id={"tour-example"}
   client:load
@@ -34,20 +35,23 @@ import "driver.js/dist/driver.css";
 const driverObj = driver({
   showProgress: true,
   steps: [
-    { element: '.page-header', popover: { title: 'Title', description: 'Description' } },
-    { element: '.top-nav', popover: { title: 'Title', description: 'Description' } },
-    { element: '.sidebar', popover: { title: 'Title', description: 'Description' } },
-    { element: '.footer', popover: { title: 'Title', description: 'Description' } },
-  ]
+    { element: ".page-header", popover: { title: "Header", description: "Search and account live here." } },
+    { element: ".sidebar", popover: { title: "Sidebar", description: "Jump between sections." } },
+    { popover: { title: "That's it", description: "A step without an element is centered." } },
+  ],
 });
 
 driverObj.drive();
 ```
 </CodeSample>
 
-You can pass a single step configuration to the `highlight` method to highlight a single element. Given below is a simple example of how to highlight a single element.
+More in [Tour Basics](/docs/tour-basics). To make steps wait for the user, see [Interactive Tours](/docs/interactive-tours) and [Action-Driven Tours](/docs/action-driven-tours).
 
-<CodeSample heading='Highlighting a simple Element' id={"some-element"} highlight={{
+## A Single Highlight
+
+`highlight()` takes one step and shows it on its own, without navigation buttons.
+
+<CodeSample heading='Highlight an Element' id={"some-element"} highlight={{
   element: '#some-element',
   popover: {
     title: 'Title for the Popover',
@@ -59,17 +63,22 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
 const driverObj = driver();
+
 driverObj.highlight({
-  element: '#some-element',
+  element: "#some-element",
   popover: {
-    title: 'Title for the Popover',
-    description: 'Description for it',
+    title: "Title for the Popover",
+    description: "Description for it",
   },
 });
 ```
 </CodeSample>
 
-Beyond tours and highlights, Driver.js also ships hints: pulsing beacons that sit quietly on the page and open a popover when clicked, with no overlay and nothing blocked. They come from their own entry, so tour-only users never load them.
+More in [Simple Highlight](/docs/simple-highlight).
+
+## Hints
+
+Hints are pulsing beacons that open a popover when clicked. There is no overlay and the page stays usable. They come from their own entry.
 
 <HintsSample
   idPrefix="basic"
@@ -103,14 +112,84 @@ import "driver.js/dist/hints.css";
 
 const productHints = hints({
   hints: [
-    { element: '#export-btn', popover: { title: 'Export your data', description: 'Download this report as CSV or PDF.' } },
-    { element: '#summary', popover: { title: 'Auto-generated summary', description: 'Written for you from the numbers.' } },
+    {
+      element: "#export-btn",
+      popover: { title: "Export your data", description: "Download this report as CSV or PDF." },
+    },
+    {
+      element: "#summary",
+      popover: { title: "Auto-generated summary", description: "Written for you from the numbers." },
+    },
   ],
 });
 
 productHints.show();
 ```
 
-Learn more about beacons, dismissals, and the optional overlay in the [Hints guide](/docs/hints).
+More in the [Hints guide](/docs/hints). For onboarding task lists, see [Checklists](/docs/checklists).
 
-Examples above show the basic usage of the library. Find more details about the configuration options in the [configuration section](/docs/configuration) and the examples in the [examples section](/docs/examples).
+## With a Framework
+
+Driver.js works on plain DOM elements, so it needs no wrapper. Create the driver once the elements are on the page, and destroy it when the component goes away.
+
+React:
+
+```jsx
+import { useEffect, useRef } from "react";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+export function Dashboard() {
+  const driverRef = useRef(null);
+
+  useEffect(() => {
+    driverRef.current = driver({
+      steps: [
+        { element: "#new-project", popover: { title: "New project", description: "Start here." } },
+        { element: "#invite", popover: { title: "Invite", description: "Bring your team." } },
+      ],
+    });
+
+    return () => driverRef.current.destroy();
+  }, []);
+
+  return (
+    <header>
+      <button id="new-project">New project</button>
+      <button id="invite">Invite</button>
+      <button onClick={() => driverRef.current.drive()}>Take the tour</button>
+    </header>
+  );
+}
+```
+
+Vue:
+
+```vue
+<script setup>
+import { onBeforeUnmount } from "vue";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const driverObj = driver({
+  steps: [
+    { element: "#new-project", popover: { title: "New project", description: "Start here." } },
+    { element: "#invite", popover: { title: "Invite", description: "Bring your team." } },
+  ],
+});
+
+onBeforeUnmount(() => driverObj.destroy());
+</script>
+
+<template>
+  <header>
+    <button id="new-project">New project</button>
+    <button id="invite">Invite</button>
+    <button @click="driverObj.drive()">Take the tour</button>
+  </header>
+</template>
+```
+
+A step's `element` is looked up when the step starts, so selectors can point at elements that render later. When your framework replaces a highlighted element, the step [follows the new one](/docs/interactive-tours#elements-that-re-render).
+
+Next: every option is in [Configuration](/docs/configuration), every method in the [API Reference](/docs/api).
