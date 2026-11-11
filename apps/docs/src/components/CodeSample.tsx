@@ -44,11 +44,39 @@ export function CodeSample(props: CodeSampleProps) {
     return { ...step, element: () => containerRef.current?.querySelector(element) as Element };
   }
 
+  // A scrolled code block would leave a highlighted line partly outside it.
+  function resetCodeScroll() {
+    document.querySelectorAll("pre").forEach(pre => {
+      pre.scrollLeft = 0;
+    });
+  }
+
+  function warnAboutWideLines(steps: DriveStep[]) {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    steps.forEach(step => {
+      const element = typeof step.element === "function" ? step.element() : step.element;
+      const target = typeof element === "string" ? document.querySelector(element) : element;
+      const block = target?.closest("pre");
+      if (!target || !block || target === block) {
+        return;
+      }
+
+      if (target.getBoundingClientRect().right > block.getBoundingClientRect().right) {
+        console.warn(`[docs] Highlighted code line is wider than its block: "${target.textContent}"`);
+      }
+    });
+  }
+
   if (id === "demo-hook-theme") {
     config!.onPopoverRender = attachFirstButton;
   }
 
   function onClick() {
+    resetCodeScroll();
+
     if (highlight) {
       const driverObj = driver({
         ...config,
@@ -119,9 +147,12 @@ export function CodeSample(props: CodeSampleProps) {
         };
       }
 
+      const steps = tour.map(scopeToSample);
+      warnAboutWideLines(steps);
+
       const driverObj = driver({
         ...config,
-        steps: tour.map(scopeToSample),
+        steps,
       });
 
       window.driverObj = driverObj;

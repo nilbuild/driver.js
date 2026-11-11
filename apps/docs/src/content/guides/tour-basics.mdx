@@ -23,9 +23,10 @@ The highlight glides from one step to the next by default. Users move with the b
     { element: '#tour-animated', popover: { title: 'Animated Tour', description: 'This tour walks through the code that creates it.', side: "left", align: 'start' }},
     { element: '.line:nth-child(1)', popover: { title: 'Import the Library', description: 'It works the same in plain JavaScript and in frameworks.', side: "bottom", align: 'start' }},
     { element: '.line:nth-child(2)', popover: { title: 'Import the CSS', description: 'The default styles for the popover and the overlay.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(7)', popover: { title: 'Steps', description: 'Each step has an element and a popover. side and align place the popover.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(9)', popover: { title: 'No Element', description: 'A step without an element is centered on the screen.', side: "bottom", align: 'start' }},
-    { element: '.line:nth-child(13)', popover: { title: 'Start the Tour', description: 'drive() starts at the first step. Pass an index to start elsewhere.', side: "top", align: 'start' }},
+    { element: '.line:nth-child(8)', popover: { title: 'An Element', description: 'Each step points at an element, here with a CSS selector.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(12)', popover: { title: 'A Popover', description: 'And describes it in a popover. side picks where the popover sits.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(19)', popover: { title: 'No Element', description: 'A step without an element is centered on the screen.', side: "bottom", align: 'start' }},
+    { element: '.line:nth-child(23)', popover: { title: 'Start the Tour', description: 'drive() starts at the first step. Pass an index to start elsewhere.', side: "top", align: 'start' }},
     { element: '#docs-sidebar a[href="/docs/configuration"]', popover: { title: 'More Options', description: 'Every option is listed on the Configuration page.', side: "right", align: 'start' }},
     { popover: { title: 'Happy Coding', description: 'That is all it takes.' } }
   ]}
@@ -39,9 +40,19 @@ The highlight glides from one step to the next by default. Users move with the b
   const driverObj = driver({
     showProgress: true,
     steps: [
-      { element: ".page-header", popover: { title: "Header", description: "Search lives here.", side: "bottom", align: "start" } },
-      { element: ".sidebar", popover: { title: "Sidebar", description: "Jump between sections.", side: "right" } },
-      { popover: { title: "Happy Coding", description: "That is all it takes." } },
+      {
+        element: ".page-header",
+        popover: {
+          title: "Header",
+          description: "Search lives here.",
+          side: "bottom",
+        },
+      },
+      {
+        element: ".sidebar",
+        popover: { title: "Sidebar", side: "right" },
+      },
+      { popover: { title: "Happy Coding" } },
     ],
   });
 

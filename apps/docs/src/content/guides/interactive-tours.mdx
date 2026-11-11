@@ -38,9 +38,9 @@ For tours where every step waits for a specific action and wrong actions get fee
     advanceOn: "click",
     showProgress: true,
     steps: [
-      { element: "#pick-plan", popover: { title: "Pick a Plan", description: "Click the card to continue." } },
-      { element: "#billing-toggle", popover: { title: "Billing", description: "The toggle still flips." } },
-      { element: "#checkout", popover: { title: "Checkout", description: "A click here ends the tour." } },
+      { element: "#plan", popover: { title: "Pick a Plan" } },
+      { element: "#billing", popover: { title: "Billing" } },
+      { element: "#checkout", popover: { title: "Checkout" } },
     ],
   });
 
@@ -75,12 +75,12 @@ A click often leads to something that doesn't exist yet, like a modal. Give the 
       {
         element: "#open-modal",
         advanceOn: "click",
-        popover: { title: "Open the Modal", instruction: "Click <b>Open</b>." },
+        popover: { title: "Open", instruction: "Click <b>Open</b>." },
       },
       {
         element: "#modal-confirm",
         waitForElement: 5000,
-        popover: { title: "Confirm", description: "This step showed once the modal rendered." },
+        popover: { title: "Confirm", description: "Now it's here." },
       },
     ],
   });
@@ -203,10 +203,10 @@ To do work before a step, like loading data, take over the Next button with `onN
       },
       {
         element: "#report",
-        popover: { title: "Your Report", description: "Loaded on demand." },
+        popover: { title: "Your Report" },
         onDeselected: () => unloadReport(),
       },
-      { popover: { title: "Last Step", description: "That's it." } },
+      { popover: { title: "Last Step" } },
     ],
   });
 

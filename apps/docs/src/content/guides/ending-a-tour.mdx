@@ -33,8 +33,8 @@ A tour ends when the user finishes the last step, or leaves early with the close
 
   const driverObj = driver({
     steps: [
-      { element: "#search", popover: { title: "Search", description: "Find anything." } },
-      { element: "#export", popover: { title: "Export", description: "Download a CSV." } },
+      { element: "#search", popover: { title: "Search" } },
+      { element: "#export", popover: { title: "Export" } },
     ],
     onDestroyStarted: (element, step, { reason }) => {
       if (reason === "done" || confirm("Are you sure?")) {
@@ -71,8 +71,8 @@ A tour ends when the user finishes the last step, or leaves early with the close
   const driverObj = driver({
     allowClose: false,
     steps: [
-      { element: "#search", popover: { title: "Search", description: "Find anything." } },
-      { element: "#export", popover: { title: "Export", description: "Download a CSV." } },
+      { element: "#search", popover: { title: "Search" } },
+      { element: "#export", popover: { title: "Export" } },
     ],
   });
 

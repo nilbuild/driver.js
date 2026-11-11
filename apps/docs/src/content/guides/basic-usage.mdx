@@ -35,9 +35,18 @@ import "driver.js/dist/driver.css";
 const driverObj = driver({
   showProgress: true,
   steps: [
-    { element: ".page-header", popover: { title: "Header", description: "Search and account live here." } },
-    { element: ".sidebar", popover: { title: "Sidebar", description: "Jump between sections." } },
-    { popover: { title: "That's it", description: "A step without an element is centered." } },
+    {
+      element: ".page-header",
+      popover: {
+        title: "Header",
+        description: "Search and account live here.",
+      },
+    },
+    {
+      element: ".sidebar",
+      popover: { title: "Sidebar" },
+    },
+    { popover: { title: "That's it" } },
   ],
 });
 

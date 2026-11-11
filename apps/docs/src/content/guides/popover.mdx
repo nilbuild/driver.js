@@ -231,8 +231,8 @@ When the popover doesn't fit on that side, it moves to one where it does. Scroll
     const driverObj = driver({
       showButtons: ["next", "previous"],
       steps: [
-        { element: "#search", popover: { title: "Search", description: "Find anything." } },
-        { element: "#export", popover: { title: "Export", description: "Download a CSV." } },
+        { element: "#search", popover: { title: "Search" } },
+        { element: "#export", popover: { title: "Export" } },
       ],
     });
 
@@ -384,7 +384,9 @@ When the popover doesn't fit on that side, it moves to one where it does. Scroll
       firstButton.className = "driver-popover-footer-btn";
       popover.footerButtons.appendChild(firstButton);
 
-      firstButton.addEventListener("click", () => driverObj.drive(0));
+      firstButton.addEventListener("click", () => {
+        driverObj.drive(0);
+      });
     },
   });
 
