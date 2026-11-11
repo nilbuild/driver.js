@@ -1,0 +1,557 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`highlight() precedence > keeps its own defaults unless the popover overrides them 1`] = `
+{
+  "config showButtons": "shown: "", footer: false, progress: false, next: "Next", close: "Close", class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "config showProgress": "shown: "", footer: false, progress: false, next: "Next", close: "Close", class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "config texts": "shown: "", footer: false, progress: false, next: "Go", close: "Dismiss", class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "plain": "shown: "", footer: false, progress: false, next: "Next", close: "Close", class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "popover showButtons": "shown: "next,close", footer: true, progress: false, next: "Next", close: "Close", class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "popover showProgress": "shown: "", footer: true, progress: "x", next: "Next", close: "Close", class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+}
+`;
+
+exports[`hook precedence > onCloseClick via button 1`] = `
+{
+  "step 2 of 3, both": "step -> index 1",
+  "step 2 of 3, config": "config -> index 1",
+  "step 2 of 3, none": "default -> destroyed",
+  "step 2 of 3, step": "step -> index 1",
+  "step 3 of 3, both": "step -> index 2",
+  "step 3 of 3, config": "config -> index 2",
+  "step 3 of 3, none": "default -> destroyed",
+  "step 3 of 3, step": "step -> index 2",
+}
+`;
+
+exports[`hook precedence > onCloseClick via key 1`] = `
+{
+  "step 2 of 3, both": "default -> destroyed",
+  "step 2 of 3, config": "default -> destroyed",
+  "step 2 of 3, none": "default -> destroyed",
+  "step 2 of 3, step": "default -> destroyed",
+  "step 3 of 3, both": "default -> destroyed",
+  "step 3 of 3, config": "default -> destroyed",
+  "step 3 of 3, none": "default -> destroyed",
+  "step 3 of 3, step": "default -> destroyed",
+}
+`;
+
+exports[`hook precedence > onDoneClick via button 1`] = `
+{
+  "step 2 of 3, both": "default -> index 2",
+  "step 2 of 3, config": "default -> index 2",
+  "step 2 of 3, none": "default -> index 2",
+  "step 2 of 3, step": "default -> index 2",
+  "step 3 of 3, both": "step -> index 2",
+  "step 3 of 3, config": "config -> index 2",
+  "step 3 of 3, none": "default -> destroyed",
+  "step 3 of 3, step": "step -> index 2",
+}
+`;
+
+exports[`hook precedence > onDoneClick via key 1`] = `
+{
+  "step 2 of 3, both": "default -> index 2",
+  "step 2 of 3, config": "default -> index 2",
+  "step 2 of 3, none": "default -> index 2",
+  "step 2 of 3, step": "default -> index 2",
+  "step 3 of 3, both": "step -> index 2",
+  "step 3 of 3, config": "config -> index 2",
+  "step 3 of 3, none": "default -> destroyed",
+  "step 3 of 3, step": "step -> index 2",
+}
+`;
+
+exports[`hook precedence > onNextClick via button 1`] = `
+{
+  "step 2 of 3, both": "step -> index 1",
+  "step 2 of 3, config": "config -> index 1",
+  "step 2 of 3, none": "default -> index 2",
+  "step 2 of 3, step": "step -> index 1",
+  "step 3 of 3, both": "step -> index 2",
+  "step 3 of 3, config": "config -> index 2",
+  "step 3 of 3, none": "default -> destroyed",
+  "step 3 of 3, step": "step -> index 2",
+}
+`;
+
+exports[`hook precedence > onNextClick via key 1`] = `
+{
+  "step 2 of 3, both": "step -> index 1",
+  "step 2 of 3, config": "config -> index 1",
+  "step 2 of 3, none": "default -> index 2",
+  "step 2 of 3, step": "step -> index 1",
+  "step 3 of 3, both": "step -> index 2",
+  "step 3 of 3, config": "config -> index 2",
+  "step 3 of 3, none": "default -> destroyed",
+  "step 3 of 3, step": "step -> index 2",
+}
+`;
+
+exports[`hook precedence > onPopoverRender via render 1`] = `
+{
+  "step 2 of 3, both": "step -> index 1",
+  "step 2 of 3, config": "config -> index 1",
+  "step 2 of 3, none": "default -> index 1",
+  "step 2 of 3, step": "step -> index 1",
+  "step 3 of 3, both": "step -> index 2",
+  "step 3 of 3, config": "config -> index 2",
+  "step 3 of 3, none": "default -> index 2",
+  "step 3 of 3, step": "step -> index 2",
+}
+`;
+
+exports[`hook precedence > onPrevClick via button 1`] = `
+{
+  "step 2 of 3, both": "step -> index 1",
+  "step 2 of 3, config": "config -> index 1",
+  "step 2 of 3, none": "default -> index 0",
+  "step 2 of 3, step": "step -> index 1",
+  "step 3 of 3, both": "step -> index 2",
+  "step 3 of 3, config": "config -> index 2",
+  "step 3 of 3, none": "default -> index 1",
+  "step 3 of 3, step": "step -> index 2",
+}
+`;
+
+exports[`hook precedence > onPrevClick via key 1`] = `
+{
+  "step 2 of 3, both": "step -> index 1",
+  "step 2 of 3, config": "config -> index 1",
+  "step 2 of 3, none": "default -> index 0",
+  "step 2 of 3, step": "step -> index 1",
+  "step 3 of 3, both": "step -> index 2",
+  "step 3 of 3, config": "config -> index 2",
+  "step 3 of 3, none": "default -> index 1",
+  "step 3 of 3, step": "step -> index 2",
+}
+`;
+
+exports[`step vs config precedence > allowClose: false drops the close button whatever showButtons says 1`] = `
+{
+  "step ["close"]": "shown: "close", footer: false",
+  "step ["next","close"]": "shown: "next,close", footer: true",
+  "step unset": "shown: "next,previous", footer: true",
+}
+`;
+
+exports[`step vs config precedence > closeBtnLabel on step 1 of 3 1`] = `
+{
+  "step "" / config """: "close: """,
+  "step "" / config "G-Dismiss"": "close: """,
+  "step "" / config unset": "close: """,
+  "step "Dismiss" / config """: "close: "Dismiss"",
+  "step "Dismiss" / config "G-Dismiss"": "close: "Dismiss"",
+  "step "Dismiss" / config unset": "close: "Dismiss"",
+  "step unset / config """: "close: "Close"",
+  "step unset / config "G-Dismiss"": "close: "G-Dismiss"",
+  "step unset / config unset": "close: "Close"",
+}
+`;
+
+exports[`step vs config precedence > closeBtnLabel on step 2 of 3 1`] = `
+{
+  "step "" / config """: "close: """,
+  "step "" / config "G-Dismiss"": "close: """,
+  "step "" / config unset": "close: """,
+  "step "Dismiss" / config """: "close: "Dismiss"",
+  "step "Dismiss" / config "G-Dismiss"": "close: "Dismiss"",
+  "step "Dismiss" / config unset": "close: "Dismiss"",
+  "step unset / config """: "close: "Close"",
+  "step unset / config "G-Dismiss"": "close: "G-Dismiss"",
+  "step unset / config unset": "close: "Close"",
+}
+`;
+
+exports[`step vs config precedence > closeBtnLabel on step 3 of 3 1`] = `
+{
+  "step "" / config """: "close: """,
+  "step "" / config "G-Dismiss"": "close: """,
+  "step "" / config unset": "close: """,
+  "step "Dismiss" / config """: "close: "Dismiss"",
+  "step "Dismiss" / config "G-Dismiss"": "close: "Dismiss"",
+  "step "Dismiss" / config unset": "close: "Dismiss"",
+  "step unset / config """: "close: "Close"",
+  "step unset / config "G-Dismiss"": "close: "G-Dismiss"",
+  "step unset / config unset": "close: "Close"",
+}
+`;
+
+exports[`step vs config precedence > disableButtons on step 1 of 3 1`] = `
+{
+  "step ["close"] / config ["close"]": "disabled: "close"",
+  "step ["close"] / config ["next"]": "disabled: "close"",
+  "step ["close"] / config []": "disabled: "close"",
+  "step ["close"] / config unset": "disabled: "close"",
+  "step ["next"] / config ["close"]": "disabled: "next"",
+  "step ["next"] / config ["next"]": "disabled: "next"",
+  "step ["next"] / config []": "disabled: "next"",
+  "step ["next"] / config unset": "disabled: "next"",
+  "step [] / config ["close"]": "disabled: """,
+  "step [] / config ["next"]": "disabled: """,
+  "step [] / config []": "disabled: """,
+  "step [] / config unset": "disabled: """,
+  "step unset / config ["close"]": "disabled: "previous,close"",
+  "step unset / config ["next"]": "disabled: "next,previous"",
+  "step unset / config []": "disabled: "previous"",
+  "step unset / config unset": "disabled: "previous"",
+}
+`;
+
+exports[`step vs config precedence > disableButtons on step 2 of 3 1`] = `
+{
+  "step ["close"] / config ["close"]": "disabled: "close"",
+  "step ["close"] / config ["next"]": "disabled: "close"",
+  "step ["close"] / config []": "disabled: "close"",
+  "step ["close"] / config unset": "disabled: "close"",
+  "step ["next"] / config ["close"]": "disabled: "next"",
+  "step ["next"] / config ["next"]": "disabled: "next"",
+  "step ["next"] / config []": "disabled: "next"",
+  "step ["next"] / config unset": "disabled: "next"",
+  "step [] / config ["close"]": "disabled: """,
+  "step [] / config ["next"]": "disabled: """,
+  "step [] / config []": "disabled: """,
+  "step [] / config unset": "disabled: """,
+  "step unset / config ["close"]": "disabled: "close"",
+  "step unset / config ["next"]": "disabled: "next"",
+  "step unset / config []": "disabled: """,
+  "step unset / config unset": "disabled: """,
+}
+`;
+
+exports[`step vs config precedence > disableButtons on step 3 of 3 1`] = `
+{
+  "step ["close"] / config ["close"]": "disabled: "close"",
+  "step ["close"] / config ["next"]": "disabled: "close"",
+  "step ["close"] / config []": "disabled: "close"",
+  "step ["close"] / config unset": "disabled: "close"",
+  "step ["next"] / config ["close"]": "disabled: "next"",
+  "step ["next"] / config ["next"]": "disabled: "next"",
+  "step ["next"] / config []": "disabled: "next"",
+  "step ["next"] / config unset": "disabled: "next"",
+  "step [] / config ["close"]": "disabled: """,
+  "step [] / config ["next"]": "disabled: """,
+  "step [] / config []": "disabled: """,
+  "step [] / config unset": "disabled: """,
+  "step unset / config ["close"]": "disabled: "close"",
+  "step unset / config ["next"]": "disabled: "next"",
+  "step unset / config []": "disabled: """,
+  "step unset / config unset": "disabled: """,
+}
+`;
+
+exports[`step vs config precedence > doneBtnText on step 1 of 3 1`] = `
+{
+  "step "" / config """: "next: "Next"",
+  "step "" / config "G-Finish"": "next: "Next"",
+  "step "" / config unset": "next: "Next"",
+  "step "Finish" / config """: "next: "Next"",
+  "step "Finish" / config "G-Finish"": "next: "Next"",
+  "step "Finish" / config unset": "next: "Next"",
+  "step unset / config """: "next: "Next"",
+  "step unset / config "G-Finish"": "next: "Next"",
+  "step unset / config unset": "next: "Next"",
+}
+`;
+
+exports[`step vs config precedence > doneBtnText on step 2 of 3 1`] = `
+{
+  "step "" / config """: "next: "Next"",
+  "step "" / config "G-Finish"": "next: "Next"",
+  "step "" / config unset": "next: "Next"",
+  "step "Finish" / config """: "next: "Next"",
+  "step "Finish" / config "G-Finish"": "next: "Next"",
+  "step "Finish" / config unset": "next: "Next"",
+  "step unset / config """: "next: "Next"",
+  "step unset / config "G-Finish"": "next: "Next"",
+  "step unset / config unset": "next: "Next"",
+}
+`;
+
+exports[`step vs config precedence > doneBtnText on step 3 of 3 1`] = `
+{
+  "step "" / config """: "next: "Done"",
+  "step "" / config "G-Finish"": "next: "G-Finish"",
+  "step "" / config unset": "next: "Done"",
+  "step "Finish" / config """: "next: "Finish"",
+  "step "Finish" / config "G-Finish"": "next: "Finish"",
+  "step "Finish" / config unset": "next: "Finish"",
+  "step unset / config """: "next: "Done"",
+  "step unset / config "G-Finish"": "next: "G-Finish"",
+  "step unset / config unset": "next: "Done"",
+}
+`;
+
+exports[`step vs config precedence > nextBtnText on step 1 of 3 1`] = `
+{
+  "step "" / config """: "next: """,
+  "step "" / config "G-Go"": "next: """,
+  "step "" / config unset": "next: """,
+  "step "Go" / config """: "next: "Go"",
+  "step "Go" / config "G-Go"": "next: "Go"",
+  "step "Go" / config unset": "next: "Go"",
+  "step unset / config """: "next: "Next"",
+  "step unset / config "G-Go"": "next: "G-Go"",
+  "step unset / config unset": "next: "Next"",
+}
+`;
+
+exports[`step vs config precedence > nextBtnText on step 2 of 3 1`] = `
+{
+  "step "" / config """: "next: """,
+  "step "" / config "G-Go"": "next: """,
+  "step "" / config unset": "next: """,
+  "step "Go" / config """: "next: "Go"",
+  "step "Go" / config "G-Go"": "next: "Go"",
+  "step "Go" / config unset": "next: "Go"",
+  "step unset / config """: "next: "Next"",
+  "step unset / config "G-Go"": "next: "G-Go"",
+  "step unset / config unset": "next: "Next"",
+}
+`;
+
+exports[`step vs config precedence > nextBtnText on step 3 of 3 1`] = `
+{
+  "step "" / config """: "next: """,
+  "step "" / config "G-Go"": "next: """,
+  "step "" / config unset": "next: """,
+  "step "Go" / config """: "next: "Go"",
+  "step "Go" / config "G-Go"": "next: "Go"",
+  "step "Go" / config unset": "next: "Go"",
+  "step unset / config """: "next: "Done"",
+  "step unset / config "G-Go"": "next: "Done"",
+  "step unset / config unset": "next: "Done"",
+}
+`;
+
+exports[`step vs config precedence > popoverClass on step 1 of 3 1`] = `
+{
+  "step "" / config """: "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "step "" / config "G-mine"": "class: "driver-popover G-mine driver-popover-side-bottom driver-popover-align-start"",
+  "step "" / config unset": "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "step "mine" / config """: "class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "step "mine" / config "G-mine"": "class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "step "mine" / config unset": "class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "step unset / config """: "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "step unset / config "G-mine"": "class: "driver-popover G-mine driver-popover-side-bottom driver-popover-align-start"",
+  "step unset / config unset": "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+}
+`;
+
+exports[`step vs config precedence > popoverClass on step 2 of 3 1`] = `
+{
+  "step "" / config """: "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "step "" / config "G-mine"": "class: "driver-popover G-mine driver-popover-side-bottom driver-popover-align-start"",
+  "step "" / config unset": "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "step "mine" / config """: "class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "step "mine" / config "G-mine"": "class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "step "mine" / config unset": "class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "step unset / config """: "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "step unset / config "G-mine"": "class: "driver-popover G-mine driver-popover-side-bottom driver-popover-align-start"",
+  "step unset / config unset": "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+}
+`;
+
+exports[`step vs config precedence > popoverClass on step 3 of 3 1`] = `
+{
+  "step "" / config """: "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "step "" / config "G-mine"": "class: "driver-popover G-mine driver-popover-side-bottom driver-popover-align-start"",
+  "step "" / config unset": "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "step "mine" / config """: "class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "step "mine" / config "G-mine"": "class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "step "mine" / config unset": "class: "driver-popover mine driver-popover-side-bottom driver-popover-align-start"",
+  "step unset / config """: "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+  "step unset / config "G-mine"": "class: "driver-popover G-mine driver-popover-side-bottom driver-popover-align-start"",
+  "step unset / config unset": "class: "driver-popover driver-popover-side-bottom driver-popover-align-start"",
+}
+`;
+
+exports[`step vs config precedence > prevBtnText on step 1 of 3 1`] = `
+{
+  "step "" / config """: "previous: """,
+  "step "" / config "G-Back"": "previous: """,
+  "step "" / config unset": "previous: """,
+  "step "Back" / config """: "previous: "Back"",
+  "step "Back" / config "G-Back"": "previous: "Back"",
+  "step "Back" / config unset": "previous: "Back"",
+  "step unset / config """: "previous: "Previous"",
+  "step unset / config "G-Back"": "previous: "G-Back"",
+  "step unset / config unset": "previous: "Previous"",
+}
+`;
+
+exports[`step vs config precedence > prevBtnText on step 2 of 3 1`] = `
+{
+  "step "" / config """: "previous: """,
+  "step "" / config "G-Back"": "previous: """,
+  "step "" / config unset": "previous: """,
+  "step "Back" / config """: "previous: "Back"",
+  "step "Back" / config "G-Back"": "previous: "Back"",
+  "step "Back" / config unset": "previous: "Back"",
+  "step unset / config """: "previous: "Previous"",
+  "step unset / config "G-Back"": "previous: "G-Back"",
+  "step unset / config unset": "previous: "Previous"",
+}
+`;
+
+exports[`step vs config precedence > prevBtnText on step 3 of 3 1`] = `
+{
+  "step "" / config """: "previous: """,
+  "step "" / config "G-Back"": "previous: """,
+  "step "" / config unset": "previous: """,
+  "step "Back" / config """: "previous: "Back"",
+  "step "Back" / config "G-Back"": "previous: "Back"",
+  "step "Back" / config unset": "previous: "Back"",
+  "step unset / config """: "previous: "Previous"",
+  "step unset / config "G-Back"": "previous: "G-Back"",
+  "step unset / config unset": "previous: "Previous"",
+}
+`;
+
+exports[`step vs config precedence > progressText on step 1 of 3 1`] = `
+{
+  "step "" / config """: "progress: "1 of 3"",
+  "step "" / config "G-S {{current}}/{{total}}"": "progress: "G-S 1/3"",
+  "step "" / config unset": "progress: "1 of 3"",
+  "step "S {{current}}/{{total}}" / config """: "progress: "S 1/3"",
+  "step "S {{current}}/{{total}}" / config "G-S {{current}}/{{total}}"": "progress: "S 1/3"",
+  "step "S {{current}}/{{total}}" / config unset": "progress: "S 1/3"",
+  "step unset / config """: "progress: "1 of 3"",
+  "step unset / config "G-S {{current}}/{{total}}"": "progress: "G-S 1/3"",
+  "step unset / config unset": "progress: "1 of 3"",
+}
+`;
+
+exports[`step vs config precedence > progressText on step 2 of 3 1`] = `
+{
+  "step "" / config """: "progress: "2 of 3"",
+  "step "" / config "G-S {{current}}/{{total}}"": "progress: "G-S 2/3"",
+  "step "" / config unset": "progress: "2 of 3"",
+  "step "S {{current}}/{{total}}" / config """: "progress: "S 2/3"",
+  "step "S {{current}}/{{total}}" / config "G-S {{current}}/{{total}}"": "progress: "S 2/3"",
+  "step "S {{current}}/{{total}}" / config unset": "progress: "S 2/3"",
+  "step unset / config """: "progress: "2 of 3"",
+  "step unset / config "G-S {{current}}/{{total}}"": "progress: "G-S 2/3"",
+  "step unset / config unset": "progress: "2 of 3"",
+}
+`;
+
+exports[`step vs config precedence > progressText on step 3 of 3 1`] = `
+{
+  "step "" / config """: "progress: "3 of 3"",
+  "step "" / config "G-S {{current}}/{{total}}"": "progress: "G-S 3/3"",
+  "step "" / config unset": "progress: "3 of 3"",
+  "step "S {{current}}/{{total}}" / config """: "progress: "S 3/3"",
+  "step "S {{current}}/{{total}}" / config "G-S {{current}}/{{total}}"": "progress: "S 3/3"",
+  "step "S {{current}}/{{total}}" / config unset": "progress: "S 3/3"",
+  "step unset / config """: "progress: "3 of 3"",
+  "step unset / config "G-S {{current}}/{{total}}"": "progress: "G-S 3/3"",
+  "step unset / config unset": "progress: "3 of 3"",
+}
+`;
+
+exports[`step vs config precedence > showButtons on step 1 of 3 1`] = `
+{
+  "step ["close","previous"] / config ["next"]": "shown: "previous,close", footer: true",
+  "step ["close","previous"] / config ["previous"]": "shown: "previous,close", footer: true",
+  "step ["close","previous"] / config []": "shown: "previous,close", footer: true",
+  "step ["close","previous"] / config unset": "shown: "previous,close", footer: true",
+  "step ["next"] / config ["next"]": "shown: "next", footer: true",
+  "step ["next"] / config ["previous"]": "shown: "next", footer: true",
+  "step ["next"] / config []": "shown: "next", footer: true",
+  "step ["next"] / config unset": "shown: "next", footer: true",
+  "step [] / config ["next"]": "shown: "", footer: false",
+  "step [] / config ["previous"]": "shown: "", footer: false",
+  "step [] / config []": "shown: "", footer: false",
+  "step [] / config unset": "shown: "", footer: false",
+  "step unset / config ["next"]": "shown: "next", footer: true",
+  "step unset / config ["previous"]": "shown: "previous", footer: true",
+  "step unset / config []": "shown: "", footer: false",
+  "step unset / config unset": "shown: "next,previous,close", footer: true",
+}
+`;
+
+exports[`step vs config precedence > showButtons on step 2 of 3 1`] = `
+{
+  "step ["close","previous"] / config ["next"]": "shown: "previous,close", footer: true",
+  "step ["close","previous"] / config ["previous"]": "shown: "previous,close", footer: true",
+  "step ["close","previous"] / config []": "shown: "previous,close", footer: true",
+  "step ["close","previous"] / config unset": "shown: "previous,close", footer: true",
+  "step ["next"] / config ["next"]": "shown: "next", footer: true",
+  "step ["next"] / config ["previous"]": "shown: "next", footer: true",
+  "step ["next"] / config []": "shown: "next", footer: true",
+  "step ["next"] / config unset": "shown: "next", footer: true",
+  "step [] / config ["next"]": "shown: "", footer: false",
+  "step [] / config ["previous"]": "shown: "", footer: false",
+  "step [] / config []": "shown: "", footer: false",
+  "step [] / config unset": "shown: "", footer: false",
+  "step unset / config ["next"]": "shown: "next", footer: true",
+  "step unset / config ["previous"]": "shown: "previous", footer: true",
+  "step unset / config []": "shown: "", footer: false",
+  "step unset / config unset": "shown: "next,previous,close", footer: true",
+}
+`;
+
+exports[`step vs config precedence > showButtons on step 3 of 3 1`] = `
+{
+  "step ["close","previous"] / config ["next"]": "shown: "previous,close", footer: true",
+  "step ["close","previous"] / config ["previous"]": "shown: "previous,close", footer: true",
+  "step ["close","previous"] / config []": "shown: "previous,close", footer: true",
+  "step ["close","previous"] / config unset": "shown: "previous,close", footer: true",
+  "step ["next"] / config ["next"]": "shown: "next", footer: true",
+  "step ["next"] / config ["previous"]": "shown: "next", footer: true",
+  "step ["next"] / config []": "shown: "next", footer: true",
+  "step ["next"] / config unset": "shown: "next", footer: true",
+  "step [] / config ["next"]": "shown: "", footer: false",
+  "step [] / config ["previous"]": "shown: "", footer: false",
+  "step [] / config []": "shown: "", footer: false",
+  "step [] / config unset": "shown: "", footer: false",
+  "step unset / config ["next"]": "shown: "next", footer: true",
+  "step unset / config ["previous"]": "shown: "previous", footer: true",
+  "step unset / config []": "shown: "", footer: false",
+  "step unset / config unset": "shown: "next,previous,close", footer: true",
+}
+`;
+
+exports[`step vs config precedence > showProgress on step 1 of 3 1`] = `
+{
+  "step false / config false": "progress: false, footer: true",
+  "step false / config true": "progress: false, footer: true",
+  "step false / config unset": "progress: false, footer: true",
+  "step true / config false": "progress: "1 of 3", footer: true",
+  "step true / config true": "progress: "1 of 3", footer: true",
+  "step true / config unset": "progress: "1 of 3", footer: true",
+  "step unset / config false": "progress: false, footer: true",
+  "step unset / config true": "progress: "1 of 3", footer: true",
+  "step unset / config unset": "progress: false, footer: true",
+}
+`;
+
+exports[`step vs config precedence > showProgress on step 2 of 3 1`] = `
+{
+  "step false / config false": "progress: false, footer: true",
+  "step false / config true": "progress: false, footer: true",
+  "step false / config unset": "progress: false, footer: true",
+  "step true / config false": "progress: "2 of 3", footer: true",
+  "step true / config true": "progress: "2 of 3", footer: true",
+  "step true / config unset": "progress: "2 of 3", footer: true",
+  "step unset / config false": "progress: false, footer: true",
+  "step unset / config true": "progress: "2 of 3", footer: true",
+  "step unset / config unset": "progress: false, footer: true",
+}
+`;
+
+exports[`step vs config precedence > showProgress on step 3 of 3 1`] = `
+{
+  "step false / config false": "progress: false, footer: true",
+  "step false / config true": "progress: false, footer: true",
+  "step false / config unset": "progress: false, footer: true",
+  "step true / config false": "progress: "3 of 3", footer: true",
+  "step true / config true": "progress: "3 of 3", footer: true",
+  "step true / config unset": "progress: "3 of 3", footer: true",
+  "step unset / config false": "progress: false, footer: true",
+  "step unset / config true": "progress: "3 of 3", footer: true",
+  "step unset / config unset": "progress: false, footer: true",
+}
+`;

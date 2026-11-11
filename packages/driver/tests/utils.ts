@@ -1,9 +1,8 @@
 import { afterEach, beforeEach } from "vitest";
-import { driver, type DriveStep, type Driver } from "../src/driver";
+import { driver, type Config, type DriveStep, type Driver } from "../src/driver";
 
 type DriverConfig = Parameters<typeof driver>[0];
 
-// A small, stable DOM that the tests highlight against.
 export const DEMO_HTML = `
   <header class="page-header"><h1>Title</h1></header>
   <p id="intro">Intro paragraph</p>
@@ -24,8 +23,6 @@ export function createDriver(config?: DriverConfig): Driver {
   return active;
 }
 
-// Resets the DOM before each test and tears the driver down after, so the
-// library's module-level state never leaks between tests. Call once per file.
 export function useDriverHarness(): void {
   beforeEach(() => {
     document.body.innerHTML = DEMO_HTML;
@@ -38,7 +35,6 @@ export function useDriverHarness(): void {
   });
 }
 
-// Waits a single animation frame — needed for hooks that fire in the rAF loop.
 export function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
 }
@@ -52,16 +48,6 @@ export function append(id: string, tag = "button"): HTMLElement {
   return element;
 }
 
-export function keyEvent(
-  type: "keydown" | "keyup",
-  init: KeyboardEventInit,
-  target: Element = document.activeElement || document.body
-): KeyboardEvent {
-  const event = new KeyboardEvent(type, { bubbles: true, cancelable: true, composed: true, ...init });
-  target.dispatchEvent(event);
-  return event;
-}
-
 export const popoverEl = () => document.querySelector(".driver-popover");
 export const popoverTitle = () => document.querySelector(".driver-popover-title")?.textContent?.trim();
 export const popoverDescription = () => document.querySelector(".driver-popover-description")?.textContent?.trim();
@@ -71,4 +57,30 @@ export const navButton = (which: "next" | "prev" | "close") =>
 
 export function pressKey(key: string): void {
   window.dispatchEvent(new KeyboardEvent("keyup", { key }));
+}
+
+const TRACED_HOOKS = [
+  "onDeselected",
+  "onHighlightStarted",
+  "onHighlighted",
+  "onDestroyStarted",
+  "onDestroyed",
+] as const;
+type HookName = (typeof TRACED_HOOKS)[number];
+
+export function traced(config: Config = {}, inside: Partial<Record<HookName, (title: string) => void>> = {}) {
+  const trace: string[] = [];
+  const hooks: Config = {};
+  for (const name of TRACED_HOOKS) {
+    hooks[name] = (element, step, opts) => {
+      const title = step?.popover?.title ?? "none";
+      const reason = opts.reason ? ` (${opts.reason})` : "";
+      trace.push(`${name}:${title}:${element ? (element as HTMLElement).id || element.tagName : "none"}${reason}`);
+      inside[name]?.(title);
+    };
+  }
+
+  const d = createDriver({ animate: false, steps: SAMPLE_STEPS, ...hooks, ...config });
+
+  return { d, trace };
 }
