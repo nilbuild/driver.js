@@ -1,9 +1,18 @@
-import { Context } from "./context";
-import { DriveStep } from "./driver";
-import { refreshOverlay, trackActiveElement, transitionStage } from "./overlay";
-import { hidePopover } from "./popover";
+import { Context } from "../core/context";
+import type { DriveStep } from "../types";
+import { refreshOverlay, trackActiveElement, transitionStage } from "../overlay/overlay";
+import { beginTransition, endTransition, isCurrent, isTransitioning, missRefresh, ownsTransition } from "./lifecycle";
+import { stepOption } from "../core/options";
+import { hidePopover } from "../popover/popover";
 import { renderStepPopover, repositionStepPopover } from "./step";
-import { bringInView, isDummyElement, isScrollable, layerFor, resolveElement } from "./utils";
+import {
+  bringInView,
+  DUMMY_ELEMENT_ID,
+  isDummyElement,
+  isScrollable,
+  moveToLayerOf,
+  resolveElement,
+} from "../core/utils";
 
 const POPOVER_ARIA: Record<string, string> = {
   "aria-haspopup": "dialog",
@@ -40,21 +49,15 @@ function restoreAria(element: Element) {
 }
 
 export function mountDummyElement(): Element {
-  const existingDummy = document.getElementById("driver-dummy-element");
+  const existingDummy = document.getElementById(DUMMY_ELEMENT_ID);
   if (existingDummy) {
     return existingDummy;
   }
 
-  let element = document.createElement("div");
+  const element = document.createElement("div");
 
-  element.id = "driver-dummy-element";
-  element.style.width = "0";
-  element.style.height = "0";
-  element.style.pointerEvents = "none";
-  element.style.opacity = "0";
-  element.style.position = "fixed";
-  element.style.top = "50%";
-  element.style.left = "50%";
+  element.id = DUMMY_ELEMENT_ID;
+  element.style.cssText = "width:0;height:0;pointer-events:none;opacity:0;position:fixed;top:50%;left:50%";
 
   document.body.appendChild(element);
 
@@ -64,10 +67,6 @@ export function mountDummyElement(): Element {
 export function highlight(ctx: Context, step: DriveStep) {
   let elemObj = resolveElement(step.element);
 
-  // If the element is not found, we mount a 1px div
-  // at the center of the screen to highlight and show
-  // the popover on top of that. This is to show a
-  // modal-like highlight.
   if (!elemObj) {
     elemObj = mountDummyElement();
   }
@@ -85,19 +84,36 @@ function observeSize(ctx: Context, element?: Element) {
 
 export function refreshActiveHighlight(ctx: Context) {
   const activeHighlight = ctx.getState("__activeElement");
-  const activeStep = ctx.getState("__activeStep")!;
+  const activeStep = ctx.getState("__activeStep");
 
-  if (!activeHighlight) {
+  if (!activeHighlight || !activeStep) {
     return;
   }
 
+  if (isTransitioning(ctx)) {
+    missRefresh(ctx);
+    refreshOverlay(ctx);
+    return;
+  }
+
+  ctx.getState("__syncAllowedElements")?.();
+  followLayer(ctx, activeHighlight);
   trackActiveElement(ctx, activeHighlight);
   refreshOverlay(ctx);
-  ctx.getState("__syncAllowedElements")?.();
   repositionStepPopover(ctx, activeHighlight, activeStep);
 }
 
+function followLayer(ctx: Context, element: Element) {
+  const wrapper = ctx.getState("popover")?.wrapper;
+  if (wrapper) {
+    moveToLayerOf(wrapper, element);
+  }
+}
+
 function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) {
+  const activation = ctx.getState("__activation");
+  const isSuperseded = () => !isCurrent(ctx, activation);
+
   observeSize(ctx);
   const duration = ctx.getConfig("duration") || 400;
   const start = Date.now();
@@ -105,26 +121,30 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
   const fromStep = ctx.getState("__activeStep");
   const fromElement = ctx.getState("__activeElement") || toElement;
 
-  // If it's the first time we're highlighting an element, we show
-  // the popover immediately. Otherwise, we wait for the animation
-  // to finish before showing the popover.
   const isFirstHighlight = !fromElement || fromElement === toElement;
-  const isToDummyElement = toElement.id === "driver-dummy-element";
-  const isFromDummyElement = fromElement.id === "driver-dummy-element";
+  const isToDummyElement = isDummyElement(toElement);
+  const isFromDummyElement = isDummyElement(fromElement);
 
   const isAnimatedTour = ctx.getConfig("animate");
   const highlightStartedHook = toStep.onHighlightStarted || ctx.getConfig("onHighlightStarted");
-  const highlightedHook = toStep?.onHighlighted || ctx.getConfig("onHighlighted");
+  const highlightedHook = toStep.onHighlighted || ctx.getConfig("onHighlighted");
   const deselectedHook = fromStep?.onDeselected || ctx.getConfig("onDeselected");
+  const signal = activation?.controller.signal;
 
   const hookOpts = ctx.getHookOpts();
 
   if (fromStep && fromStep !== toStep && deselectedHook) {
     deselectedHook(isFromDummyElement ? undefined : fromElement, fromStep, hookOpts);
+    if (isSuperseded()) {
+      return;
+    }
   }
 
   if (highlightStartedHook) {
-    highlightStartedHook(isToDummyElement ? undefined : toElement, toStep, hookOpts);
+    highlightStartedHook(isToDummyElement ? undefined : toElement, toStep, { ...hookOpts, signal });
+    if (isSuperseded()) {
+      return;
+    }
   }
 
   const hasDelayedPopover = !isFirstHighlight && isAnimatedTour;
@@ -137,13 +157,15 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
   ctx.setState("activeStep", toStep);
   ctx.setState("activeElement", toElement);
 
-  const animate = () => {
-    const transitionCallback = ctx.getState("__transitionCallback");
+  const commitBeforeHighlightedHook = (targetElement: Element) => {
+    ctx.setState("__previousStep", fromStep);
+    ctx.setState("__previousElement", fromElement);
+    ctx.setState("__activeStep", toStep);
+    ctx.setState("__activeElement", targetElement);
+  };
 
-    // This makes sure that the repeated calls to transferHighlight
-    // don't interfere with each other. Only the last call will be
-    // executed.
-    if (transitionCallback !== animate) {
+  const animate = () => {
+    if (!ownsTransition(ctx, animate)) {
       return;
     }
 
@@ -163,76 +185,113 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
     } else {
       trackActiveElement(ctx, targetElement);
 
+      commitBeforeHighlightedHook(targetElement);
+
       if (highlightedHook) {
-        highlightedHook(isToDummyElement ? undefined : targetElement, toStep, {
-          ...ctx.getHookOpts(),
-          signal: ctx.getState("__activation")?.controller.signal,
-        });
+        highlightedHook(isToDummyElement ? undefined : targetElement, toStep, { ...ctx.getHookOpts(), signal });
       }
 
-      ctx.setState("__transitionCallback", undefined);
-      ctx.setState("__previousStep", fromStep);
-      ctx.setState("__previousElement", fromElement);
-      ctx.setState("__activeStep", toStep);
-      ctx.setState("__activeElement", targetElement);
+      if (!ownsTransition(ctx, animate)) {
+        return;
+      }
+
+      const hasMissedRefresh = endTransition(ctx);
       observeSize(ctx, targetElement);
+      if (hasMissedRefresh) {
+        refreshActiveHighlight(ctx);
+      }
+
+      return;
     }
 
     window.requestAnimationFrame(animate);
   };
 
-  ctx.setState("__transitionCallback", animate);
+  beginTransition(ctx, animate);
 
   window.requestAnimationFrame(animate);
 
-  document.querySelectorAll(".driver-active-element-parent").forEach(element => {
-    element.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
-  });
+  clearParentMarks(ctx);
 
   bringInView(toElement, ctx.getConfig("smoothScroll"));
   if (!hasDelayedPopover && toStep.popover) {
     renderStepPopover(ctx, toElement, toStep);
   }
 
-  document.querySelectorAll(".driver-active-element").forEach(clearActiveElement);
+  clearElementMarks(ctx);
   markActiveElement(ctx, toElement, toStep);
 }
 
+const classGuards = new WeakMap<Element, MutationObserver>();
+
+function guardClasses(element: Element, classes: string[]) {
+  classGuards.get(element)?.disconnect();
+
+  const observer = new MutationObserver(() => {
+    const missing = classes.filter(name => !element.classList.contains(name));
+    if (missing.length > 0) {
+      element.classList.add(...missing);
+    }
+  });
+  observer.observe(element, { attributes: true, attributeFilter: ["class"] });
+  classGuards.set(element, observer);
+}
+
 function clearActiveElement(element: Element) {
+  classGuards.get(element)?.disconnect();
+  classGuards.delete(element);
   element.classList.remove("driver-active-element", "driver-no-interaction");
   restoreAria(element);
 }
 
+function clearElementMarks(ctx: Context) {
+  const marked = ctx.getState("__marked")?.element;
+  new Set([marked, ...document.querySelectorAll(".driver-active-element")]).forEach(element => {
+    if (element) {
+      clearActiveElement(element);
+    }
+  });
+}
+
+function clearParentMarks(ctx: Context) {
+  const marked = ctx.getState("__marked")?.parent;
+  new Set([marked, ...document.querySelectorAll(".driver-active-element-parent")]).forEach(parent => {
+    parent?.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
+  });
+}
+
 function markActiveElement(ctx: Context, element: Element, step: DriveStep) {
-  if (step.disableActiveInteraction ?? ctx.getConfig("disableActiveInteraction")) {
+  const isBlocked = stepOption(ctx, step, "disableActiveInteraction") === true;
+  if (isBlocked) {
     element.classList.add("driver-no-interaction");
   }
 
   const parent = element.parentElement;
-  if (parent && parent !== document.body) {
-    parent.classList.add("driver-active-element-parent");
+  const markedParent = parent && parent !== document.body ? parent : undefined;
+  if (markedParent) {
+    markedParent.classList.add("driver-active-element-parent");
 
-    if (isScrollable(parent)) {
-      parent.classList.add("driver-active-element-parent-no-scroll");
+    if (isScrollable(markedParent)) {
+      markedParent.classList.add("driver-active-element-parent-no-scroll");
     }
   }
 
+  ctx.setState("__marked", { element, parent: markedParent });
   element.classList.add("driver-active-element");
   if (!isDummyElement(element)) {
     setPopoverAria(element);
+    guardClasses(element, isBlocked ? ["driver-active-element", "driver-no-interaction"] : ["driver-active-element"]);
   }
 }
 
-export function destroyHighlight() {
-  document.getElementById("driver-dummy-element")?.remove();
-  document.querySelectorAll(".driver-active-element").forEach(element => {
-    const parent = element.parentElement;
-    if (parent && parent !== document.body) {
-      parent.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
-    }
+export function removeDummyElement() {
+  document.getElementById(DUMMY_ELEMENT_ID)?.remove();
+}
 
-    clearActiveElement(element);
-  });
+export function destroyHighlight(ctx: Context) {
+  removeDummyElement();
+  clearParentMarks(ctx);
+  clearElementMarks(ctx);
 }
 
 export function rebindActiveElement(ctx: Context, element: Element) {
@@ -241,31 +300,15 @@ export function rebindActiveElement(ctx: Context, element: Element) {
     return;
   }
 
-  const previousElements = new Set([
-    ctx.getState("activeElement"),
-    ...document.querySelectorAll(".driver-active-element"),
-  ]);
-  previousElements.forEach(previous => {
-    if (!previous) {
-      return;
-    }
-
-    clearActiveElement(previous);
-    previous.parentElement?.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
-  });
-
+  clearParentMarks(ctx);
+  clearElementMarks(ctx);
   markActiveElement(ctx, element, step);
 
   ctx.setState("activeElement", element);
   ctx.setState("__activeElement", element);
   observeSize(ctx, element);
 
-  const wrapper = ctx.getState("popover")?.wrapper;
-  const layer = layerFor(element);
-  if (wrapper && wrapper.parentElement !== layer) {
-    layer.appendChild(wrapper);
-  }
-
+  followLayer(ctx, element);
   trackActiveElement(ctx, element);
   repositionStepPopover(ctx, element, step);
 }

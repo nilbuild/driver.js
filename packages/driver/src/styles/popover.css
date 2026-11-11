@@ -1,8 +1,3 @@
-/* The popover, shared by the tour (driver.css) and the hints (hints.css)
-   entries. Both @import this file, so the popover looks the same whether it is
-   opened by a tour step or a hint. Keep tour-only rules (overlay, stage, body
-   classes) out of here. */
-
 .driver-layer {
   position: fixed !important;
   top: 0 !important;
@@ -43,6 +38,7 @@
     sans-serif
   );
   box-sizing: border-box;
+  pointer-events: auto;
   color: #2d2d2d;
   margin: 0;
   padding: 15px;
@@ -84,8 +80,6 @@
   transition-duration: 200ms;
 }
 
-/* focus-visible, not focus: the popover focuses the close button when it
-   opens, which would otherwise darken it for mouse users too. */
 .driver-popover-close-btn:hover,
 .driver-popover-close-btn:focus-visible {
   color: #2d2d2d;
@@ -153,7 +147,7 @@
 }
 
 .driver-popover-navigation-btns button + button {
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 
 .driver-popover-arrow {
@@ -166,7 +160,6 @@
   display: none;
 }
 
-/** Popover Arrow Sides **/
 .driver-popover-arrow-side-left {
   left: 100%;
   border-right-color: transparent;
@@ -199,10 +192,6 @@
   display: none;
 }
 
-/* The offset of the arrow along its edge is set inline by the library so the
-   tip points at the center of the highlighted element. */
-
-/* No arrow */
 .driver-popover-arrow-none {
   display: none;
 }

@@ -1,9 +1,4 @@
-/* The checklist widget only. Tours started from an item use the tour's own
-   styles, so pages with a checklist import driver.css as well. */
-
 .driver-checklist {
-  /* Distance from the screen edges, set with the offset option or these
-     variables; phones get a tighter default below. */
   --driver-checklist-x: var(--driver-checklist-offset-x, 20px);
   --driver-checklist-y: var(--driver-checklist-offset-y, 20px);
 
@@ -33,7 +28,6 @@
   box-sizing: border-box;
 }
 
-/* Clear of the notch and the home bar on phones that have them. */
 .driver-checklist-bottom-right,
 .driver-checklist-bottom-left {
   bottom: calc(var(--driver-checklist-y) + env(safe-area-inset-bottom, 0px));
@@ -42,7 +36,6 @@
 .driver-checklist-top-right,
 .driver-checklist-top-left {
   top: calc(var(--driver-checklist-y) + env(safe-area-inset-top, 0px));
-  /* The panel opens below the launcher instead of above it. */
   flex-direction: column-reverse;
 }
 
@@ -58,8 +51,6 @@
   align-items: flex-start;
 }
 
-/* On phones the panel spans the screen with even margins, and the launcher
-   stays in its corner. */
 @media (max-width: 480px) {
   .driver-checklist {
     --driver-checklist-x: var(--driver-checklist-offset-x, 12px);
@@ -75,7 +66,6 @@
   }
 }
 
-/* The tour takes over the screen; the checklist waits until it ends. */
 .driver-active .driver-checklist {
   display: none;
 }
@@ -120,8 +110,6 @@
 .driver-checklist-panel {
   width: 320px;
   max-width: 100%;
-  /* Leaves room for the launcher and the gaps; dvh follows the visible
-     area as mobile browser toolbars show and hide. */
   max-height: min(520px, calc(100vh - 2 * var(--driver-checklist-y) - 60px));
   max-height: min(520px, calc(100dvh - 2 * var(--driver-checklist-y) - 60px));
   overflow-y: auto;
@@ -132,7 +120,6 @@
   animation: driver-checklist-in 200ms ease-out;
 }
 
-/* No launcher to leave room for. */
 .driver-checklist-no-launcher .driver-checklist-panel {
   max-height: min(520px, calc(100vh - 2 * var(--driver-checklist-y)));
   max-height: min(520px, calc(100dvh - 2 * var(--driver-checklist-y)));
@@ -151,7 +138,6 @@
   }
 }
 
-/* Below the launcher in the top corners, so it slides down instead. */
 .driver-checklist-top-right .driver-checklist-panel,
 .driver-checklist-top-left .driver-checklist-panel {
   animation-name: driver-checklist-in-down;
@@ -170,7 +156,6 @@
   }
 }
 
-/* Header type and the close button mirror the tour popover. */
 .driver-checklist-header {
   position: relative;
   padding: 15px 15px 12px;
@@ -261,7 +246,6 @@
   background-color: #f7f7f7;
 }
 
-/* A focused item is marked by its row's background above, not a ring. */
 .driver-checklist-item-trigger:focus-visible {
   outline: none;
 }
@@ -309,7 +293,6 @@ button.driver-checklist-check,
   cursor: pointer;
 }
 
-/* A bigger tap target than the 16px circle, for fingers. */
 button.driver-checklist-check::before {
   content: "";
   position: absolute;

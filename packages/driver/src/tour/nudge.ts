@@ -1,4 +1,4 @@
-import type { Context } from "./context";
+import type { Context } from "../core/context";
 
 const POPOVER_CLASS = "driver-popover-nudge";
 const timers = new WeakMap<Element, number>();
@@ -36,14 +36,18 @@ function untilAnimationEnds(element: Element, onEnd: () => void) {
   timers.set(element, window.setTimeout(finish, nudgeDuration() + 150));
 }
 
+function restartAnimation(wrapper: HTMLElement) {
+  wrapper.classList.remove(POPOVER_CLASS);
+  void wrapper.offsetWidth;
+  wrapper.classList.add(POPOVER_CLASS);
+}
+
 export function nudge(ctx: Context) {
   const wrapper = ctx.getState("popover")?.wrapper;
   if (!ctx.getState("isInitialized") || !wrapper || !wrapper.isConnected || wrapper.style.display === "none") {
     return;
   }
 
-  wrapper.classList.remove(POPOVER_CLASS);
-  void wrapper.offsetWidth;
-  wrapper.classList.add(POPOVER_CLASS);
+  restartAnimation(wrapper);
   untilAnimationEnds(wrapper, () => wrapper.classList.remove(POPOVER_CLASS));
 }

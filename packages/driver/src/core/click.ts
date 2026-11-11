@@ -2,12 +2,6 @@ const DRIVER_CLICK_EVENTS = ["pointerdown", "mousedown", "pointerup", "mouseup",
 
 const driverClickHandlers = new WeakMap<Element, (e: MouseEvent | PointerEvent) => void>();
 
-/**
- * Attaches click handler to the elements created by driver.js. It makes
- * sure to give the listener the first chance to handle the event, and
- * prevents all other pointer-events to make sure no external-library
- * ever knows the click happened.
- */
 export function onDriverClick(
   element: Element,
   listener: (pointer: MouseEvent | PointerEvent) => void,
@@ -32,7 +26,6 @@ export function onDriverClick(
     }
   };
 
-  // We want to be the absolute first one to hear about the event
   const useCapture = true;
 
   for (const type of DRIVER_CLICK_EVENTS) {

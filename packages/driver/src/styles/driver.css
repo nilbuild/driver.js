@@ -1,6 +1,3 @@
-/* The popover styling is shared with the hints entry, so it lives in its own
-   file that both import. Everything below is tour-only: the overlay, the stage
-   cutout interactions and the body-class driven behaviour. */
 @import "./popover.css";
 
 .driver-active .driver-overlay {
@@ -46,7 +43,6 @@
   animation: animate-fade-in var(--driver-animation-duration, 400ms);
 }
 
-/* Disable the scrolling of a scrollable parent that holds an active element*/
 .driver-active-element-parent-no-scroll {
   overflow: hidden !important;
 }
@@ -118,22 +114,88 @@
   }
 }
 
-/* Action steps (popover.action): the instruction row, and the status shown in
-   place of the next button. The wrapper gets .driver-popover-action. */
-.driver-popover-action-text {
+.driver-popover-instruction {
+  align-items: flex-start;
+  gap: 10px;
   margin-top: 12px;
-  padding: 8px 10px;
-  border-radius: 4px;
-  background-color: var(--driver-action-background, #f2f2f2);
-  color: var(--driver-action-color, inherit);
+  padding: var(--driver-instruction-padding, 8px 10px);
+  border-radius: var(--driver-instruction-radius, 4px);
+  background-color: var(--driver-instruction-background, #f2f2f2);
+  color: var(--driver-instruction-color, inherit);
   font-size: 14px;
   line-height: 1.5;
+}
+
+.driver-popover-instruction-text {
+  flex: 1;
+  min-width: 0;
   overflow-wrap: break-word;
 }
 
-.driver-popover-action-status {
-  padding: 4px 0 4px 8px;
-  color: var(--driver-action-status-color, #727272);
-  font-size: 12px;
-  line-height: 1.3;
+.driver-popover-instruction-indicator {
+  --size: var(--driver-instruction-indicator-size, 8px);
+  flex: none;
+  box-sizing: border-box;
+  width: var(--size);
+  height: var(--size);
+  margin: calc((1.5em - var(--size)) / 2) 2px 0;
+  border-radius: 50%;
+  background-color: var(--driver-instruction-indicator-color, #f59e0b);
+  animation: driver-instruction-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes driver-instruction-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+.driver-popover-instruction-done .driver-popover-instruction {
+  background-color: var(--driver-instruction-done-background, #dcfce7);
+  color: var(--driver-instruction-done-color, #15803d);
+}
+
+.driver-popover-instruction-done .driver-popover-instruction-indicator {
+  width: calc(var(--size) * 0.7);
+  height: calc(var(--size) * 1.3);
+  margin-top: calc((1.5em - var(--size) * 1.3) / 2 - 1px);
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  border-radius: 0;
+  background: none;
+  transform: rotate(45deg);
+  animation: none;
+}
+
+.driver-popover-footer .driver-popover-btn-disabled[aria-disabled] {
+  pointer-events: auto;
+  cursor: default;
+  opacity: 1;
+  background-color: #fff;
+  color: var(--driver-instruction-next-color, #a3a3a3);
+}
+
+.driver-popover-instruction-done .driver-popover-footer .driver-popover-next-btn {
+  border-color: var(--driver-instruction-done-color, #15803d);
+  background-color: var(--driver-instruction-done-color, #15803d);
+  color: #fff;
+}
+
+.driver-popover-nudge .driver-popover-instruction {
+  box-shadow: 0 0 0 2px var(--driver-instruction-indicator-color, #f59e0b);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .driver-popover-instruction-indicator {
+    animation: none;
+  }
+}
+
+.driver-popover-feedback {
+  margin-top: 8px;
+  color: var(--driver-feedback-color, #b45309);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: break-word;
 }

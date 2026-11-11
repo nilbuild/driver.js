@@ -1,22 +1,10 @@
-import type { Activation, AdvanceOn, Context } from "./context";
-import type { DriveStep } from "./driver";
+import type { Activation, Context } from "../core/context";
+import { advanceEvents, isClickGesture, usesAdvanceOnClick } from "../core/options";
+import type { AdvanceOn } from "../types";
+import { isTransitioning, setSettling } from "./lifecycle";
 
-export function resolveAdvanceOn(ctx: Context, step: DriveStep): AdvanceOn | undefined {
-  if (step.advanceOn !== undefined) {
-    return step.advanceOn || undefined;
-  }
-
-  if (step.advanceOnClick !== undefined) {
-    return step.advanceOnClick ? "click" : undefined;
-  }
-
-  const advanceOn = ctx.getConfig("advanceOn");
-  if (advanceOn !== undefined) {
-    return advanceOn || undefined;
-  }
-
-  return ctx.getConfig("advanceOnClick") ? "click" : undefined;
-}
+const MULTI_CLICK_MS = 500;
+const SAME_SPOT_PX = 8;
 
 export function isOnPath(event: Event, element: Element | undefined): boolean {
   if (!element) {
@@ -38,9 +26,24 @@ export function listenForAdvanceEvents(
   onComplete: () => void
 ) {
   const { signal } = activation.controller;
-  const { event: types, when } =
-    typeof advanceOn === "object" && !Array.isArray(advanceOn) ? advanceOn : { event: advanceOn };
-  const eventTypes = Array.isArray(types) ? types : [types];
+  const { types, when } = advanceEvents(advanceOn);
+
+  const isLegacyClickDuringTransition = () => usesAdvanceOnClick(ctx, activation.step) && isTransitioning(ctx);
+
+  const isRestOfCompletingMultiClick = (event: Event) => {
+    const completingClick = ctx.getState("__advanceClick");
+    const click = event as MouseEvent;
+    if (!completingClick || click.detail < 2 || click.timeStamp - completingClick.timeStamp > MULTI_CLICK_MS) {
+      return false;
+    }
+
+    return (
+      Math.abs(click.clientX - completingClick.clientX) < SAME_SPOT_PX &&
+      Math.abs(click.clientY - completingClick.clientY) < SAME_SPOT_PX
+    );
+  };
+
+  const isStrayClick = (event: Event) => isLegacyClickDuringTransition() || isRestOfCompletingMultiClick(event);
 
   const isMet = (event: Event) => {
     if (!when) {
@@ -62,13 +65,17 @@ export function listenForAdvanceEvents(
     window.clearTimeout(pendingTimer);
     pendingEvent = undefined;
     pendingTimer = undefined;
-    activation.pendingCompletion = false;
+    setSettling(activation, false);
 
     if (signal.aborted) {
       return;
     }
 
     if (!ctx.isConsumed(event) && isMet(event)) {
+      if (isClickGesture(event.type)) {
+        ctx.setState("__advanceClick", event as MouseEvent);
+      }
+
       onComplete();
     }
 
@@ -80,13 +87,17 @@ export function listenForAdvanceEvents(
       return;
     }
 
+    if (isClickGesture(event.type) && isStrayClick(event)) {
+      return;
+    }
+
     pendingEvent = event;
-    activation.pendingCompletion = true;
+    setSettling(activation, true);
     window.clearTimeout(pendingTimer);
     pendingTimer = window.setTimeout(() => settle(event), 0);
   };
 
-  for (const type of eventTypes) {
+  for (const type of types) {
     window.addEventListener(type, onCapture, { capture: true, signal });
     window.addEventListener(type, settle, { signal });
   }

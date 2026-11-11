@@ -1,46 +1,49 @@
-import { AllowedButtons, destroyPopover, Popover } from "./popover";
-import { destroyOverlay } from "./overlay";
-import { destroyEvents, initEvents, requireRefresh } from "./events";
+import { AllowedButtons, destroyPopover } from "./popover/popover";
+import { destroyOverlay } from "./overlay/overlay";
+import { destroyEvents, initEvents, requireRefresh } from "./interaction/events";
 import {
-  Activation,
-  AdvanceOn,
-  AllowedElements,
-  Config,
-  createContext,
-  DestroyReason,
-  DriverHook,
-  ElementMissingHook,
-  InteractionHook,
-  PopoverPatch,
-} from "./context";
-import { announce, destroyLiveRegion, mountLiveRegion } from "./live-region";
-import { listenForAdvanceEvents, resolveAdvanceOn } from "./advance";
-import { nudge } from "./nudge";
-import { trackAllowedElements } from "./allowed";
-import { destroyHighlight, highlight, mountDummyElement, rebindActiveElement } from "./highlight";
+  beginActivation,
+  cancelElementWait,
+  endActivation,
+  enterStep,
+  isCurrent,
+  isDone,
+  isTransitioning,
+  isWaiting,
+  placeholderOf,
+} from "./tour/lifecycle";
+import { requestCompletion } from "./tour/completion";
+import { Activation, Context, createContext } from "./core/context";
+import { watchForRemoval } from "./tour/removal";
+import type { AdvanceOn, Config, DestroyReason, Driver, DriveStep, PopoverPatch } from "./types";
+import { endInitialWait, handleWaitTimeout, popoverTarget, showInitialWait, waitForStepElement } from "./tour/wait";
+import { announce, destroyLiveRegion, mountLiveRegion } from "./popover/live-region";
+import { listenForAdvanceEvents } from "./tour/advance";
+import { advanceEvents, isClickGesture, resolveAdvanceOn, stepOption } from "./core/options";
+import { nudge } from "./tour/nudge";
+
+import { trackAllowedElements } from "./tour/allowed";
+import { destroyHighlight, highlight } from "./tour/highlight";
 import {
   findReachableIndex,
   isEndStep,
   resolveNextHook,
   resolvePrevHook,
   resolveStepButtons,
-  clearStepPopoverWaiting,
   isActionStep,
-  isPopoverWaiting,
+  isStandalone,
+  markStandalone,
   markStepPopoverWaiting,
   popoverText,
-  withPopoverPatch,
-  renderStepPopover,
   resolveTourStep,
   shouldSkipStep,
   updateStepPopover,
-} from "./step";
-import { isDummyElement, resolveElement } from "./utils";
-import "./driver.css";
+} from "./tour/step";
+import { isDummyElement, resolveElement } from "./core/utils";
+import "./styles/driver.css";
 
 let teardownActive: (() => void) | undefined;
 
-// Re-export the public types so they remain part of the package's type surface.
 export type {
   AdvanceOn,
   AdvanceOnEvent,
@@ -49,65 +52,41 @@ export type {
   Config,
   DestroyReason,
   DriverHook,
+  ElementMissing,
   ElementMissingHook,
   ElementMissingOpts,
+  ElementMissingPreset,
   HookOpts,
   InteractionHook,
   InteractionOpts,
   InteractionRegion,
   PopoverPatch,
+  Driver,
+  DriveStep,
+  Popover,
   State,
-} from "./context";
-export type { StageDefinition } from "./stage";
-export type { Popover, PopoverDOM, Side, Alignment, AllowedButtons } from "./popover";
-
-export type DriveStep = {
-  element?: string | Element | (() => Element);
-  onHighlightStarted?: DriverHook;
-  onHighlighted?: DriverHook;
-  onDeselected?: DriverHook;
-  popover?: Popover;
-  disableActiveInteraction?: boolean;
-  advanceOn?: AdvanceOn;
-  /** @deprecated Use `advanceOn: "click"`. */
-  advanceOnClick?: boolean;
-  onInteraction?: InteractionHook;
-  allowedElements?: AllowedElements;
-  onElementMissing?: ElementMissingHook;
-  skipMissingElement?: boolean;
-  waitForElement?: number;
-  data?: Record<string, any>;
-};
-
-export interface Driver {
-  isActive: () => boolean;
-  refresh: () => void;
-  drive: (stepIndex?: number) => void;
-  setConfig: (config: Config) => void;
-  setSteps: (steps: DriveStep[]) => void;
-  getConfig: () => Config;
-  getState: (key?: string) => any;
-  getActiveIndex: () => number | undefined;
-  isFirstStep: () => boolean;
-  isLastStep: () => boolean;
-  getActiveStep: () => DriveStep | undefined;
-  getActiveElement: () => Element | undefined;
-  getPreviousElement: () => Element | undefined;
-  getPreviousStep: () => DriveStep | undefined;
-  getNextStep: () => DriveStep | undefined;
-  moveNext: () => void;
-  movePrevious: () => void;
-  moveTo: (index: number) => void;
-  hasNextStep: () => boolean;
-  hasPreviousStep: () => boolean;
-  highlight: (step: DriveStep) => void;
-  updatePopover: (patch?: PopoverPatch) => void;
-  nudge: (patch?: PopoverPatch) => void;
-  destroy: () => void;
-}
+} from "./types";
+export type { StageDefinition } from "./overlay/stage";
+export type { PopoverDOM, Side, Alignment, AllowedButtons } from "./popover/popover";
 
 export function driver(options: Config = {}): Driver {
-  const ctx = createContext(options);
+  const ctx: Context = Object.assign(createContext(options), {
+    tour: {
+      drive,
+      next,
+      pressNext,
+      previous,
+      moveNext,
+      movePrevious,
+      close: () => destroy("close"),
+      requestClose: handleClose,
+      overlayClick: handleOverlayClick,
+      escape: handleEscape,
+      arrowLeft: handleArrowLeft,
+      arrowRight: handleArrowRight,
+      refreshPopover: refreshActivePopover,
+    },
+  });
   const teardown = () => destroy("replaced", false);
 
   function handleClose(reason: DestroyReason = "close") {
@@ -127,27 +106,46 @@ export function driver(options: Config = {}): Driver {
   }
 
   function currentPopoverStep(): DriveStep | undefined {
-    return ctx.getState("__initialWait")?.step ?? ctx.getState("__activeStep");
+    return placeholderOf(ctx)?.step ?? ctx.getState("__activeStep");
+  }
+
+  function hookStep(): DriveStep | undefined {
+    return currentPopoverStep() ?? ctx.getState("activeStep");
   }
 
   function currentButtons() {
     const step = currentPopoverStep();
 
-    return resolveStepButtons(ctx, step && withPopoverPatch(ctx, step));
+    return resolveStepButtons(ctx, step);
   }
 
-  // Moving on by hand is off while the popover waits for an element and on
-  // action steps, which only complete through advanceOn or moveNext(). The
-  // activation is the step being entered, so this also holds while the
-  // highlight is still animating towards it.
   function canSkipStep() {
     const step = ctx.getState("__activation")?.step ?? currentPopoverStep();
 
-    return !isPopoverWaiting(ctx) && !isActionStep(ctx, step);
+    return !isWaiting(ctx) && !isActionStep(step);
+  }
+
+  function nudgeIfGated(): boolean {
+    const activation = ctx.getState("__activation");
+    if (!isActionStep(activation?.step ?? currentPopoverStep())) {
+      return false;
+    }
+
+    if (!(activation && isDone(ctx, activation.step)) && !isWaiting(ctx)) {
+      nudge(ctx);
+    }
+
+    return true;
+  }
+
+  function pressNext() {
+    if (!nudgeIfGated()) {
+      next();
+    }
   }
 
   function canUseButton(button: AllowedButtons) {
-    if (button === "previous" && isPopoverWaiting(ctx)) {
+    if (button === "previous" && isWaiting(ctx)) {
       return false;
     }
 
@@ -163,6 +161,10 @@ export function driver(options: Config = {}): Driver {
   function handleOverlayClick() {
     const overlayClickBehavior = ctx.getConfig("overlayClickBehavior");
 
+    if (typeof overlayClickBehavior !== "function" && overlayClickBehavior !== "none" && nudgeIfGated()) {
+      return;
+    }
+
     if (ctx.getConfig("allowClose") && overlayClickBehavior === "close") {
       destroy("overlay");
       return;
@@ -171,30 +173,49 @@ export function driver(options: Config = {}): Driver {
     if (typeof overlayClickBehavior === "function") {
       ctx.setState("__destroyReason", "overlay");
 
-      const activeStep = ctx.getState("__activeStep");
-      const activeElement = ctx.getState("__activeElement");
-
-      overlayClickBehavior(activeElement, activeStep!, ctx.getHookOpts());
+      const step = hookStep();
+      if (step) {
+        overlayClickBehavior(ctx.getState("__activeElement"), step, ctx.getHookOpts());
+      }
 
       return;
     }
 
     if (overlayClickBehavior === "nextStep" && canSkipStep()) {
-      goNext(ctx.getState("activeElement"), ctx.getState("activeStep"));
+      next();
     }
   }
 
-  function goNext(element: Element | undefined, step: DriveStep | undefined) {
+  function next() {
+    const { element, step } = popoverTarget(ctx);
     const onNextClick = resolveNextHook(ctx, step);
-    if (onNextClick) {
-      if (isEndStep(ctx, 1)) {
-        ctx.setState("__destroyReason", "done");
-      }
-      onNextClick(element, step!, ctx.getHookOpts());
+    if (!step || !onNextClick) {
+      moveUnlessStandalone(step, moveNext);
       return;
     }
 
-    moveNext();
+    if (isEndStep(ctx, 1)) {
+      ctx.setState("__destroyReason", "done");
+    }
+
+    onNextClick(element, step, ctx.getHookOpts());
+  }
+
+  function previous() {
+    const { element, step } = popoverTarget(ctx);
+    const onPrevClick = resolvePrevHook(ctx, step);
+    if (!step || !onPrevClick) {
+      moveUnlessStandalone(step, movePrevious);
+      return;
+    }
+
+    onPrevClick(element, step, ctx.getHookOpts());
+  }
+
+  function moveUnlessStandalone(step: DriveStep | undefined, move: () => void) {
+    if (!isStandalone(step)) {
+      move();
+    }
   }
 
   function moveNext() {
@@ -229,239 +250,83 @@ export function driver(options: Config = {}): Driver {
 
   function moveTo(index: number) {
     const steps = ctx.getConfig("steps") || [];
-
-    if (steps[index]) {
-      drive(index);
-    } else {
+    if (!steps[index]) {
       destroy("api");
+      return;
     }
+
+    init();
+    drive(index);
   }
 
   function advance() {
-    const activeStep = ctx.getState("activeStep");
-    if (!activeStep) {
-      return;
-    }
-
-    goNext(ctx.getState("activeElement"), activeStep);
-  }
-
-  function requestCompletion(activation: Activation) {
-    if (ctx.getState("__activation") !== activation || activation.latched) {
-      return;
-    }
-
-    activation.latched = true;
-    advance();
-
-    releaseLatch(activation);
-  }
-
-  function releaseLatch(activation: Activation) {
-    if (ctx.getState("__activation") !== activation || ctx.getState("__pendingWaitCancel")) {
-      return;
-    }
-
-    activation.latched = false;
-    activation.recheck?.();
-  }
-
-  function endActivation() {
     const activation = ctx.getState("__activation");
-    if (!activation) {
+    if (!activation || isWaiting(ctx)) {
       return;
     }
 
-    ctx.setState("__activation", undefined);
-    activation.controller.abort();
+    requestCompletion(ctx, activation);
   }
 
-  function resolveMissingHook(step: DriveStep): ElementMissingHook | undefined {
-    return step.onElementMissing || ctx.getConfig("onElementMissing");
-  }
+  const warnedSteps = new WeakSet<DriveStep>();
 
-  function popoverTarget() {
-    const initialWait = ctx.getState("__initialWait");
-
-    return {
-      element: initialWait?.element ?? ctx.getState("activeElement"),
-      step: initialWait?.step ?? ctx.getState("activeStep"),
-    };
-  }
-
-  function clearWaiting() {
-    const target = popoverTarget();
-    clearStepPopoverWaiting(ctx, target.element, target.step);
-  }
-
-  function watchForRemoval(activation: Activation) {
-    const { step } = activation;
-    const { signal } = activation.controller;
-    if (!step.element || !resolveMissingHook(step)) {
+  function warnAboutDeadEnds(step: DriveStep, advanceOn: AdvanceOn | undefined) {
+    const { types } = advanceEvents(advanceOn);
+    const isBlocked = !!stepOption(ctx, step, "disableActiveInteraction");
+    if (!isBlocked || !types.length || !types.every(isClickGesture)) {
       return;
     }
 
-    let frame: number | undefined;
-    let graceTimer: number | undefined;
-    let hasReported = false;
+    const index = ctx.getState("activeIndex");
+    const definition = (index !== undefined && ctx.getConfig("steps")?.[index]) || step;
+    if (warnedSteps.has(definition)) {
+      return;
+    }
+    warnedSteps.add(definition);
 
-    const isBusy = () => activation.latched || activation.pendingCompletion || ctx.getState("__pendingWaitCancel");
-
-    const restore = (element: Element) => {
-      window.clearTimeout(graceTimer);
-      graceTimer = undefined;
-      hasReported = false;
-      rebindActiveElement(ctx, element);
-      if (!activation.latched && !ctx.getState("__pendingWaitCancel")) {
-        clearWaiting();
-      }
-    };
-
-    const recover = () => {
-      const replacement = resolveElement(step.element);
-      if (!replacement || !replacement.isConnected) {
-        return false;
-      }
-
-      restore(replacement);
-      return true;
-    };
-
-    const report = (element: Element) => {
-      hasReported = true;
-      clearWaiting();
-      resolveMissingHook(step)?.(element, step, { ...ctx.getHookOpts(), cause: "removed" });
-    };
-
-    const check = () => {
-      frame = undefined;
-      const element = ctx.getState("activeElement");
-      if (signal.aborted || !element || isDummyElement(element)) {
-        return;
-      }
-
-      if (element.isConnected) {
-        if (hasReported || graceTimer !== undefined) {
-          restore(element);
-        }
-
-        return;
-      }
-
-      if (isBusy() || recover() || hasReported || graceTimer) {
-        return;
-      }
-
-      const grace = step.waitForElement ?? ctx.getConfig("waitForElement") ?? 0;
-      if (grace <= 0) {
-        report(element);
-        return;
-      }
-
-      markStepPopoverWaiting(ctx);
-      graceTimer = window.setTimeout(() => {
-        graceTimer = undefined;
-        if (signal.aborted || isBusy() || recover()) {
-          return;
-        }
-
-        report(element);
-      }, grace);
-    };
-
-    const schedule = () => {
-      if (frame === undefined) {
-        frame = window.requestAnimationFrame(check);
-      }
-    };
-
-    const observer = new MutationObserver(schedule);
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-    activation.recheck = schedule;
-
-    signal.addEventListener("abort", () => {
-      observer.disconnect();
-      window.clearTimeout(graceTimer);
-      if (frame !== undefined) {
-        window.cancelAnimationFrame(frame);
-      }
-    });
-  }
-
-  function beginActivation(step: DriveStep): Activation {
-    endActivation();
-
-    const activation: Activation = { step, controller: new AbortController(), latched: false };
-    ctx.setState("__activation", activation);
-    ctx.setState("__lastAnnouncement", undefined);
-
-    return activation;
+    const name = index === undefined ? "The highlight" : `Step ${index + 1}`;
+    console.warn(`[driver.js] ${name} can't complete: disableActiveInteraction blocks its advanceOn events.`);
   }
 
   function armActivation(activation: Activation) {
-    if (ctx.getState("__activation") !== activation) {
+    if (!isCurrent(ctx, activation)) {
       return;
     }
 
     const { step } = activation;
     trackAllowedElements(ctx, step, activation.controller.signal);
-    watchForRemoval(activation);
+    watchForRemoval(ctx, activation);
 
     const advanceOn = resolveAdvanceOn(ctx, step);
+    warnAboutDeadEnds(step, advanceOn);
     if (!advanceOn) {
       return;
     }
 
-    listenForAdvanceEvents(ctx, advanceOn, activation, () => requestCompletion(activation));
+    listenForAdvanceEvents(ctx, advanceOn, activation, () => requestCompletion(ctx, activation));
   }
 
   function handleArrowLeft() {
-    const isTransitioning = ctx.getState("__transitionCallback");
-    if (isTransitioning) {
-      return;
-    }
-
     const activeIndex = ctx.getState("activeIndex");
-    const activeStep = ctx.getState("__activeStep");
-    const activeElement = ctx.getState("__activeElement");
-    if (typeof activeIndex === "undefined" || typeof activeStep === "undefined") {
+    if (isTransitioning(ctx) || activeIndex === undefined || !ctx.getState("__activeStep")) {
       return;
     }
 
     const steps = ctx.getConfig("steps") || [];
-    if (!steps[activeIndex - 1]) {
+    if (!steps[activeIndex - 1] || !canUseButton("previous")) {
       return;
     }
 
-    if (!canUseButton("previous")) {
-      return;
-    }
-
-    const onPrevClick = resolvePrevHook(ctx, activeStep);
-    if (onPrevClick) {
-      return onPrevClick(activeElement, activeStep, ctx.getHookOpts());
-    }
-
-    movePrevious();
+    previous();
   }
 
   function handleArrowRight() {
-    const isTransitioning = ctx.getState("__transitionCallback");
-    if (isTransitioning) {
+    const hasStep = ctx.getState("activeIndex") !== undefined && !!currentPopoverStep();
+    if (isTransitioning(ctx) || !hasStep || nudgeIfGated() || !canUseButton("next")) {
       return;
     }
 
-    const activeIndex = ctx.getState("activeIndex");
-    const activeStep = currentPopoverStep();
-    if (typeof activeIndex === "undefined" || typeof activeStep === "undefined") {
-      return;
-    }
-
-    if (!canUseButton("next")) {
-      return;
-    }
-
-    goNext(ctx.getState("__activeElement"), activeStep);
+    next();
   }
 
   function updatePopover(patch?: PopoverPatch) {
@@ -471,9 +336,28 @@ export function driver(options: Config = {}): Driver {
     }
 
     activation.popoverPatch = patch ? { ...activation.popoverPatch, ...patch } : undefined;
+    refreshActivePopover();
+  }
+
+  function setFeedback(feedback: string) {
+    const activation = ctx.getState("__activation");
+    if (!activation || (activation.feedback || "") === feedback) {
+      return;
+    }
+
+    activation.feedback = feedback;
+    refreshActivePopover();
+    announce(ctx, ctx.getState("popover")?.feedback?.textContent || "");
+  }
+
+  function refreshActivePopover() {
+    const activation = ctx.getState("__activation");
+    if (!activation) {
+      return;
+    }
 
     const popover = ctx.getState("popover");
-    const { element, step } = popoverTarget();
+    const { element, step } = popoverTarget(ctx);
     if (!popover || !element || step !== activation.step) {
       return;
     }
@@ -482,12 +366,8 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    const wasWaiting = isPopoverWaiting(ctx);
     const before = popoverText(popover);
     updateStepPopover(ctx, element, activation.step);
-    if (wasWaiting) {
-      markStepPopoverWaiting(ctx);
-    }
 
     const changed = popoverText(popover).filter((text, index) => text && text !== before[index]);
     announce(ctx, changed.join(". "));
@@ -512,130 +392,10 @@ export function driver(options: Config = {}): Driver {
 
     initEvents(ctx);
     mountLiveRegion(ctx);
-
-    ctx.listen("overlayClick", handleOverlayClick);
-    ctx.listen("escapePress", handleEscape);
-    ctx.listen("closeClick", handleClose);
-    ctx.listen("arrowLeftPress", handleArrowLeft);
-    ctx.listen("arrowRightPress", handleArrowRight);
-  }
-
-  function cancelElementWait() {
-    const cancel = ctx.getState("__pendingWaitCancel");
-    if (!cancel) {
-      return;
-    }
-
-    ctx.setState("__pendingWaitCancel", undefined);
-    cancel();
-  }
-
-  // Re-resolves the step's element on every DOM mutation rather than polling;
-  // this also covers function elements, since they query the mutated DOM.
-  function waitForStepElement(step: DriveStep, timeout: number, onSettled: (found: boolean) => void) {
-    const originating = ctx.getState("__activation");
-
-    const settle = (found: boolean) => {
-      observer.disconnect();
-      window.clearTimeout(timer);
-      ctx.setState("__pendingWaitCancel", undefined);
-      onSettled(found);
-
-      if (originating) {
-        releaseLatch(originating);
-      }
-    };
-
-    const observer = new MutationObserver(() => {
-      if (resolveElement(step.element)) {
-        settle(true);
-      }
-    });
-
-    const timer = window.setTimeout(() => settle(false), timeout);
-
-    ctx.setState("__pendingWaitCancel", () => {
-      observer.disconnect();
-      window.clearTimeout(timer);
-    });
-
-    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
-  }
-
-  function resolveStepAt(stepIndex: number): DriveStep {
-    const steps = ctx.getConfig("steps") || [];
-    const hasNextStep = steps[stepIndex + 1];
-
-    return resolveTourStep(ctx, stepIndex, {
-      onNextClick: () => {
-        if (!hasNextStep) {
-          destroy("done");
-        } else {
-          drive(stepIndex + 1);
-        }
-      },
-      onPrevClick: () => {
-        drive(stepIndex - 1);
-      },
-      onCloseClick: () => {
-        destroy("close");
-      },
-    });
-  }
-
-  function showInitialWait(stepIndex: number) {
-    const step = resolveStepAt(stepIndex);
-    if (!step.popover) {
-      return;
-    }
-
-    const element = mountDummyElement();
-    enterStep(stepIndex, true);
-    ctx.setState("__initialWait", { element, step, index: stepIndex });
-    beginActivation(step);
-    renderStepPopover(ctx, element, step);
-    markStepPopoverWaiting(ctx);
-  }
-
-  function endInitialWait() {
-    if (!ctx.getState("__initialWait")) {
-      return;
-    }
-
-    ctx.setState("__initialWait", undefined);
-    destroyPopover(ctx.getState("popover"));
-    ctx.setState("popover", undefined);
-    document.getElementById("driver-dummy-element")?.remove();
-  }
-
-  function handleWaitTimeout(stepIndex: number) {
-    const waitedStep = resolveStepAt(stepIndex);
-    const onElementMissing = resolveMissingHook(waitedStep);
-    if (!onElementMissing) {
-      drive(stepIndex, true);
-      return;
-    }
-
-    const activation = ctx.getState("__activation");
-    clearWaiting();
-    const result = onElementMissing(undefined, waitedStep, {
-      ...ctx.getHookOpts(),
-      index: stepIndex,
-      cause: "timeout",
-    });
-    const hasMoved =
-      !ctx.getState("isInitialized") ||
-      ctx.getState("__activation") !== activation ||
-      ctx.getState("__pendingWaitCancel");
-    if (result === false || hasMoved) {
-      return;
-    }
-
-    drive(stepIndex, true);
   }
 
   function drive(stepIndex: number = 0, hasWaitedForElement = false) {
-    cancelElementWait();
+    cancelElementWait(ctx);
 
     ctx.setState("__destroyReason", undefined);
 
@@ -654,26 +414,28 @@ export function driver(options: Config = {}): Driver {
 
     const currentStep = steps[stepIndex];
 
-    const waitTimeout = currentStep.waitForElement ?? ctx.getConfig("waitForElement") ?? 0;
+    const waitTimeout = stepOption(ctx, currentStep, "waitForElement") ?? 0;
     if (!hasWaitedForElement && waitTimeout > 0 && currentStep.element && !resolveElement(currentStep.element)) {
-      if (ctx.getState("activeStep") || ctx.getState("__initialWait")?.index === stepIndex) {
-        markStepPopoverWaiting(ctx);
+      if (placeholderOf(ctx)?.index === stepIndex) {
+        markStepPopoverWaiting(ctx, "initial");
+      } else if (ctx.getState("activeStep")) {
+        markStepPopoverWaiting(ctx, "next");
       } else {
-        endInitialWait();
-        showInitialWait(stepIndex);
+        endInitialWait(ctx);
+        showInitialWait(ctx, stepIndex);
       }
 
-      waitForStepElement(currentStep, waitTimeout, found => {
+      waitForStepElement(ctx, currentStep, waitTimeout, found => {
         if (found) {
           drive(stepIndex, true);
         } else {
-          handleWaitTimeout(stepIndex);
+          handleWaitTimeout(ctx, stepIndex);
         }
       });
       return;
     }
 
-    endInitialWait();
+    endInitialWait(ctx);
 
     if (shouldSkipStep(ctx, currentStep)) {
       const activeIndex = ctx.getState("activeIndex");
@@ -688,32 +450,40 @@ export function driver(options: Config = {}): Driver {
       return;
     }
 
-    enterStep(stepIndex, false);
-    highlightStep(resolveStepAt(stepIndex));
-  }
-
-  function enterStep(stepIndex: number, keepReturnFocus: boolean) {
-    if (!ctx.getState("__keepReturnFocus")) {
-      ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
-    }
-    ctx.setState("__keepReturnFocus", keepReturnFocus);
-    ctx.setState("activeIndex", stepIndex);
+    enterStep(ctx, stepIndex, false);
+    highlightStep(resolveTourStep(ctx, stepIndex));
   }
 
   function highlightStep(step: DriveStep) {
-    const activation = beginActivation(step);
-    ctx.setState("__isWaiting", false);
+    const activation = beginActivation(ctx, step);
     highlight(ctx, step);
     armActivation(activation);
   }
 
+  function removeTour() {
+    if (teardownActive === teardown) {
+      teardownActive = undefined;
+    }
+
+    document.body.classList.remove("driver-active", "driver-fade", "driver-simple", "driver-no-scroll");
+    document.body.style.removeProperty("--driver-animation-duration");
+
+    cancelElementWait(ctx);
+    endActivation(ctx);
+    destroyEvents(ctx);
+    destroyLiveRegion(ctx);
+    destroyPopover(ctx.getState("popover"));
+    destroyHighlight(ctx);
+    destroyOverlay(ctx);
+
+    const state = ctx.getState();
+    ctx.resetState();
+
+    return state;
+  }
+
   function destroy(reason: DestroyReason, withOnDestroyStartedHook = true) {
     if (!ctx.getState("isInitialized")) {
-      destroyEvents(ctx);
-      destroyLiveRegion(ctx);
-      ctx.setState("__events", undefined);
-      ctx.setState("__teardownGate", undefined);
-      ctx.setState("__liveRegion", undefined);
       return;
     }
 
@@ -722,43 +492,22 @@ export function driver(options: Config = {}): Driver {
     }
 
     const activeElement = ctx.getState("__activeElement");
-    const activeStep = ctx.getState("__activeStep") ?? ctx.getState("__initialWait")?.step;
+    const activeStep = ctx.getState("__activeStep") ?? placeholderOf(ctx)?.step;
     const hookElement = isDummyElement(activeElement) ? undefined : activeElement;
 
     const activeOnDestroyed = ctx.getState("__activeOnDestroyed");
 
     const onDestroyStarted = ctx.getConfig("onDestroyStarted");
-    // `onDestroyStarted` is used to confirm the exit of tour. If we trigger
-    // the hook for when user calls `destroy`, driver will get into infinite loop
-    // not causing tour to be destroyed.
-    if (withOnDestroyStartedHook && onDestroyStarted) {
+    const startedStep = hookStep();
+    if (withOnDestroyStartedHook && onDestroyStarted && startedStep) {
       ctx.setState("__destroyReason", reason);
-      onDestroyStarted(hookElement, activeStep!, ctx.getHookOpts(undefined, reason));
+      onDestroyStarted(hookElement, startedStep, ctx.getHookOpts(undefined, reason));
       return;
-    }
-
-    if (teardownActive === teardown) {
-      teardownActive = undefined;
     }
 
     const onDeselected = activeStep?.onDeselected || ctx.getConfig("onDeselected");
     const onDestroyed = ctx.getConfig("onDestroyed");
-
-    document.body.classList.remove("driver-active", "driver-fade", "driver-simple", "driver-no-scroll");
-    document.body.style.removeProperty("--driver-animation-duration");
-
-    cancelElementWait();
-    endActivation();
-    destroyEvents(ctx);
-    destroyLiveRegion(ctx);
-    destroyPopover(ctx.getState("popover"));
-    destroyHighlight();
-    destroyOverlay(ctx);
-    ctx.resetEmitter();
-
-    const stateBeforeDestroy = ctx.getState();
-
-    ctx.resetState();
+    const stateBeforeDestroy = removeTour();
 
     if (activeStep) {
       if (activeElement && onDeselected) {
@@ -782,13 +531,12 @@ export function driver(options: Config = {}): Driver {
     },
     setConfig: ctx.setConfig,
     setSteps: (steps: DriveStep[]) => {
-      cancelElementWait();
-      endActivation();
-      const { __events, __teardownGate, __liveRegion } = ctx.getState();
-      ctx.resetState();
-      ctx.setState("__events", __events);
-      ctx.setState("__teardownGate", __teardownGate);
-      ctx.setState("__liveRegion", __liveRegion);
+      if (ctx.getState("isInitialized")) {
+        removeTour();
+      } else {
+        ctx.resetState();
+      }
+
       ctx.setConfig({
         ...ctx.getConfig(),
         steps,
@@ -821,27 +569,32 @@ export function driver(options: Config = {}): Driver {
     hasPreviousStep: () => ctx.getState("activeIndex") !== undefined && !isEndStep(ctx, -1),
     highlight: (step: DriveStep) => {
       init();
-      cancelElementWait();
-      endInitialWait();
+      cancelElementWait(ctx);
+      endInitialWait(ctx);
       ctx.setState("__destroyReason", undefined);
 
-      highlightStep({
-        ...step,
-        popover: step.popover
-          ? {
-              showButtons: [],
-              showProgress: false,
-              progressText: "",
-              ...step.popover!,
-            }
-          : undefined,
-      });
+      highlightStep(
+        markStandalone({
+          ...step,
+          popover: step.popover
+            ? {
+                showButtons: [],
+                showProgress: false,
+                progressText: "",
+                ...step.popover,
+              }
+            : undefined,
+        })
+      );
     },
     updatePopover,
-    nudge: (patch?: PopoverPatch) => {
-      if (patch) {
-        updatePopover(patch);
+    advance,
+    nudge: (message?: string | PopoverPatch) => {
+      if (typeof message === "object") {
+        updatePopover(message);
       }
+
+      setFeedback(typeof message === "string" ? message : "");
       nudge(ctx);
     },
     destroy: () => {
@@ -850,6 +603,5 @@ export function driver(options: Config = {}): Driver {
   };
 
   ctx.setDriver(api);
-
   return api;
 }

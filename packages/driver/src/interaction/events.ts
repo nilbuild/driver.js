@@ -1,8 +1,9 @@
-import { Context } from "./context";
-import { refreshActiveHighlight } from "./highlight";
-import { getFocusableElements } from "./utils";
-import { handledKeys, initGate, isFocusInPlay, isKeyInPlay, keyId } from "./gate";
-import { ALLOWED_CLASS } from "./allowed";
+import { Context } from "../core/context";
+import { refreshActiveHighlight } from "../tour/highlight";
+import { getFocusableElements } from "../core/utils";
+import { initGate } from "./gate";
+import { handledKeys, isFocusInPlay, isKeyCarriedOverFromEarlierStep, isKeyInPlay, keyId } from "./keys";
+import { ALLOWED_CLASS } from "../tour/allowed";
 
 export function requireRefresh(ctx: Context) {
   const resizeTimeout = ctx.getState("__resizeTimeout");
@@ -14,6 +15,15 @@ export function requireRefresh(ctx: Context) {
     "__resizeTimeout",
     window.requestAnimationFrame(() => refreshActiveHighlight(ctx))
   );
+}
+
+function onActiveElementResize(ctx: Context) {
+  const rect = ctx.getState("__activeElement")?.getBoundingClientRect();
+  if (!rect || (rect.width === 0 && rect.height === 0)) {
+    return;
+  }
+
+  requireRefresh(ctx);
 }
 
 function trapFocus(ctx: Context, e: KeyboardEvent) {
@@ -74,20 +84,22 @@ function onKeydownBubble(ctx: Context, e: KeyboardEvent) {
 function onKeyup(ctx: Context, e: KeyboardEvent) {
   const allowKeyboardControl = ctx.getConfig("allowKeyboardControl") ?? true;
   const wasHandledByApp = handledKeys(ctx).delete(keyId(e));
+  const isCarriedOver = isKeyCarriedOverFromEarlierStep(ctx, e);
+  ctx.getState("__pressedKeys")?.delete(keyId(e));
   if (ctx.getState("__widgetKey") === keyId(e)) {
     ctx.setState("__widgetKey", undefined);
   }
 
-  if (!allowKeyboardControl || wasHandledByApp || isFocusInPlay(ctx)) {
+  if (!allowKeyboardControl || wasHandledByApp || isCarriedOver || isFocusInPlay(ctx)) {
     return;
   }
 
   if (e.key === "Escape") {
-    ctx.emit("escapePress");
+    ctx.tour.escape();
   } else if (e.key === "ArrowRight") {
-    ctx.emit("arrowRightPress");
+    ctx.tour.arrowRight();
   } else if (e.key === "ArrowLeft") {
-    ctx.emit("arrowLeftPress");
+    ctx.tour.arrowLeft();
   }
 }
 
@@ -96,7 +108,6 @@ export function initEvents(ctx: Context) {
     return;
   }
 
-  // Stashed in state so destroyEvents can detach these exact references.
   const onWindowKeyup = (e: KeyboardEvent) => onKeyup(ctx, e);
   const onWindowKeydown = (e: KeyboardEvent) => {
     onKeydownBubble(ctx, e);
@@ -115,7 +126,7 @@ export function initEvents(ctx: Context) {
   });
 
   if (typeof ResizeObserver !== "undefined") {
-    ctx.setState("__resizeObserver", new ResizeObserver(() => requireRefresh(ctx)));
+    ctx.setState("__resizeObserver", new ResizeObserver(() => onActiveElementResize(ctx)));
   }
 
   ctx.setState("__teardownGate", initGate(ctx));
@@ -124,6 +135,7 @@ export function initEvents(ctx: Context) {
   window.addEventListener("keydown", onWindowKeydown, false);
   window.addEventListener("resize", onWindowResize);
   window.addEventListener("scroll", onWindowScroll);
+  document.addEventListener("close", onWindowResize, true);
 }
 
 export function destroyEvents(ctx: Context) {
@@ -138,5 +150,6 @@ export function destroyEvents(ctx: Context) {
   ctx.getState("__teardownGate")?.();
   ctx.getState("__resizeObserver")?.disconnect();
   window.removeEventListener("resize", events.onResize);
+  document.removeEventListener("close", events.onResize, true);
   window.removeEventListener("scroll", events.onScroll);
 }

@@ -1,8 +1,5 @@
-// Imported by package name, not path, so the checklist shares the one driver
-// the page already loads: tours it starts replace any running tour instead of
-// stacking on top, and the core is not bundled a second time.
 import { driver, type Config, type DestroyReason, type DriveStep, type Driver } from "driver.js";
-import "./checklist.css";
+import "./styles/checklist.css";
 
 export type { DestroyReason } from "driver.js";
 
@@ -11,23 +8,16 @@ export type ChecklistPosition = "bottom-right" | "bottom-left" | "top-right" | "
 export type ChecklistItemHook = (item: ChecklistItem, opts: { checklist: Checklist }) => void;
 
 export type ChecklistItem = {
-  // Stable identity for progress: saved progress is a list of these, so it
-  // must survive reordering and copy edits.
   id: string;
   title: string;
   description?: string;
 
-  // What clicking the item does. A tour ticks the item when the user finishes
-  // it; a link or action ticks it on click, unless completeWhen decides.
   tour?: DriveStep[] | Config | Driver;
   href?: string;
   action?: ChecklistItemHook;
 
-  // Checked on show(), refresh() and after the item's tour or action, for
-  // tasks that are done in the app rather than in the checklist.
   completeWhen?: () => boolean;
 
-  // Overrides the checklist's allowManualComplete for this item.
   allowManualComplete?: boolean;
 
   data?: Record<string, any>;
@@ -68,29 +58,19 @@ export type ChecklistConfig = {
   description?: string;
   launcherText?: string;
 
-  // Shown instead of the texts above once every item is done, and swapped
-  // back if an item is unticked.
   completeTitle?: string;
   completeDescription?: string;
   completeLauncherText?: string;
 
   progressText?: string;
-  // The count on the launcher; an empty string hides it.
   launcherProgressText?: string;
   position?: ChecklistPosition;
-  // false skips the floating launcher, for pages that open the panel from
-  // their own UI with open() / toggle(). (default: true)
   launcher?: boolean;
-  // Distance in pixels from the screen edges. (default: 20, 12 on phones)
   offset?: { x?: number; y?: number };
   className?: string;
 
-  // Lets users tick items off, or untick them, with the check circle, for
-  // tasks the checklist cannot see being done.
   allowManualComplete?: boolean;
 
-  // Progress comes in as the ids already done and goes out through
-  // onProgress, so it can live in localStorage, your API or the user record.
   completed?: string[];
   onProgress?: (progress: ChecklistProgress) => void;
 
@@ -171,8 +151,6 @@ export function checklist(config: ChecklistConfig): Checklist {
 
   function getProgress(): ChecklistProgress {
     return {
-      // Ids of items no longer in the list are kept, so a checklist that is
-      // filtered per page never drops progress made elsewhere.
       completed: Array.from(completed),
       done: items().filter(item => completed.has(item.id)).length,
       total: items().length,
@@ -229,7 +207,6 @@ export function checklist(config: ChecklistConfig): Checklist {
     }
 
     if (isInteractive) {
-      // The link navigates on its own; this only records the click.
       trigger.addEventListener("click", event => {
         if (!isLink) {
           event.preventDefault();
@@ -251,13 +228,10 @@ export function checklist(config: ChecklistConfig): Checklist {
       trigger.appendChild(description);
     }
 
-    // Filled in by render() once the item is done, for screen readers.
     const status = document.createElement("span");
     status.className = "driver-checklist-sr-only";
     trigger.appendChild(status);
 
-    // A plain check circle is part of the row's click target, like the text.
-    // On a row with nothing to start, the text ticks it like the circle does.
     const check = createCheck(item);
     if (check instanceof HTMLSpanElement && isInteractive) {
       check.addEventListener("click", () => trigger.click());
@@ -280,7 +254,6 @@ export function checklist(config: ChecklistConfig): Checklist {
 
     const { done, total } = getProgress();
 
-    // Updated in place rather than rebuilt, so focus and hover survive.
     Array.from(dom.list.children).forEach((entry, index) => {
       const isDone = completed.has(items()[index].id);
       entry.classList.toggle("driver-checklist-item-done", isDone);
@@ -299,7 +272,6 @@ export function checklist(config: ChecklistConfig): Checklist {
 
     dom.progressText.textContent = format(currentConfig.progressText || "{{done}} of {{total}}");
     dom.progressFill.style.width = `${percent}%`;
-    // For progress designs drawn in CSS, such as a ring around the count.
     dom.root.style.setProperty("--driver-checklist-progress", `${percent}%`);
     dom.launcherCount.textContent = format(launcherProgressText);
     dom.launcherCount.hidden = !launcherProgressText;
@@ -309,8 +281,6 @@ export function checklist(config: ChecklistConfig): Checklist {
     syncLauncherTitle();
   }
 
-  // Tracks the last string we wrote so comparison works even when the browser
-  // rewrites the markup (e.g. self-closing tags, entity encoding).
   const lastHTML = new WeakMap<HTMLElement, string>();
 
   function setHTML(element: HTMLElement, html: string) {
@@ -338,8 +308,6 @@ export function checklist(config: ChecklistConfig): Checklist {
     dom.panel.setAttribute("aria-label", dom.title.textContent || "");
   }
 
-  // A label too long for the launcher is cut off with an ellipsis by CSS;
-  // the tooltip then shows it in full.
   function syncLauncherTitle() {
     if (!dom) {
       return;
@@ -438,8 +406,6 @@ export function checklist(config: ChecklistConfig): Checklist {
     launcher.appendChild(launcherCount);
 
     root.appendChild(panel);
-    // Without a launcher it is still built, just never attached, so the code
-    // syncing its text and state has nothing to special-case.
     if (currentConfig.launcher === false) {
       root.classList.add("driver-checklist-no-launcher");
     } else {
@@ -522,15 +488,12 @@ export function checklist(config: ChecklistConfig): Checklist {
 
     refresh();
 
-    // Another tour took over the screen; reopening would cover it.
     if (reason === "replaced") {
       return;
     }
 
     open();
 
-    // Focus was on the tour, which is gone; hand it back to the item so
-    // keyboard users continue where they left off.
     if (dom && (!document.activeElement || document.activeElement === document.body)) {
       const entry = dom.list.children[items().indexOf(item)];
       entry?.querySelector<HTMLElement>(".driver-checklist-item-trigger")?.focus();
@@ -541,8 +504,6 @@ export function checklist(config: ChecklistConfig): Checklist {
     const tour = item.tour!;
     const instance = isDriver(tour) ? tour : driver(Array.isArray(tour) ? { steps: tour } : tour);
 
-    // Listen for the end of the tour without taking the hook away from the
-    // instance's owner, and hand their config back once it is over.
     const ownConfig = instance.getConfig();
     instance.setConfig({
       ...ownConfig,
@@ -608,7 +569,6 @@ export function checklist(config: ChecklistConfig): Checklist {
     emit("closed");
   }
 
-  // Back to the launcher, or without one, to whatever opened the panel.
   function restoreFocus() {
     const target = currentConfig.launcher === false ? openedFrom : dom?.launcher;
     if (target instanceof HTMLElement) {
@@ -634,8 +594,6 @@ export function checklist(config: ChecklistConfig): Checklist {
     document.body.appendChild(dom.root);
     bindListeners();
 
-    // Progress passed in may already cover every item; that is not a fresh
-    // completion, so onComplete stays quiet.
     hasCompleted = isAllDone();
 
     render();

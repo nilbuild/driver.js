@@ -1,4 +1,4 @@
-import type { Context } from "./context";
+import type { Context } from "../core/context";
 
 export function mountLiveRegion(ctx: Context) {
   if (ctx.getState("__liveRegion")) {
@@ -10,18 +10,8 @@ export function mountLiveRegion(ctx: Context) {
   region.setAttribute("aria-live", "polite");
   region.setAttribute("aria-atomic", "true");
 
-  Object.assign(region.style, {
-    position: "absolute",
-    width: "1px",
-    height: "1px",
-    margin: "-1px",
-    padding: "0",
-    overflow: "hidden",
-    clip: "rect(0 0 0 0)",
-    clipPath: "inset(50%)",
-    whiteSpace: "nowrap",
-    border: "0",
-  });
+  region.style.cssText =
+    "position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0";
 
   document.body.appendChild(region);
   ctx.setState("__liveRegion", region);

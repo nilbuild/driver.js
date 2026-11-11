@@ -1,52 +1,10 @@
-import type { DriverHook, HookOpts } from "./context";
-import { destroyDriverClick, onDriverClick } from "./click";
+import { destroyDriverClick, onDriverClick } from "../core/click";
 import { PositionOptions, repositionPopover } from "./position";
-import { bringInView, getFocusableElements, layerFor, removeFromLayer } from "./utils";
+import { bringInView, getFocusableElements, layerFor, removeFromLayer } from "../core/utils";
 
 export type Side = "top" | "right" | "bottom" | "left";
 export type Alignment = "start" | "center" | "end";
 export type AllowedButtons = "next" | "previous" | "close";
-
-// The popover configuration of a tour step / highlight. This is the public
-// shape users pass in; the primitive below works on the fully resolved
-// PopoverRenderOptions instead, which the tour derives from this and its
-// global config (see step-popover.ts).
-export type Popover = {
-  title?: string;
-  description?: string;
-  side?: Side;
-  align?: Alignment;
-
-  showButtons?: AllowedButtons[];
-  showProgress?: boolean;
-  disableButtons?: AllowedButtons[];
-
-  popoverClass?: string;
-
-  // Button texts
-  progressText?: string;
-  doneBtnText?: string;
-  nextBtnText?: string;
-  prevBtnText?: string;
-  closeBtnLabel?: string;
-
-  // Makes this an action step: what the user has to do to move on, shown
-  // between the description and the footer. The next button gives way to a
-  // status text and the step can't be skipped; it completes through
-  // advanceOn or your own moveNext().
-  action?: string;
-  // Status shown in place of the next button on an action step. (default: "Waiting for you")
-  actionStatusText?: string;
-
-  // Called after the popover is rendered
-  onPopoverRender?: (popover: PopoverDOM, opts: HookOpts) => void;
-
-  // Button callbacks
-  onNextClick?: DriverHook;
-  onPrevClick?: DriverHook;
-  onCloseClick?: DriverHook;
-  onDoneClick?: DriverHook;
-};
 
 export type PopoverDOM = {
   wrapper: HTMLElement;
@@ -60,13 +18,12 @@ export type PopoverDOM = {
   closeButton: HTMLButtonElement;
   footerButtons: HTMLElement;
 
-  // Only created once a step uses popover.action.
-  action?: HTMLElement;
-  actionStatus?: HTMLElement;
+  instruction?: HTMLElement;
+  instructionIndicator?: HTMLElement;
+
+  feedback?: HTMLElement;
 };
 
-// Everything the primitive needs to render a popover, fully resolved by the
-// caller; no config or state fallbacks happen at this level.
 export type PopoverRenderOptions = {
   title?: string;
   description?: string;
@@ -80,25 +37,23 @@ export type PopoverRenderOptions = {
   prevBtnText: string;
   closeBtnLabel: string;
 
-  // Style the next button as the tour's done button.
   doneButton?: boolean;
 
-  // Shows the action row, and the status in place of the next button.
-  action?: string;
-  actionStatusText?: string;
+  instruction?: string;
+  isGated?: boolean;
+  isDone?: boolean;
+
+  feedback?: string;
 
   popoverClass?: string;
   smoothScroll?: boolean;
 
-  // Button clicks, resolved by the caller. Deciding between step hooks,
-  // global hooks and default behaviour is the caller's business.
   onNextClick?: () => void;
   onPrevClick?: () => void;
   onCloseClick?: () => void;
 
   keepFocus?: boolean;
 
-  // Called once the popover is in the DOM, before it is positioned.
   onRender?: (popover: PopoverDOM) => void;
 
   position: PositionOptions;
@@ -130,12 +85,12 @@ function setDisplay(element: HTMLElement, isVisible: boolean, display = "block")
 
 export function toggleButton(button: HTMLButtonElement, isDisabled: boolean) {
   button.disabled = isDisabled;
-  button.classList.toggle("driver-popover-btn-disabled", isDisabled);
+  button.classList.toggle(DISABLED_BUTTON, isDisabled);
 }
 
-const ACTION_TEXT_ID = "driver-popover-action-text";
+const INSTRUCTION_TEXT = "driver-popover-instruction-text";
+const DISABLED_BUTTON = "driver-popover-btn-disabled";
 
-// Adds or removes only our own id, keeping any an app added in onPopoverRender.
 function toggleDescribedBy(wrapper: HTMLElement, id: string, isOn: boolean) {
   const ids = (wrapper.getAttribute("aria-describedby") || "").split(/\s+/).filter(token => token && token !== id);
   if (isOn) {
@@ -145,45 +100,67 @@ function toggleDescribedBy(wrapper: HTMLElement, id: string, isOn: boolean) {
   wrapper.setAttribute("aria-describedby", ids.join(" "));
 }
 
-function createActionElements(popover: PopoverDOM) {
-  const action = document.createElement("div");
-  action.id = ACTION_TEXT_ID;
-  action.classList.add("driver-popover-action-text");
-
-  const actionStatus = document.createElement("span");
-  actionStatus.classList.add("driver-popover-action-status");
-  actionStatus.setAttribute("role", "status");
+function insertRow(popover: PopoverDOM, className: string): HTMLElement {
+  const row = createElement("div", className);
 
   const footer = popover.footer.parentNode === popover.wrapper ? popover.footer : null;
-  popover.wrapper.insertBefore(action, footer);
-  popover.footerButtons.appendChild(actionStatus);
+  popover.wrapper.insertBefore(row, footer);
 
-  popover.action = action;
-  popover.actionStatus = actionStatus;
+  return row;
 }
 
-function applyAction(popover: PopoverDOM, options: PopoverRenderOptions) {
-  const { action, showButtons } = options;
-  if (action && !popover.action) {
-    createActionElements(popover);
+function createInstruction(popover: PopoverDOM) {
+  const row = insertRow(popover, "driver-popover-instruction");
+  const indicator = createElement("span", "driver-popover-instruction-indicator");
+  indicator.setAttribute("aria-hidden", "true");
+  row.append(createElement("span", INSTRUCTION_TEXT, INSTRUCTION_TEXT), indicator);
+
+  popover.instruction = row;
+  popover.instructionIndicator = indicator;
+}
+
+function applyInstruction(popover: PopoverDOM, options: PopoverRenderOptions) {
+  const isGated = !!options.isGated;
+  if ((isGated || options.instruction) && !popover.instruction) {
+    createInstruction(popover);
   }
 
-  // Popovers that never showed an action are left alone.
-  const { action: actionText, actionStatus } = popover;
-  if (!actionText || !actionStatus) {
+  const { instruction: row, instructionIndicator: indicator, wrapper, nextButton } = popover;
+  if (!row || !indicator) {
     return;
   }
 
-  popover.wrapper.classList.toggle("driver-popover-action", !!action);
-  toggleDescribedBy(popover.wrapper, ACTION_TEXT_ID, !!action);
+  const html = options.instruction || "";
+  wrapper.classList.toggle("driver-popover-has-instruction", isGated);
+  wrapper.classList.toggle("driver-popover-instruction-done", isGated && !!options.isDone);
+  toggleDescribedBy(wrapper, INSTRUCTION_TEXT, !!html);
 
-  if (action) {
-    setHtml(actionText, action);
+  const text = row.querySelector<HTMLElement>(`:scope > .${INSTRUCTION_TEXT}`);
+  if (text && html) {
+    setHtml(text, html);
   }
-  setDisplay(actionText, !!action);
+  setDisplay(row, !!html, "flex");
+  setDisplay(indicator, isGated, "");
 
-  setHtml(actionStatus, options.actionStatusText ?? "");
-  setDisplay(actionStatus, !!action && showButtons.includes("next"), "inline-block");
+  if (isGated) {
+    nextButton.setAttribute("aria-disabled", "true");
+    nextButton.classList.add(DISABLED_BUTTON);
+  } else {
+    nextButton.removeAttribute("aria-disabled");
+  }
+}
+
+function applyFeedback(popover: PopoverDOM, options: PopoverRenderOptions) {
+  if (options.feedback && !popover.feedback) {
+    popover.feedback = insertRow(popover, "driver-popover-feedback");
+  }
+
+  if (!popover.feedback) {
+    return;
+  }
+
+  setHtml(popover.feedback, options.feedback || "");
+  setDisplay(popover.feedback, !!options.feedback);
 }
 
 function applyPopoverContent(popover: PopoverDOM, options: PopoverRenderOptions) {
@@ -211,13 +188,14 @@ function applyPopoverContent(popover: PopoverDOM, options: PopoverRenderOptions)
   setDisplay(popover.closeButton, showButtons.includes("close"));
   setDisplay(popover.footer, showFooter, "flex");
   setDisplay(popover.progress, showProgress);
-  setDisplay(popover.nextButton, showButtons.includes("next") && !options.action);
-  applyAction(popover, options);
+  setDisplay(popover.nextButton, showButtons.includes("next"));
   setDisplay(popover.previousButton, showButtons.includes("previous"));
 
   toggleButton(popover.nextButton, disableButtons.includes("next"));
   toggleButton(popover.previousButton, disableButtons.includes("previous"));
   toggleButton(popover.closeButton, disableButtons.includes("close"));
+  applyInstruction(popover, options);
+  applyFeedback(popover, options);
 
   const wrapper = popover.wrapper;
   wrapper.classList.remove(...(customClasses.get(wrapper) || []));
@@ -275,11 +253,9 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
 
   popover.arrow.className = "driver-popover-arrow";
 
-  // Handles the popover button clicks
   onDriverClick(
     popover.wrapper,
     e => {
-      // Synthetic events can target a Text node, which has no closest()
       const target = e.target instanceof Element ? e.target : (e.target as Node | null)?.parentElement;
       if (!target) {
         return undefined;
@@ -300,9 +276,6 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
       return undefined;
     },
     target => {
-      // Only prevent the default action if we're clicking on a driver button.
-      // This allows links inside the popover title/description, as well as
-      // custom buttons added through onPopoverRender, to behave normally.
       if (popover.description.contains(target) || popover.title.contains(target)) {
         return false;
       }
@@ -317,9 +290,6 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
   repositionOnImagesLoad(popover, anchor, options.position);
   bringInView(popoverWrapper, options.smoothScroll);
 
-  // Focus on the first focusable element in the popover or the anchor. The
-  // anchor is always scanned: a 0x0 anchor (like the tour's dummy element for
-  // anchor-less popovers) never yields a focusable element anyway.
   const focusableElement = options.keepFocus ? [] : getFocusableElements([popoverWrapper, anchor]);
   if (focusableElement.length > 0) {
     focusableElement[0].focus();
@@ -343,61 +313,51 @@ function repositionOnImagesLoad(popover: PopoverDOM, anchor: Element, position: 
   });
 }
 
+function createElement<K extends "div" | "span" | "button">(tag: K, className: string, id?: string) {
+  const element = document.createElement(tag);
+  if (id) {
+    element.id = id;
+  }
+
+  if (element instanceof HTMLButtonElement) {
+    element.type = "button";
+  }
+
+  element.className = className;
+
+  return element;
+}
+
 function createPopover(): PopoverDOM {
-  const wrapper = document.createElement("div");
-  wrapper.classList.add("driver-popover");
+  const wrapper = createElement("div", "driver-popover");
   wrapper.setAttribute("aria-describedby", "driver-popover-description");
 
-  const arrow = document.createElement("div");
-  arrow.classList.add("driver-popover-arrow");
+  const arrow = createElement("div", "driver-popover-arrow");
 
-  const title = document.createElement("div");
-  title.id = "driver-popover-title";
-  title.classList.add("driver-popover-title");
+  const title = createElement("div", "driver-popover-title", "driver-popover-title");
   title.style.display = "none";
   title.innerText = "Popover Title";
 
-  const description = document.createElement("div");
-  description.id = "driver-popover-description";
-  description.classList.add("driver-popover-description");
+  const description = createElement("div", "driver-popover-description", "driver-popover-description");
   description.style.display = "none";
   description.innerText = "Popover description is here";
 
-  const closeButton = document.createElement("button");
-  closeButton.type = "button";
-  closeButton.classList.add("driver-popover-close-btn");
+  const closeButton = createElement("button", "driver-popover-close-btn");
   closeButton.innerHTML = "&times;";
 
-  const footer = document.createElement("div");
-  footer.classList.add("driver-popover-footer");
+  const footer = createElement("div", "driver-popover-footer");
+  const progress = createElement("span", "driver-popover-progress-text");
+  const footerButtons = createElement("span", "driver-popover-navigation-btns");
 
-  const progress = document.createElement("span");
-  progress.classList.add("driver-popover-progress-text");
-  progress.innerText = "";
-
-  const footerButtons = document.createElement("span");
-  footerButtons.classList.add("driver-popover-navigation-btns");
-
-  const previousButton = document.createElement("button");
-  previousButton.type = "button";
-  previousButton.classList.add("driver-popover-prev-btn", "driver-popover-footer-btn");
+  const previousButton = createElement("button", "driver-popover-prev-btn driver-popover-footer-btn");
   previousButton.innerHTML = "Previous";
 
-  const nextButton = document.createElement("button");
-  nextButton.type = "button";
-  nextButton.classList.add("driver-popover-next-btn", "driver-popover-footer-btn");
+  const nextButton = createElement("button", "driver-popover-next-btn driver-popover-footer-btn");
   nextButton.innerHTML = "Next";
 
-  footerButtons.appendChild(previousButton);
-  footerButtons.appendChild(nextButton);
-  footer.appendChild(progress);
-  footer.appendChild(footerButtons);
-
-  wrapper.appendChild(closeButton);
-  wrapper.appendChild(arrow);
-  wrapper.appendChild(title);
-  wrapper.appendChild(description);
-  wrapper.appendChild(footer);
+  footerButtons.append(previousButton, nextButton);
+  footer.append(progress, footerButtons);
+  wrapper.append(closeButton, arrow, title, description, footer);
 
   return {
     wrapper,

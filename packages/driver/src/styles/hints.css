@@ -1,5 +1,3 @@
-/* Popover styles are shared with the tour; importing hints.css alone is
-   enough for hints-only consumers. Everything below is hint-specific. */
 @import "./popover.css";
 
 .driver-hint {
@@ -10,9 +8,7 @@
   width: var(--driver-hint-size, 24px);
   height: var(--driver-hint-size, 24px);
   cursor: pointer;
-  /* Below the overlay, so other beacons dim with the page while a hint is open. */
   z-index: 999999996;
-  /* Centered on the anchor point that the script sets inline. */
   transform: translate(-50%, -50%);
 }
 
@@ -20,7 +16,6 @@
   pointer-events: auto;
 }
 
-/* The open hint's beacon rises above the overlay, next to its popover. */
 .driver-hint[aria-expanded="true"] {
   z-index: 999999998;
 }
@@ -43,8 +38,6 @@
 .driver-hint-pulse {
   inset: 0;
   opacity: 0.6;
-  /* Scales past the button box; without this the invisible ring would
-     extend the click target and swallow clicks meant for the page. */
   pointer-events: none;
   animation: driver-hint-pulse var(--driver-hint-animation-duration, 2s) ease-out infinite;
 }
@@ -76,24 +69,15 @@
   }
 }
 
-/* A larger arrow than the tour's, proportionate to the beacon. Placement
-   measures the arrow, so restyling it keeps the tip on target; only the
-   beacon shift assumes the size (HINT_ARROW_SIZE in hints.ts). */
 .driver-hint-popover .driver-popover-arrow {
   border-width: 7px;
 }
 
-/* box-shadow stops at the popover's box, leaving the protruding arrow flat.
-   A drop-shadow filter follows the rendered silhouette instead, so the box
-   and the arrow cast one seamless shadow in any theme. */
 .driver-hint-popover.driver-popover {
   box-shadow: none;
   filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.25)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
 }
 
-/* The opt-in dim with the hint's element cut out. The svg lets pointer events
-   through (the cutout stays interactive); the dimmed path catches them, and
-   clicking it closes the hint. */
 .driver-hint-overlay {
   position: fixed;
   inset: 0;
@@ -116,7 +100,6 @@
   }
 }
 
-/* The tour marks the body while it runs; beacons step aside until it ends. */
 .driver-active .driver-hint {
   display: none;
 }

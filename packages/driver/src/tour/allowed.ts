@@ -1,11 +1,13 @@
-import type { AllowedElements, Context } from "./context";
-import type { DriveStep } from "./driver";
-import { isDummyElement } from "./utils";
+import type { AllowedElements, Context } from "../core/context";
+import type { DriveStep } from "../types";
+import { redrawOverlayCutouts } from "../overlay/overlay";
+import { stepOption } from "../core/options";
+import { isDummyElement } from "../core/utils";
 
 export const ALLOWED_CLASS = "driver-allowed-element";
 
 export function resolveAllowedSetting(ctx: Context, step: DriveStep): AllowedElements | undefined {
-  return step.allowedElements ?? ctx.getConfig("allowedElements");
+  return stepOption(ctx, step, "allowedElements");
 }
 
 export function resolveAllowedElements(setting: AllowedElements | undefined): Element[] {
@@ -64,13 +66,28 @@ export function trackAllowedElements(ctx: Context, step: DriveStep, signal: Abor
     frame = window.requestAnimationFrame(() => {
       frame = undefined;
       sync();
+      redrawOverlayCutouts(ctx);
     });
   };
 
-  const observer = new MutationObserver(schedule);
+  const observer = new MutationObserver(() => {
+    marked.forEach(element => {
+      if (!element.classList.contains(ALLOWED_CLASS)) {
+        element.classList.add(ALLOWED_CLASS);
+      }
+    });
+    schedule();
+  });
+
+  const isLookup = typeof setting === "function" || [setting].flat().some(entry => typeof entry === "string");
 
   sync();
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    ...(isLookup ? {} : { attributeFilter: ["class"] }),
+  });
   ctx.setState("__syncAllowedElements", sync);
 
   signal.addEventListener("abort", () => {
@@ -92,7 +109,7 @@ export function isFocusWithinStep(ctx: Context, element: Element, step: DriveSte
     return false;
   }
 
-  const isInteractive = !(step.disableActiveInteraction ?? ctx.getConfig("disableActiveInteraction"));
+  const isInteractive = stepOption(ctx, step, "disableActiveInteraction") !== true;
   if (!isDummyElement(element) && isInteractive && element.contains(focused)) {
     return true;
   }

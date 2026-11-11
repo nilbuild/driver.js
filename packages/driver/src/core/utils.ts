@@ -1,4 +1,4 @@
-import type { DriveStep } from "./driver";
+import type { DriveStep } from "../types";
 
 export function resolveElement(element: DriveStep["element"]): Element | null | undefined {
   if (typeof element === "function") {
@@ -12,8 +12,10 @@ export function resolveElement(element: DriveStep["element"]): Element | null | 
   return element;
 }
 
+export const DUMMY_ELEMENT_ID = "driver-dummy-element";
+
 export function isDummyElement(element: Element | undefined): boolean {
-  return !element || element.id === "driver-dummy-element";
+  return !element || element.id === DUMMY_ELEMENT_ID;
 }
 
 export function isScrollable(element: Element) {
@@ -65,8 +67,6 @@ export function bringInView(element: Element, shouldSmoothScroll?: boolean) {
   const isTallerThanViewport = (element as HTMLElement).offsetHeight > window.innerHeight;
 
   element.scrollIntoView({
-    // Removing the smooth scrolling for elements which exist inside the scrollable parent
-    // This was causing the highlight to not properly render
     behavior: !shouldSmoothScroll || hasScrollableParent(element) ? "auto" : "smooth",
     inline: "center",
     block: isTallerThanViewport ? "start" : "center",
@@ -78,7 +78,7 @@ function hasScrollableParent(e: Element) {
     return;
   }
 
-  const parent = e.parentElement as HTMLElement & { scrollTopMax?: number };
+  const parent = e.parentElement;
 
   return parent.scrollHeight > parent.clientHeight;
 }
@@ -136,8 +136,6 @@ export function isElementVisible(el: HTMLElement) {
 
 const dialogsWithLayer = new WeakSet<Element>();
 
-// A modal <dialog> renders in the top layer, above everything in <body>, so
-// UI for an element inside one has to live in that dialog to be visible.
 export function layerFor(element: Element): Element {
   const dialog = element.closest("dialog[open]");
   if (!dialog) {
@@ -170,13 +168,38 @@ export function layerFor(element: Element): Element {
   return layer;
 }
 
-export function removeFromLayer(node: Element) {
-  const layer = node.parentElement;
-  node.remove();
-
+function dropEmptyLayer(layer: Element | null) {
   if (layer?.classList.contains("driver-layer") && !layer.childElementCount) {
     layer.remove();
   }
+}
+
+export function removeFromLayer(node: Element) {
+  const layer = node.parentElement;
+  node.remove();
+  dropEmptyLayer(layer);
+}
+
+export function placeInLayer(node: Element, layer: Element, isUnderneath = false) {
+  if (isUnderneath && layer !== document.body) {
+    layer.prepend(node);
+    return;
+  }
+
+  layer.appendChild(node);
+}
+
+export function moveToLayerOf(node: Element, element: Element, isUnderneath = false): boolean {
+  const layer = layerFor(element);
+  const previous = node.parentElement;
+  if (previous === layer) {
+    return false;
+  }
+
+  placeInLayer(node, layer, isUnderneath);
+  dropEmptyLayer(previous);
+
+  return true;
 }
 
 const KEY_WIDGETS = [
