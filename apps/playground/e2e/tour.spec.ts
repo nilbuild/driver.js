@@ -256,3 +256,26 @@ test("setSteps on a running tour ends it and leaves nothing on the page", async 
   await page.evaluate(() => window.tour.drive());
   await expect(title(page)).toHaveText("New");
 });
+
+test("plain CSS can hide popover parts without !important", async ({ page }) => {
+  await page.evaluate(() => {
+    const style = document.createElement("style");
+    style.textContent = ".driver-popover-progress-text, .driver-popover-prev-btn:disabled { display: none; }";
+    document.head.appendChild(style);
+
+    window.tour = window.driverjs.driver({
+      animate: false,
+      showProgress: true,
+      steps: [
+        { element: "#one", popover: { title: "One" } },
+        { element: "#two", popover: { title: "Two" } },
+      ],
+    });
+    window.tour.drive();
+  });
+  await expect(title(page)).toHaveText("One");
+
+  await expect(page.locator(".driver-popover-progress-text")).toBeHidden();
+  await expect(page.locator(".driver-popover-prev-btn")).toBeHidden();
+  await expect(page.locator(".driver-popover-next-btn")).toBeVisible();
+});

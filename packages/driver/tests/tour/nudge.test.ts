@@ -108,7 +108,7 @@ describe("nudge", () => {
       d.nudge("Not that one.");
 
       expect(feedback()?.textContent).toBe("Not that one.");
-      expect(feedback()?.style.display).toBe("block");
+      expect(feedback()?.style.display).toBe("");
       expect(isPopoverNudged()).toBe(true);
       expect(description()).toBe("Why");
       expect(popoverEl()?.querySelector(".driver-popover-instruction-text")?.textContent).toBe("Do it.");

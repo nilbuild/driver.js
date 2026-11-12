@@ -129,6 +129,10 @@ export function initEvents(ctx: Context) {
     ctx.setState("__resizeObserver", new ResizeObserver(() => onActiveElementResize(ctx)));
   }
 
+  const openObserver = new MutationObserver(() => requireRefresh(ctx));
+  openObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["open"], subtree: true });
+  ctx.setState("__openObserver", openObserver);
+
   ctx.setState("__teardownGate", initGate(ctx));
   window.addEventListener("keydown", onWindowKeydownCapture, true);
   window.addEventListener("keyup", onWindowKeyup, false);
@@ -149,6 +153,7 @@ export function destroyEvents(ctx: Context) {
   window.removeEventListener("keydown", events.onKeydownCapture, true);
   ctx.getState("__teardownGate")?.();
   ctx.getState("__resizeObserver")?.disconnect();
+  ctx.getState("__openObserver")?.disconnect();
   window.removeEventListener("resize", events.onResize);
   document.removeEventListener("close", events.onResize, true);
   window.removeEventListener("scroll", events.onScroll);

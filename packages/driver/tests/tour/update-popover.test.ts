@@ -51,7 +51,7 @@ describe("updatePopover", () => {
 
     expect(popoverTitle()).toBe("Step 1");
     expect(popoverDescription()).toBe("First");
-    expect(navButton("next")?.style.display).toBe("block");
+    expect(navButton("next")?.style.display).toBe("");
   });
 
   it("shows a title or description that the step did not have", async () => {
@@ -62,7 +62,7 @@ describe("updatePopover", () => {
     d.updatePopover({ description: "Added later" });
 
     const description = document.querySelector<HTMLElement>(".driver-popover-description");
-    expect(description?.style.display).toBe("block");
+    expect(description?.style.display).toBe("");
     expect(popoverDescription()).toBe("Added later");
   });
 
@@ -73,10 +73,10 @@ describe("updatePopover", () => {
 
     d.updatePopover({ showButtons: ["close"] });
     expect(navButton("next")?.style.display).toBe("none");
-    expect(navButton("close")?.style.display).toBe("block");
+    expect(navButton("close")?.style.display).toBe("");
 
     d.updatePopover({ showButtons: ["next", "previous", "close"], disableButtons: ["next"] });
-    expect(navButton("next")?.style.display).toBe("block");
+    expect(navButton("next")?.style.display).toBe("");
     expect(navButton("next")?.disabled).toBe(true);
 
     d.updatePopover({ disableButtons: [] });

@@ -278,7 +278,7 @@ describe("dismissing", () => {
     beaconFor("intro").click();
 
     expect(dismissButton()?.innerHTML).toBe("Got it");
-    expect(dismissButton()?.style.display).toBe("block");
+    expect(dismissButton()?.style.display).toBe("");
   });
 
   it("uses custom button text from the hint over the global default", () => {

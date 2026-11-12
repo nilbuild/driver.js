@@ -340,15 +340,15 @@ describe("markup", () => {
     expect(outline(document.querySelector(".driver-popover")!)).toBe(
       [
         "div#driver-popover-content.driver-popover.driver-popover-side-bottom.driver-popover-align-start[aria-describedby=driver-popover-description aria-labelledby=driver-popover-title role=dialog display=block]",
-        '  button.driver-popover-close-btn[aria-label=Close type=button display=block] "×"',
+        '  button.driver-popover-close-btn[aria-label=Close type=button] "×"',
         "  div.driver-popover-arrow[]",
-        '  div#driver-popover-title.driver-popover-title[display=block] "Step 2"',
-        '  div#driver-popover-description.driver-popover-description[display=block] "Second"',
-        "  div.driver-popover-footer[display=flex]",
-        '    span.driver-popover-progress-text[display=block] "2 of 3"',
+        '  div#driver-popover-title.driver-popover-title[] "Step 2"',
+        '  div#driver-popover-description.driver-popover-description[] "Second"',
+        "  div.driver-popover-footer[]",
+        '    span.driver-popover-progress-text[] "2 of 3"',
         "    span.driver-popover-navigation-btns[]",
-        '      button.driver-popover-prev-btn.driver-popover-footer-btn[type=button display=block] "Previous"',
-        '      button.driver-popover-next-btn.driver-popover-footer-btn[type=button display=block] "Next"',
+        '      button.driver-popover-prev-btn.driver-popover-footer-btn[type=button] "Previous"',
+        '      button.driver-popover-next-btn.driver-popover-footer-btn[type=button] "Next"',
       ].join("\n")
     );
 

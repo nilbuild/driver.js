@@ -285,3 +285,41 @@ test.describe("disableActiveInteraction: true with focus already on the element"
     expect(await log(page)).toEqual(["click@#one"]);
   });
 });
+
+test.describe("pointer-events the app sets inside the tour's elements", () => {
+  async function mount(page: Page, allowed: boolean) {
+    await page.evaluate(allowed => {
+      const style = document.createElement("style");
+      style.textContent = ".click-through { pointer-events: none; }";
+      document.head.appendChild(style);
+
+      const card = document.createElement("div");
+      card.id = "pe-card";
+      card.style.cssText = "position:relative;width:300px;height:80px;margin:20px";
+      card.innerHTML = `
+        <div id="pe-editor" style="width:100%;height:100%"></div>
+        <div id="pe-placeholder" class="click-through" style="position:absolute;inset:0">Enter task body</div>
+      `;
+      document.body.prepend(card);
+
+      window.tour = window.driverjs.driver({
+        animate: false,
+        steps: allowed
+          ? [{ element: "#intro", allowedElements: "#pe-card", popover: { title: "Intro" } }]
+          : [{ element: "#pe-card", popover: { title: "Card" } }],
+      });
+      window.tour.drive();
+    }, allowed);
+    await expect(overlay(page)).toHaveCount(1);
+    await settle(page);
+  }
+
+  for (const allowed of [false, true]) {
+    test(`stay click-through inside ${allowed ? "an allowed" : "the highlighted"} element`, async ({ page }) => {
+      await mount(page, allowed);
+      const card = await box(page.locator("#pe-card"));
+
+      await expect.poll(() => topElementAt(page, card.x + card.width / 2, card.y + card.height / 2)).toBe("pe-editor");
+    });
+  }
+});

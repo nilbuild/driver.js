@@ -400,7 +400,7 @@ test.describe("advanceOn with a condition", () => {
       await expectStill(page, 1);
 
       await page.keyboard.press(name);
-      await expect(popover(page)).toHaveCount(0);
+      await expect(title(page)).toHaveText("Step 3");
     });
   }
 

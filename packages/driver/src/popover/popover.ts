@@ -1,6 +1,6 @@
 import { destroyDriverClick, onDriverClick } from "../core/click";
 import { PositionOptions, repositionPopover } from "./position";
-import { bringInView, getFirstFocusableElement, layerFor, removeFromLayer } from "../core/utils";
+import { bringInView, layerFor, removeFromLayer } from "../core/utils";
 
 export type Side = "top" | "right" | "bottom" | "left";
 export type Alignment = "start" | "center" | "end";
@@ -79,13 +79,30 @@ function setHtml(element: HTMLElement, html: string) {
   appliedHtml.set(element, html);
 }
 
-function setDisplay(element: HTMLElement, isVisible: boolean, display = "block") {
-  element.style.display = isVisible ? display : "none";
+function setDisplay(element: HTMLElement, isVisible: boolean) {
+  element.style.display = isVisible ? "" : "none";
+}
+
+const focusTakenFrom = new WeakSet<HTMLButtonElement>();
+
+function focusWrapper(wrapper: HTMLElement | null) {
+  wrapper?.setAttribute("tabindex", "-1");
+  wrapper?.focus();
 }
 
 export function toggleButton(button: HTMLButtonElement, isDisabled: boolean) {
+  const wrapper = button.closest<HTMLElement>(".driver-popover");
+  if (isDisabled && document.activeElement === button) {
+    focusWrapper(wrapper);
+    focusTakenFrom.add(button);
+  }
+
   button.disabled = isDisabled;
   button.classList.toggle(DISABLED_BUTTON, isDisabled);
+
+  if (!isDisabled && focusTakenFrom.delete(button) && wrapper && document.activeElement === wrapper) {
+    button.focus();
+  }
 }
 
 const INSTRUCTION_TEXT = "driver-popover-instruction-text";
@@ -139,8 +156,7 @@ function applyInstruction(popover: PopoverDOM, options: PopoverRenderOptions) {
   if (text && html) {
     setHtml(text, html);
   }
-  setDisplay(row, !!html, "flex");
-  setDisplay(indicator, isGated, "");
+  setDisplay(row, !!html);
 
   if (isGated) {
     nextButton.setAttribute("aria-disabled", "true");
@@ -186,7 +202,7 @@ function applyPopoverContent(popover: PopoverDOM, options: PopoverRenderOptions)
   const showFooter = showButtons.includes("next") || showButtons.includes("previous") || showProgress;
 
   setDisplay(popover.closeButton, showButtons.includes("close"));
-  setDisplay(popover.footer, showFooter, "flex");
+  setDisplay(popover.footer, showFooter);
   setDisplay(popover.progress, showProgress);
   setDisplay(popover.nextButton, showButtons.includes("next"));
   setDisplay(popover.previousButton, showButtons.includes("previous"));
@@ -291,10 +307,26 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
   bringInView(popoverWrapper, options.smoothScroll);
 
   if (!options.keepFocus) {
-    getFirstFocusableElement([popoverWrapper, anchor])?.focus();
+    focusPopover(popover);
   }
 
   return popover;
+}
+
+function focusPopover(popover: PopoverDOM) {
+  const { nextButton, wrapper } = popover;
+  const isNextUsable =
+    nextButton.isConnected &&
+    nextButton.style.display !== "none" &&
+    !nextButton.disabled &&
+    !nextButton.hasAttribute("aria-disabled");
+  if (isNextUsable) {
+    nextButton.focus();
+  }
+
+  if (document.activeElement !== nextButton) {
+    focusWrapper(wrapper);
+  }
 }
 
 const imageTargets = new WeakMap<PopoverDOM, { anchor: Element; position: PositionOptions }>();

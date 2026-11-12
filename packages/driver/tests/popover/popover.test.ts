@@ -8,7 +8,7 @@ describe("popover rendering", () => {
     const d = createDriver({ animate: false });
     d.highlight({ element: "#intro", popover: { title: "Intro", showButtons: ["close"] } });
 
-    expect(navButton("close")?.style.display).toBe("block");
+    expect(navButton("close")?.style.display).toBe("");
     expect(navButton("next")?.style.display).not.toBe("block");
   });
 
@@ -72,7 +72,7 @@ describe("popover config fallbacks", () => {
 
     d.moveNext();
 
-    expect(document.querySelector<HTMLElement>(".driver-popover-progress-text")!.style.display).toBe("block");
+    expect(document.querySelector<HTMLElement>(".driver-popover-progress-text")!.style.display).toBe("");
     expect(progressText()).toBe("2 of 2");
 
     d.setConfig({
@@ -85,7 +85,7 @@ describe("popover config fallbacks", () => {
     d.drive();
 
     expect(progressText()).toBe("1 of 2");
-    expect(document.querySelector<HTMLElement>(".driver-popover-progress-text")!.style.display).toBe("block");
+    expect(document.querySelector<HTMLElement>(".driver-popover-progress-text")!.style.display).toBe("");
   });
 
   it("keeps the navigation for a tour step without a popover, hiding the empty title and description", () => {
@@ -94,8 +94,8 @@ describe("popover config fallbacks", () => {
 
     expect(document.querySelector<HTMLElement>(".driver-popover-title")!.style.display).toBe("none");
     expect(document.querySelector<HTMLElement>(".driver-popover-description")!.style.display).toBe("none");
-    expect(document.querySelector<HTMLElement>(".driver-popover-footer")!.style.display).toBe("flex");
-    expect(navButton("next")?.style.display).toBe("block");
+    expect(document.querySelector<HTMLElement>(".driver-popover-footer")!.style.display).toBe("");
+    expect(navButton("next")?.style.display).toBe("");
   });
 });
 
@@ -105,7 +105,7 @@ describe("popover title", () => {
     d.highlight({ element: "#intro", popover: { description: "Only description" } });
 
     expect(document.querySelector<HTMLElement>(".driver-popover-title")?.style.display).toBe("none");
-    expect(document.querySelector<HTMLElement>(".driver-popover-description")?.style.display).toBe("block");
+    expect(document.querySelector<HTMLElement>(".driver-popover-description")?.style.display).toBe("");
   });
 });
 

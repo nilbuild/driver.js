@@ -85,7 +85,7 @@
   color: #2d2d2d;
 }
 
-.driver-popover-title[style*="block"] + .driver-popover-description {
+.driver-popover-title:not([style*="none"]) + .driver-popover-description {
   margin-top: 5px;
 }
 
@@ -136,7 +136,7 @@
 }
 
 .driver-popover-footer-btn:hover,
-.driver-popover-footer-btn:focus {
+.driver-popover-footer-btn:focus-visible {
   background-color: #f7f7f7;
 }
 

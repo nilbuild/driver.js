@@ -51,6 +51,80 @@ test.describe("focus when a step starts", () => {
   });
 });
 
+test.describe("focus in a new popover", () => {
+  test("lands on Next, so Enter moves on instead of closing the tour", async ({ page }) => {
+    await start(page, {
+      steps: [
+        { element: "#one", popover: { title: "One" } },
+        { element: "#two", popover: { title: "Two" } },
+      ],
+    });
+
+    await expect(page.locator(".driver-popover-next-btn")).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(title(page)).toHaveText("Two");
+  });
+
+  test("lands on the popover itself when Next is not usable", async ({ page }) => {
+    await start(page, {
+      steps: [{ element: "#one", advanceOn: "click", popover: { title: "One", instruction: "Click it." } }],
+    });
+
+    await expect(popover(page)).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(title(page)).toHaveText("One");
+  });
+});
+
+test.describe("focus when Next cannot take it", () => {
+  test("goes to the popover when onPopoverRender removes Next, and Enter does not reach the page", async ({ page }) => {
+    await page.evaluate(() => {
+      window.log = [];
+      document.querySelector("#three")!.addEventListener("click", () => window.log.push("three"));
+    });
+    await page.locator("#three").focus();
+    await page.evaluate(() => {
+      window.tour = window.driverjs.driver({
+        animate: false,
+        steps: [
+          { element: "#one", popover: { title: "One", onPopoverRender: popover => popover.nextButton.remove() } },
+        ],
+      });
+      window.tour.drive();
+    });
+    await expect(title(page)).toHaveText("One");
+
+    await expect(popover(page)).toBeFocused();
+    await page.keyboard.press("Enter");
+    expect(await page.evaluate(() => window.log)).toEqual([]);
+  });
+
+  test("goes to the popover when CSS hides Next", async ({ page }) => {
+    await page.addStyleTag({ content: ".driver-popover-next-btn { display: none; }" });
+    await start(page, { steps: [{ element: "#one", popover: { title: "One" } }] });
+
+    await expect(popover(page)).toBeFocused();
+  });
+
+  test("returns to Next once it is enabled again", async ({ page }) => {
+    await start(page, {
+      steps: [
+        { element: "#one", popover: { title: "One" } },
+        { element: "#two", popover: { title: "Two" } },
+      ],
+    });
+    await expect(page.locator(".driver-popover-next-btn")).toBeFocused();
+
+    await page.evaluate(() => window.tour.updatePopover({ disableButtons: ["next"] }));
+    await expect(popover(page)).toBeFocused();
+    await page.evaluate(() => window.tour.updatePopover({ disableButtons: [] }));
+    await expect(page.locator(".driver-popover-next-btn")).toBeFocused();
+
+    await page.keyboard.press("Enter");
+    await expect(title(page)).toHaveText("Two");
+  });
+});
+
 test.describe("Tab", () => {
   test("reaches allowed elements", async ({ page }) => {
     await start(page, {

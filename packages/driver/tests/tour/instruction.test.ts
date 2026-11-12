@@ -35,7 +35,7 @@ describe("popover.instruction", () => {
     it("shows the instruction in its own row between the description and the footer", async () => {
       await start({ steps: withFirst(actionStep()) });
 
-      expect(row()?.style.display).toBe("flex");
+      expect(row()?.style.display).toBe("");
       expect(rowText()?.querySelector("b")?.textContent).toBe("Intro");
       expect(row()?.textContent).toBe("Click Intro to go on.");
       expect(row()?.previousElementSibling?.classList.contains("driver-popover-description")).toBe(true);
@@ -58,7 +58,7 @@ describe("popover.instruction", () => {
     it("keeps Next in its place, looking disabled but still focusable", async () => {
       await start({ steps: withFirst(actionStep()) });
 
-      expect(next().style.display).toBe("block");
+      expect(next().style.display).toBe("");
       expect(next().getAttribute("aria-disabled")).toBe("true");
       expect(next().disabled).toBe(false);
       expect(next().classList.contains("driver-popover-btn-disabled")).toBe(true);
@@ -78,19 +78,19 @@ describe("popover.instruction", () => {
 
       expect(next().style.display).toBe("none");
       expect(footer()?.style.display).toBe("none");
-      expect(row()?.style.display).toBe("flex");
+      expect(row()?.style.display).toBe("");
       expect(indicator()?.style.display).toBe("");
     });
 
     it("keeps the footer for Previous or the progress text", async () => {
       await start({ showButtons: ["previous"], steps: withFirst(actionStep()) });
-      expect(footer()?.style.display).toBe("flex");
+      expect(footer()?.style.display).toBe("");
     });
 
     it("works without advanceOn", async () => {
       await start({ steps: withFirst(actionStep()) });
 
-      expect(row()?.style.display).toBe("flex");
+      expect(row()?.style.display).toBe("");
       expect(isGated()).toBe(true);
     });
 
@@ -103,7 +103,6 @@ describe("popover.instruction", () => {
       await nextFrame();
 
       expect(row()?.textContent).toBe("Click it.");
-      expect(indicator()?.style.display).toBe("none");
       expect(isGated()).toBe(false);
       expect(next().hasAttribute("aria-disabled")).toBe(false);
 
@@ -310,7 +309,7 @@ describe("popover.instruction", () => {
         d.advance();
         expect(d.getActiveIndex()).toBe(1);
         expect(isDone()).toBe(true);
-        expect(row()?.style.display).toBe("flex");
+        expect(row()?.style.display).toBe("");
         expect(indicator()?.style.display).toBe("");
         expect(next().getAttribute("aria-disabled")).toBe("true");
 

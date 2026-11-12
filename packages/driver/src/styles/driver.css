@@ -8,15 +8,22 @@
   overflow: hidden;
 }
 
-.driver-active * {
+.driver-active
+  :where(
+    :not(
+      .driver-active-element,
+      .driver-active-element *,
+      .driver-allowed-element,
+      .driver-allowed-element *,
+      .driver-popover,
+      .driver-popover *
+    )
+  ) {
   pointer-events: none;
 }
 
 .driver-active .driver-active-element,
-.driver-active .driver-active-element *,
-.driver-active .driver-allowed-element *,
-.driver-popover,
-.driver-popover * {
+.driver-popover {
   pointer-events: auto;
 }
 
@@ -121,6 +128,7 @@
 }
 
 .driver-popover-instruction {
+  display: flex;
   align-items: flex-start;
   gap: 10px;
   margin-top: 12px;
@@ -148,6 +156,10 @@
   border-radius: 50%;
   background-color: var(--driver-instruction-indicator-color, #f59e0b);
   animation: driver-instruction-pulse 1.6s ease-in-out infinite;
+}
+
+:where(.driver-popover:not(.driver-popover-has-instruction)) .driver-popover-instruction-indicator {
+  display: none;
 }
 
 @keyframes driver-instruction-pulse {

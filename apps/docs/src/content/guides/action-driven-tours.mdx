@@ -340,7 +340,7 @@ When a click starts something that takes time, like a save, call `driverObj.adva
 Good to know:
 
 - A double-click arrives as `click`, `click`, `dblclick`. Don't block clicks on a double-click step.
-- Blocking a click can't undo what your app did on `pointerdown`, like closing a menu.
+- `onInteraction` only sees the click. On the highlighted element and allowed elements, `pointerdown` has already reached your app, so returning `false` can't undo what it did, like closing a menu.
 - Clicks on the popover are not reported, but they reach your app. Ignore them in a "click outside" handler with `event.target.closest(".driver-popover")`.
 - Key presses are not reported, so typing always works.
 - `nudge({ description })` changes the popover's own text instead of adding a line. `updatePopover()` does the same without the shake.

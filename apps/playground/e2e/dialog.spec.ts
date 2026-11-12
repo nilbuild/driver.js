@@ -226,6 +226,34 @@ test.describe("steps inside a modal dialog", () => {
     await expect(layers(page)).toHaveCount(1);
   });
 
+  test("bring the popover into a dialog that opens after the step settles on an inline element", async ({ page }) => {
+    await page.evaluate(() => {
+      const dialog = document.createElement("dialog");
+      dialog.innerHTML = `<p>Read the <a id="late-link" href="#terms">terms</a> first.</p>`;
+      document.body.appendChild(dialog);
+
+      window.tour = window.driverjs.driver({
+        animate: false,
+        steps: [{ element: "dialog #late-link", popover: { title: "Terms", side: "bottom" } }],
+      });
+      window.tour.drive();
+    });
+    await expect(title(page)).toHaveText("Terms");
+    await settle(page);
+    await page.waitForTimeout(200);
+
+    await page.evaluate(() => document.querySelector("dialog")!.showModal());
+
+    await expect
+      .poll(() => page.evaluate(() => document.querySelector(".driver-popover")?.parentElement?.className))
+      .toBe("driver-layer");
+    const next = await box(nextButton(page));
+    await expect.poll(() => hitAt(page, next.x + next.width / 2, next.y + next.height / 2)).not.toBe("overlay");
+    const link = await box(page.locator("#late-link"));
+    const pop = await box(popover(page));
+    expect(pop.y).toBeGreaterThanOrEqual(link.y + link.height);
+  });
+
   test("bring the popover into a dialog that opens while the step animates in", async ({ page }) => {
     await page.evaluate(() => {
       const dialog = document.createElement("dialog");

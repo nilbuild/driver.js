@@ -403,6 +403,10 @@ export function hints(config: HintsConfig = {}): Hints {
     overlay = undefined;
   }
 
+  function isBeaconFocusTarget(entry: MountedHint) {
+    return entry.hint.popover?.showButton === false && !currentConfig.overlay;
+  }
+
   function popoverOptions(entry: MountedHint): PopoverRenderOptions {
     const hintPopover = entry.hint.popover || {};
     const showButton = hintPopover.showButton ?? true;
@@ -431,6 +435,7 @@ export function hints(config: HintsConfig = {}): Hints {
       },
       onRender: popoverDom => hintPopover.onPopoverRender?.(popoverDom, { hint: entry.hint, hints: api }),
 
+      keepFocus: isBeaconFocusTarget(entry),
       position: popoverPosition(entry),
     };
   }
@@ -470,6 +475,9 @@ export function hints(config: HintsConfig = {}): Hints {
     }
 
     popover = renderPopover(popoverAnchor(entry), popoverOptions(entry));
+    if (isBeaconFocusTarget(entry)) {
+      entry.beacon.focus();
+    }
 
     const onOpen = entry.hint.onOpen || currentConfig.onOpen;
     onOpen?.(entry.element, entry.hint, { config: currentConfig, hints: api });

@@ -385,6 +385,24 @@ test.describe("closing a hint", () => {
   });
 });
 
+test("a hint without a button keeps focus on its beacon, so Enter toggles it", async ({ page }) => {
+  await page.evaluate(() => {
+    window.productHints = window.driverjs.hints({
+      hints: [{ element: "#two", id: "two", popover: { title: "Two hint", showButton: false } }],
+    });
+    window.productHints.show();
+  });
+  await expect(beacons(page)).toHaveCount(1);
+
+  await beacons(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(title(page)).toHaveText("Two hint");
+  await expect(beacons(page)).toBeFocused();
+
+  await page.keyboard.press("Enter");
+  await expect(popover(page)).toHaveCount(0);
+});
+
 test.describe("after hide()", () => {
   test("nothing reacts to scrolling, resizing, clicks or Escape, and show() starts clean", async ({ page }) => {
     const errors: string[] = [];

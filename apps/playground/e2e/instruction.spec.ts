@@ -422,3 +422,41 @@ test.describe("instruction steps as rendered", () => {
     await expect(indicator(page)).toHaveCSS("animation-name", "none");
   });
 });
+
+test.describe("instruction CSS", () => {
+  const startWithCss = async (page: Page, css: string) => {
+    await page.evaluate(css => {
+      const style = document.createElement("style");
+      style.textContent = css;
+      document.head.appendChild(style);
+
+      window.tour = window.driverjs.driver({
+        animate: false,
+        steps: [{ element: "#one", advanceOn: "click", popover: { title: "Act", instruction: "Click it." } }],
+      });
+      window.tour.drive();
+    }, css);
+    await expect(title(page)).toHaveText("Act");
+  };
+
+  test("a plain rule hides the dot on an action step", async ({ page }) => {
+    await startWithCss(page, ".driver-popover-instruction-indicator { display: none; }");
+
+    await expect(instruction(page)).toBeVisible();
+    await expect(indicator(page)).toBeHidden();
+  });
+
+  test("a row hidden by CSS stays hidden while the popover is nudged", async ({ page }) => {
+    await startWithCss(page, ".driver-popover-instruction { display: none; }");
+    await expect(instruction(page)).toBeHidden();
+
+    const duringNudge = await page.evaluate(() => {
+      window.tour.nudge();
+      const popoverEl = document.querySelector(".driver-popover")!;
+      const row = document.querySelector(".driver-popover-instruction")!;
+
+      return { isNudged: popoverEl.classList.contains("driver-popover-nudge"), display: getComputedStyle(row).display };
+    });
+    expect(duringNudge).toEqual({ isNudged: true, display: "none" });
+  });
+});

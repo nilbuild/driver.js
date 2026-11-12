@@ -70,10 +70,6 @@ export function getFocusableElements(parentEls: Element[]) {
   return focusableCandidates(parentEls).filter(isFocusable);
 }
 
-export function getFirstFocusableElement(parentEls: Element[]): HTMLElement | undefined {
-  return focusableCandidates(parentEls).find(isFocusable);
-}
-
 export function bringInView(element: Element, shouldSmoothScroll?: boolean) {
   if (!element || isElementInView(element)) {
     return;

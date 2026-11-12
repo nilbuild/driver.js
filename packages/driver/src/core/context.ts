@@ -76,6 +76,7 @@ function createConfigStore() {
 
 export type InternalState = State & {
   __resizeObserver?: ResizeObserver;
+  __openObserver?: MutationObserver;
   __refreshMissed?: boolean;
   __advanceClick?: MouseEvent;
   __marked?: { element: Element; parent?: Element };
