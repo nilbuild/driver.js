@@ -7,7 +7,8 @@
     "paths": {
       "driver.js": ["../../packages/driver/src/driver.ts"],
       "driver.js/hints": ["../../packages/driver/src/hints.ts"],
-      "driver.js/checklist": ["../../packages/driver/src/checklist.ts"]
+      "driver.js/checklist": ["../../packages/driver/src/checklist.ts"],
+      "driver.js/headless": ["../../packages/driver/src/headless.ts"]
     }
   }
 }

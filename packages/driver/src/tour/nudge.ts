@@ -43,8 +43,8 @@ function restartAnimation(wrapper: HTMLElement) {
 }
 
 export function nudge(ctx: Context) {
-  const wrapper = ctx.getState("popover")?.wrapper;
-  if (!ctx.getState("isInitialized") || !wrapper || !wrapper.isConnected || wrapper.style.display === "none") {
+  const wrapper = ctx.state.popover?.wrapper;
+  if (!ctx.state.isInitialized || !wrapper || !wrapper.isConnected || wrapper.style.display === "none") {
     return;
   }
 

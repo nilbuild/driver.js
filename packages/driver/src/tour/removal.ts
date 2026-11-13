@@ -1,23 +1,23 @@
+import { hookOpts } from "../core/context";
 import type { Activation, Context } from "../core/context";
-import { rebindActiveElement } from "./highlight";
 import { stepOption } from "../core/options";
 import { isBusy, isLeaving } from "./lifecycle";
-import { isActionStep, markStepPopoverWaiting } from "./step";
+import { isActionStep } from "./step";
 import type { DriveStep, ElementMissing, ElementMissingPreset } from "../types";
 import { isDummyElement, resolveElement } from "../core/utils";
-import { clearWaiting } from "./wait";
+import { clearWaiting, markWaiting, reportWaiting } from "./wait";
 
 export function resolveMissing(ctx: Context, step: DriveStep): ElementMissing {
   return stepOption(ctx, step, "onElementMissing") ?? "stay";
 }
 
 function goBack(ctx: Context, preset: ElementMissingPreset) {
-  const activeIndex = ctx.getState("activeIndex");
+  const activeIndex = ctx.state.activeIndex;
   if (!activeIndex) {
     return;
   }
 
-  const steps = ctx.getConfig("steps") || [];
+  const steps = ctx.config.steps || [];
   for (let index = activeIndex - 1; preset === "previousAction" && index >= 0; index--) {
     const candidate = steps[index];
     if (isActionStep(candidate) && candidate.element && resolveElement(candidate.element)?.isConnected) {
@@ -44,7 +44,7 @@ export function watchForRemoval(ctx: Context, activation: Activation) {
     window.clearTimeout(graceTimer);
     graceTimer = undefined;
     hasReported = false;
-    rebindActiveElement(ctx, element);
+    ctx.ui.rebind(ctx, element);
     if (!isLeaving(ctx, activation)) {
       clearWaiting(ctx);
     }
@@ -56,7 +56,12 @@ export function watchForRemoval(ctx: Context, activation: Activation) {
       return false;
     }
 
+    const previous = ctx.state.activeElement;
     restore(replacement);
+    const onElementReplaced = stepOption(ctx, step, "onElementReplaced");
+    if (onElementReplaced && replacement !== previous) {
+      onElementReplaced(replacement, step, { ...hookOpts(ctx), signal });
+    }
     return true;
   };
 
@@ -66,7 +71,7 @@ export function watchForRemoval(ctx: Context, activation: Activation) {
 
     const missing = resolveMissing(ctx, step);
     if (typeof missing === "function") {
-      missing(element, step, { ...ctx.getHookOpts(), cause: "removed" });
+      missing(element, step, { ...hookOpts(ctx), cause: "removed" });
       return;
     }
 
@@ -77,7 +82,7 @@ export function watchForRemoval(ctx: Context, activation: Activation) {
 
   const check = () => {
     frame = undefined;
-    const element = ctx.getState("activeElement");
+    const element = ctx.state.activeElement;
     if (signal.aborted || !element || isDummyElement(element)) {
       return;
     }
@@ -104,7 +109,7 @@ export function watchForRemoval(ctx: Context, activation: Activation) {
       return;
     }
 
-    markStepPopoverWaiting(ctx, "missing");
+    markWaiting(ctx, "missing");
     graceTimer = window.setTimeout(() => {
       graceTimer = undefined;
       if (signal.aborted || isBusy(ctx, activation) || recover()) {
@@ -113,6 +118,7 @@ export function watchForRemoval(ctx: Context, activation: Activation) {
 
       report(element);
     }, grace);
+    reportWaiting(ctx, step, ctx.state.activeIndex, element);
   };
 
   const schedule = () => {

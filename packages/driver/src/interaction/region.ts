@@ -6,12 +6,12 @@ import { isDummyElement } from "../core/utils";
 type Region = InteractionRegion | "popover";
 
 export function regionOf(ctx: Context, path: EventTarget[]): Region {
-  const popover = ctx.getState("popover")?.wrapper;
+  const popover = ctx.state.popover?.wrapper;
   if (popover && path.includes(popover)) {
     return "popover";
   }
 
-  const element = ctx.getState("activeElement");
+  const element = ctx.state.activeElement;
   if (!isDummyElement(element) && path.includes(element!)) {
     return "element";
   }

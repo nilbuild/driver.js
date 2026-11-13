@@ -40,6 +40,16 @@
         "default": "./dist/hints.cjs"
       }
     },
+    "./headless": {
+      "import": {
+        "types": "./dist/headless.d.mts",
+        "default": "./dist/headless.mjs"
+      },
+      "require": {
+        "types": "./dist/headless.d.cts",
+        "default": "./dist/headless.cjs"
+      }
+    },
     "./checklist": {
       "import": {
         "types": "./dist/checklist.d.mts",
@@ -80,6 +90,7 @@
     "dist/**/*",
     "hints/package.json",
     "checklist/package.json",
+    "headless/package.json",
     "!dist/**/*.js.map"
   ],
   "devDependencies": {

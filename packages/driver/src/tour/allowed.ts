@@ -59,7 +59,7 @@ export function trackAllowedElements(ctx: Context, step: DriveStep, signal: Abor
     });
     marked = matches;
 
-    const active = ctx.getState("activeElement");
+    const active = ctx.state.activeElement;
     const isRaised = !!active && !isDummyElement(active) && isInsideAllowedElement(active);
     if (active && isRaised !== active.classList.contains(RAISED_CLASS)) {
       active.classList.toggle(RAISED_CLASS, isRaised);
@@ -107,7 +107,7 @@ export function trackAllowedElements(ctx: Context, step: DriveStep, signal: Abor
     attributes: true,
     ...(isLookup ? {} : { attributeFilter: ["class"] }),
   });
-  ctx.setState("__syncAllowedElements", sync);
+  ctx.state.__syncAllowedElements = sync;
 
   signal.addEventListener("abort", () => {
     observer.disconnect();
@@ -116,8 +116,8 @@ export function trackAllowedElements(ctx: Context, step: DriveStep, signal: Abor
     }
 
     marked.forEach(element => element.classList.remove(ALLOWED_CLASS));
-    if (ctx.getState("__syncAllowedElements") === sync) {
-      ctx.setState("__syncAllowedElements", undefined);
+    if (ctx.state.__syncAllowedElements === sync) {
+      ctx.state.__syncAllowedElements = undefined;
     }
   });
 }

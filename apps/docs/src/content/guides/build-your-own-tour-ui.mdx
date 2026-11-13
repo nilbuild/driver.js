@@ -1,0 +1,103 @@
+---
+title: "Build Your Own Tour UI"
+description: "Four tours with completely different UIs, built on driver.js/headless: a checklist panel, a chat assistant, a hand-drawn spotlight and hints inside a form. Live demos with the full code."
+groupTitle: "Recipes"
+sort: 47
+badge: "New"
+---
+
+import CodeTabs from "../../components/CodeTabs.astro";
+import { AssistantDemo, InlineDemo, PanelDemo, SpotlightDemo } from "../../components/HeadlessDemos.tsx";
+
+import panelJs from "../../examples/headless/panel.js?raw";
+import panelCss from "../../examples/headless/panel.css?raw";
+import assistantJs from "../../examples/headless/assistant.js?raw";
+import assistantCss from "../../examples/headless/assistant.css?raw";
+import spotlightJs from "../../examples/headless/spotlight.js?raw";
+import spotlightCss from "../../examples/headless/spotlight.css?raw";
+import inlineJs from "../../examples/headless/inline.js?raw";
+import inlineCss from "../../examples/headless/inline.css?raw";
+
+Use this when the popover isn't the right shape for your product. With [`driver.js/headless`](/docs/headless-tours), driver.js still runs the tour: it finds each element, waits for it and notices when the user does the step. Everything you see is yours.
+
+The four tours below use the same engine with four very different UIs. The code under each demo is the exact code it runs.
+
+## How Far to Go
+
+| You want to... | Use |
+| --- | --- |
+| Use your colors and fonts on the popover | [Match Your Brand](/docs/match-your-brand), [Theming](/docs/theming) |
+| Add, rename or translate buttons | [Custom Buttons](/docs/custom-buttons) |
+| Change the popover's markup | [`onPopoverRender`](/docs/popover#event-handlers) |
+| Draw everything yourself | `driver.js/headless`, on this page |
+
+## The Pattern
+
+Every headless UI is built from the same few hooks. Put your content in `data` on each step and render it when the step starts:
+
+```js
+import { driver } from "driver.js/headless";
+
+const tour = driver({
+  steps: [{ element: "#save", advanceOn: "click", data: { text: "Save it" } }],
+  onHighlighted: (element, step, opts) => show(element, step.data, opts.index),
+  onDeselected: element => unmark(element),
+  onWaitingForElement: (element, step, opts) => showLoading(opts.signal),
+  onDestroyed: () => hide(),
+});
+
+tour.drive();
+```
+
+Your own buttons call `tour.moveNext()`, `tour.movePrevious()` and `tour.destroy()`. Steps with `advanceOn` move on by themselves when the user does the thing.
+
+## Checklist Panel
+
+The guide is a panel beside the app that ticks off steps as the user does them. Nothing covers the page, and the current target gets an outline from your own CSS class.
+
+<PanelDemo client:load />
+
+<CodeTabs tabs={[{ label: "panel.js", code: panelJs }, { label: "panel.css", code: panelCss }]} />
+
+- `onHighlighted` adds a class to the element and redraws the panel. `opts.index` is the current step.
+- `onDeselected` takes the class off again, also when the tour ends. If your framework re-renders the button, `onElementReplaced` puts the class on the new one.
+- `opts.reason === "done"` in `onDestroyed` tells a finished tour from a closed one.
+
+## Chat Assistant
+
+Each step arrives as a chat message. Upload takes a moment, so the assistant shows that it's waiting until the Share button appears.
+
+<AssistantDemo client:load />
+
+<CodeTabs tabs={[{ label: "assistant.js", code: assistantJs }, { label: "assistant.css", code: assistantCss }]} />
+
+- `onHighlightStarted` posts the step's message as soon as its element is found.
+- `waitForElement` holds the tour while the upload runs. `onWaitingForElement` shows "Uploading…", and its `signal` removes it when the wait ends.
+- The same setup works for an AI assistant: put the step text in `data` and let your chat render it.
+
+## Hand-Drawn Spotlight
+
+Your own highlight: a dashed ring that glides between elements, with a sticky note and your own buttons and keys. No overlay and no popover from driver.js.
+
+<SpotlightDemo client:load />
+
+<CodeTabs tabs={[{ label: "spotlight.js", code: spotlightJs }, { label: "spotlight.css", code: spotlightCss }]} />
+
+- `getBoundingClientRect()` on `tour.getActiveElement()` places the ring, so it stays on the element even after a re-render. A CSS transition on `translate`, `width` and `height` makes it glide.
+- The note's buttons are built once and only their text changes, so keyboard focus stays on Next between steps.
+- The headless build doesn't scroll or listen to keys, so the code does both: `scrollIntoView()`, then the arrow keys and Escape, skipped while the user types in a field.
+- One `AbortController` removes every listener in `onDestroyed`.
+
+## Hints Inside a Form
+
+The guidance is part of the form: a line of help under the current field, and the tour moves on when the field is filled in correctly. Sign up unlocks at the end.
+
+<InlineDemo client:load />
+
+<CodeTabs tabs={[{ label: "inline.js", code: inlineJs }, { label: "inline.css", code: inlineCss }]} />
+
+- `advanceOn` with `when` checks the field and moves on once it's right. The email waits for `change`, so the tour doesn't jump ahead mid-address. The password checks on every keystroke.
+- `onHighlighted` moves one hint element into the current field and links it with `aria-describedby`, so screen readers read it too. Focus stays where the user put it.
+- `:has(.inline-hint)` styles the current field with plain CSS.
+
+**Uses**: [`driver.js/headless`](/docs/headless-tours), [`advanceOn`](/docs/action-driven-tours), [`waitForElement` and `onWaitingForElement`](/docs/configuration#missing-elements), [hooks](/docs/configuration#hooks), [navigation](/docs/api#navigation)

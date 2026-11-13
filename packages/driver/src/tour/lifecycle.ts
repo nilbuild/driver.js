@@ -10,92 +10,99 @@ export function beginActivation(ctx: Context, step: DriveStep, placeholder?: Act
     placeholder,
     latched: false,
   };
-  ctx.setState("__activation", activation);
-  ctx.setState("__lastAnnouncement", undefined);
+  ctx.state.__activation = activation;
+  ctx.state.__lastAnnouncement = undefined;
 
   return activation;
 }
 
 export function endActivation(ctx: Context) {
-  const activation = ctx.getState("__activation");
+  const activation = ctx.state.__activation;
   if (!activation) {
     return;
   }
 
-  ctx.setState("__activation", undefined);
+  ctx.state.__activation = undefined;
+  activation.waitController?.abort();
   activation.controller.abort();
 }
 
 export function isCurrent(ctx: Context, activation: Activation | undefined): boolean {
-  return ctx.getState("__activation") === activation;
+  return ctx.state.__activation === activation;
 }
 
 export function enterStep(ctx: Context, stepIndex: number, keepReturnFocus: boolean) {
-  if (!ctx.getState("__keepReturnFocus")) {
-    ctx.setState("__activeOnDestroyed", document.activeElement as HTMLElement);
+  if (!ctx.state.__keepReturnFocus) {
+    ctx.state.__activeOnDestroyed = document.activeElement as HTMLElement;
   }
-  ctx.setState("__keepReturnFocus", keepReturnFocus);
-  ctx.setState("activeIndex", stepIndex);
+  ctx.state.__keepReturnFocus = keepReturnFocus;
+  ctx.state.activeIndex = stepIndex;
 }
 
 export function beginTransition(ctx: Context, frame: () => void) {
-  ctx.setState("__transitionCallback", frame);
+  ctx.state.__transitionCallback = frame;
 }
 
 export function isTransitioning(ctx: Context): boolean {
-  return !!ctx.getState("__transitionCallback");
+  return !!ctx.state.__transitionCallback;
 }
 
 export function ownsTransition(ctx: Context, frame: () => void): boolean {
-  return ctx.getState("__transitionCallback") === frame;
+  return ctx.state.__transitionCallback === frame;
 }
 
 export function endTransition(ctx: Context): boolean {
-  const hasMissedRefresh = !!ctx.getState("__refreshMissed");
-  ctx.setState("__transitionCallback", undefined);
+  const hasMissedRefresh = !!ctx.state.__refreshMissed;
+  ctx.state.__transitionCallback = undefined;
   if (hasMissedRefresh) {
-    ctx.setState("__refreshMissed", false);
+    ctx.state.__refreshMissed = false;
   }
 
   return hasMissedRefresh;
 }
 
 export function missRefresh(ctx: Context) {
-  ctx.setState("__refreshMissed", true);
+  ctx.state.__refreshMissed = true;
 }
 
 export function setWait(ctx: Context, wait: StepWait) {
-  const activation = ctx.getState("__activation");
-  if (activation) {
-    activation.wait = wait;
+  const activation = ctx.state.__activation;
+  if (!activation) {
+    return;
   }
+
+  activation.waitController?.abort();
+  activation.waitController = undefined;
+  activation.wait = wait;
 }
 
 export function clearWait(ctx: Context): boolean {
-  const activation = ctx.getState("__activation");
+  const activation = ctx.state.__activation;
   if (!activation?.wait) {
     return false;
   }
 
   activation.wait = undefined;
+  activation.waitController?.abort();
+  activation.waitController = undefined;
 
   return true;
 }
 
 export function isWaiting(ctx: Context): boolean {
-  return !!ctx.getState("__activation")?.wait;
+  return !!ctx.state.__activation?.wait;
 }
 
 export function setElementWait(ctx: Context, cancel?: () => void) {
-  ctx.setState("__pendingWaitCancel", cancel);
+  ctx.state.__pendingWaitCancel = cancel;
 }
 
 export function hasElementWait(ctx: Context): boolean {
-  return !!ctx.getState("__pendingWaitCancel");
+  return !!ctx.state.__pendingWaitCancel;
 }
 
 export function cancelElementWait(ctx: Context) {
-  const cancel = ctx.getState("__pendingWaitCancel");
+  const cancel = ctx.state.__pendingWaitCancel;
   if (!cancel) {
     return;
   }
@@ -105,13 +112,17 @@ export function cancelElementWait(ctx: Context) {
 }
 
 export function placeholderOf(ctx: Context) {
-  const activation = ctx.getState("__activation");
+  const activation = ctx.state.__activation;
 
   return activation?.placeholder && { ...activation.placeholder, step: activation.step };
 }
 
+export function popoverStep(ctx: Context): DriveStep | undefined {
+  return placeholderOf(ctx)?.step ?? ctx.state.__activeStep;
+}
+
 export function dropPlaceholder(ctx: Context): boolean {
-  const activation = ctx.getState("__activation");
+  const activation = ctx.state.__activation;
   if (!activation?.placeholder) {
     return false;
   }
@@ -157,7 +168,7 @@ export function isBusy(ctx: Context, activation: Activation): boolean {
 }
 
 export function isDone(ctx: Context, step: DriveStep): boolean {
-  const activation = ctx.getState("__activation");
+  const activation = ctx.state.__activation;
 
   return activation?.step === step && !!activation.done;
 }

@@ -49,6 +49,12 @@ import "driver.js/dist/checklist.css";
 
 Hints don't need `driver.css`. Checklists do, because their items run tours.
 
+[Headless tours](/docs/headless-tours) draw nothing, so they need no stylesheet.
+
+```js
+import { driver } from "driver.js/headless";
+```
+
 ## CDN
 
 ```html
@@ -77,6 +83,11 @@ Hints don't need `driver.css`. Checklists do, because their items run tours.
   rel="stylesheet"
   href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/checklist.css"
 />
+
+<!-- Only if you run headless tours. It replaces the main script. -->
+<script
+  src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/headless.iife.js"
+></script>
 ```
 
 The CDN builds expose globals instead of modules:
@@ -85,6 +96,7 @@ The CDN builds expose globals instead of modules:
 const driver = window.driver.js.driver;
 const hints = window.driverHints.hints;
 const checklist = window.driverChecklist.checklist;
+const headless = window.driverHeadless.driver;
 
 const driverObj = driver();
 ```

@@ -10,6 +10,7 @@ Install with \`npm install driver.js\`. Each feature is its own entry with its o
 - Tours and highlights: \`import { driver } from "driver.js"\` and \`import "driver.js/dist/driver.css"\`
 - Hints: \`import { hints } from "driver.js/hints"\` and \`import "driver.js/dist/hints.css"\`
 - Checklists: \`import { checklist } from "driver.js/checklist"\` with \`import "driver.js/dist/driver.css"\` and \`import "driver.js/dist/checklist.css"\`
+- Headless tours, for your own UI: \`import { driver } from "driver.js/headless"\`, no stylesheet
 
 Every page below is Markdown. Drop the \`.md\` suffix for the HTML version.`;
 

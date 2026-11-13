@@ -1,4 +1,5 @@
-import type { Context, DriverHook, StepWait } from "../core/context";
+import { hookOpts } from "../core/context";
+import type { Context, DriverHook } from "../core/context";
 import type { DriveStep, Popover } from "../types";
 import {
   AllowedButtons,
@@ -14,7 +15,7 @@ import { isDummyElement, resolveElement } from "../core/utils";
 import { isFocusWithinStep } from "./allowed";
 import { announce } from "../popover/live-region";
 import { stepOption } from "../core/options";
-import { clearWait, isDone, isWaiting, setWait } from "./lifecycle";
+import { isDone, isWaiting } from "./lifecycle";
 
 const DEFAULT_PROGRESS_TEXT = "{{current}} of {{total}}";
 
@@ -28,7 +29,7 @@ export function shouldSkipStep(ctx: Context, step: DriveStep): boolean {
 }
 
 export function findReachableIndex(ctx: Context, fromIndex: number, direction: 1 | -1): number | undefined {
-  const steps = ctx.getConfig("steps") || [];
+  const steps = ctx.config.steps || [];
 
   for (let i = fromIndex; i >= 0 && i < steps.length; i += direction) {
     if (!shouldSkipStep(ctx, steps[i])) {
@@ -40,31 +41,31 @@ export function findReachableIndex(ctx: Context, fromIndex: number, direction: 1
 }
 
 export function isEndStep(ctx: Context, direction: 1 | -1): boolean {
-  const activeIndex = ctx.getState("activeIndex");
+  const activeIndex = ctx.state.activeIndex;
 
   return activeIndex !== undefined && findReachableIndex(ctx, activeIndex + direction, direction) === undefined;
 }
 
 export function resolveNextHook(ctx: Context, step?: DriveStep): DriverHook | undefined {
   const isLastStep = isEndStep(ctx, 1);
-  const onDoneClick = step?.popover?.onDoneClick || ctx.getConfig("onDoneClick");
+  const onDoneClick = step?.popover?.onDoneClick || ctx.config.onDoneClick;
   if (isLastStep && onDoneClick) {
     return onDoneClick;
   }
 
-  return step?.popover?.onNextClick || ctx.getConfig("onNextClick");
+  return step?.popover?.onNextClick || ctx.config.onNextClick;
 }
 
 export function resolvePrevHook(ctx: Context, step?: DriveStep): DriverHook | undefined {
-  return step?.popover?.onPrevClick || ctx.getConfig("onPrevClick");
+  return step?.popover?.onPrevClick || ctx.config.onPrevClick;
 }
 
 export function resolveCloseHook(ctx: Context, step?: DriveStep): DriverHook | undefined {
-  return step?.popover?.onCloseClick || ctx.getConfig("onCloseClick");
+  return step?.popover?.onCloseClick || ctx.config.onCloseClick;
 }
 
 function formatProgress(ctx: Context, text: string, stepIndex: number): string {
-  const total = (ctx.getConfig("steps") || []).length;
+  const total = (ctx.config.steps || []).length;
 
   return text.replace("{{current}}", `${stepIndex + 1}`).replace("{{total}}", `${total}`);
 }
@@ -86,7 +87,7 @@ function placeOf(ctx: Context, stepIndex: number): TourPlace {
 }
 
 export function resolvePopoverOptions(ctx: Context, popover: Popover = {}, place?: TourPlace) {
-  const config = ctx.getConfig();
+  const config = ctx.config;
   const configuredButtons = popover.showButtons || config.showButtons;
   const progressText = config.progressText || DEFAULT_PROGRESS_TEXT;
 
@@ -123,7 +124,7 @@ export function resolvePopoverOptions(ctx: Context, popover: Popover = {}, place
 }
 
 export function resolveTourStep(ctx: Context, stepIndex: number): DriveStep {
-  const steps = ctx.getConfig("steps") || [];
+  const steps = ctx.config.steps || [];
   const step = steps[stepIndex];
   const popover = step.popover || {};
   const place = placeOf(ctx, stepIndex);
@@ -136,7 +137,7 @@ export function resolveTourStep(ctx: Context, stepIndex: number): DriveStep {
       nextBtnText: place.hasNext ? undefined : resolved.nextBtnText,
       disableButtons: resolved.disableButtons,
       showProgress: resolved.showProgress,
-      onNextClick: popover.onNextClick || ctx.getConfig("onNextClick") || ctx.tour.moveNext,
+      onNextClick: popover.onNextClick || ctx.config.onNextClick || ctx.tour.moveNext,
       onPrevClick: resolvePrevHook(ctx, step) || ctx.tour.movePrevious,
       onCloseClick: resolveCloseHook(ctx, step) || ctx.tour.close,
       ...popover,
@@ -162,19 +163,19 @@ export function markStandalone(step: DriveStep): DriveStep {
 }
 
 function resolveStepPosition(ctx: Context, element: Element, step: DriveStep): PositionOptions {
-  const stagePadding = ctx.getConfig("stagePadding") || 0;
+  const stagePadding = ctx.config.stagePadding || 0;
 
   return {
     side: step.popover?.side || "bottom",
     align: step.popover?.align || "start",
-    offset: stagePadding + (ctx.getConfig("popoverOffset") || 0),
+    offset: stagePadding + (ctx.config.popoverOffset || 0),
     padding: stagePadding,
     centered: isDummyElement(element),
   };
 }
 
 function activePatch(ctx: Context, step: DriveStep) {
-  const activation = ctx.getState("__activation");
+  const activation = ctx.state.__activation;
 
   return activation?.popoverPatch && activation.step === step ? activation.popoverPatch : undefined;
 }
@@ -189,7 +190,7 @@ function currentPopover(ctx: Context, step: DriveStep) {
   }
 
   if (patch?.progressText !== undefined) {
-    options.progressText = formatProgress(ctx, patch.progressText, ctx.getState("activeIndex") ?? 0);
+    options.progressText = formatProgress(ctx, patch.progressText, ctx.state.activeIndex ?? 0);
   }
 
   return { popover, options };
@@ -204,7 +205,7 @@ export function resolveStepButtons(ctx: Context, step?: DriveStep) {
 function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): PopoverRenderOptions {
   const { popover, options } = currentPopover(ctx, step);
 
-  const activation = ctx.getState("__activation");
+  const activation = ctx.state.__activation;
   const isGated = isActionStep(step);
 
   return {
@@ -218,27 +219,28 @@ function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): Po
     feedback: activation?.step === step ? activation.feedback : undefined,
 
     doneButton: isEndStep(ctx, 1),
-    smoothScroll: ctx.getConfig("smoothScroll"),
+    smoothScroll: ctx.config.smoothScroll,
+    scrollIntoView: stepOption(ctx, step, "scrollIntoView"),
 
     onNextClick: ctx.tour.pressNext,
     onPrevClick: ctx.tour.previous,
 
     onCloseClick: () => {
-      ctx.setState("__destroyReason", "close");
+      ctx.state.__destroyReason = "close";
 
       const onCloseClick = resolveCloseHook(ctx, step);
       if (onCloseClick) {
-        return onCloseClick(ctx.getState("activeElement") ?? element, step, ctx.getHookOpts());
+        return onCloseClick(ctx.state.activeElement ?? element, step, hookOpts(ctx));
       }
 
       return ctx.tour.requestClose();
     },
 
     onRender: popoverDom => {
-      ctx.setState("popover", popoverDom);
+      ctx.state.popover = popoverDom;
 
-      const onPopoverRender = popover.onPopoverRender || ctx.getConfig("onPopoverRender");
-      onPopoverRender?.(popoverDom, ctx.getHookOpts());
+      const onPopoverRender = popover.onPopoverRender || ctx.config.onPopoverRender;
+      onPopoverRender?.(popoverDom, hookOpts(ctx));
     },
 
     position: resolveStepPosition(ctx, element, step),
@@ -246,7 +248,7 @@ function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): Po
 }
 
 export function renderStepPopover(ctx: Context, element: Element, step: DriveStep) {
-  destroyPopover(ctx.getState("popover"));
+  destroyPopover(ctx.state.popover);
 
   const keepFocus = isFocusWithinStep(ctx, element, step);
   const popover = renderPopover(element, {
@@ -274,7 +276,7 @@ export function showStepPopoverState(ctx: Context) {
 }
 
 export function updateStepPopover(ctx: Context, element: Element, step: DriveStep) {
-  const popover = ctx.getState("popover");
+  const popover = ctx.state.popover;
   if (!popover) {
     return;
   }
@@ -284,7 +286,7 @@ export function updateStepPopover(ctx: Context, element: Element, step: DriveSte
 }
 
 export function repositionStepPopover(ctx: Context, element: Element, step: DriveStep) {
-  const popover = ctx.getState("popover");
+  const popover = ctx.state.popover;
   if (!popover) {
     return;
   }
@@ -292,8 +294,8 @@ export function repositionStepPopover(ctx: Context, element: Element, step: Driv
   repositionPopover(popover, element, resolveStepPosition(ctx, element, step));
 }
 
-function showPopoverWaiting(ctx: Context) {
-  const popover = ctx.getState("popover");
+export function showPopoverWaiting(ctx: Context) {
+  const popover = ctx.state.popover;
   if (!popover || popover.wrapper.style.display === "none") {
     return;
   }
@@ -304,17 +306,8 @@ function showPopoverWaiting(ctx: Context) {
   toggleButton(popover.previousButton, true);
 }
 
-export function markStepPopoverWaiting(ctx: Context, wait: StepWait) {
-  setWait(ctx, wait);
-  showPopoverWaiting(ctx);
-}
-
-export function clearStepPopoverWaiting(ctx: Context, element: Element | undefined, step: DriveStep | undefined) {
-  if (!clearWait(ctx)) {
-    return;
-  }
-
-  const popover = ctx.getState("popover");
+export function hidePopoverWaiting(ctx: Context, element: Element | undefined, step: DriveStep | undefined) {
+  const popover = ctx.state.popover;
   if (!popover || popover.wrapper.style.display === "none") {
     return;
   }

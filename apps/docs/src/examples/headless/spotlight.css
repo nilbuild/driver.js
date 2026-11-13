@@ -1,0 +1,52 @@
+.spot-ring,
+.spot-note {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  transition:
+    translate 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 0.35s,
+    height 0.35s;
+}
+
+.spot-ring {
+  border: 3px dashed #ec4899;
+  border-radius: 14px;
+  pointer-events: none;
+  animation: spot-spin 6s linear infinite;
+}
+
+.spot-note {
+  width: max-content;
+  max-width: 260px;
+  padding: 12px 14px;
+  background: #fef08a;
+  box-shadow: 2px 3px 0 #1f2937;
+  font-family: "Comic Sans MS", "Marker Felt", cursive;
+  rotate: -2deg;
+}
+
+.spot-note p {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.spot-note small {
+  margin-right: 6px;
+}
+
+.spot-note button {
+  margin: 6px 6px 0 0;
+  padding: 2px 10px;
+  border: 2px solid #1f2937;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+@keyframes spot-spin {
+  50% {
+    border-color: #8b5cf6;
+  }
+}

@@ -1,0 +1,63 @@
+---
+import { Code } from "astro:components";
+
+type Tab = { label: string; code: string; lang?: "js" | "css" | "html" };
+
+const { tabs } = Astro.props as { tabs: Tab[] };
+const langOf = (tab: Tab) => tab.lang ?? (tab.label.endsWith(".css") ? "css" : "js");
+---
+
+<div class="code-tabs not-prose my-4" data-code-tabs>
+  <div class="flex gap-1 overflow-x-auto rounded-t-md bg-[#1e1f1c] px-2 pt-2" role="tablist">
+    {
+      tabs.map((tab, index) => (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={index === 0 ? "true" : "false"}
+          data-tab={index}
+          class="cursor-pointer rounded-t-md px-3 py-1.5 font-mono text-xs text-gray-400 aria-selected:bg-[#272822] aria-selected:text-white"
+        >
+          {tab.label}
+        </button>
+      ))
+    }
+  </div>
+  {
+    tabs.map((tab, index) => (
+      <div data-panel={index} hidden={index !== 0}>
+        <Code code={tab.code.trimEnd()} lang={langOf(tab)} theme="monokai" />
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .code-tabs :global(pre) {
+    margin: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    padding: 1rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+</style>
+
+<script>
+  document.addEventListener("click", event => {
+    const tab = (event.target as Element).closest?.("[data-code-tabs] [data-tab]");
+    const root = tab?.closest("[data-code-tabs]");
+    if (!tab || !root) {
+      return;
+    }
+
+    const index = tab.getAttribute("data-tab");
+    root.querySelectorAll("[data-tab]").forEach(button => {
+      button.setAttribute("aria-selected", String(button === tab));
+    });
+    root.querySelectorAll<HTMLElement>("[data-panel]").forEach(panel => {
+      panel.hidden = panel.dataset.panel !== index;
+    });
+  });
+</script>

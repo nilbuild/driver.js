@@ -41,6 +41,12 @@ export default defineConfig([
   },
   {
     ...shared,
+    entry: { headless: "src/headless.ts" },
+    format: ["es", "cjs", "iife"],
+    globalName: "driverHeadless",
+  },
+  {
+    ...shared,
     entry: { checklist: "src/checklist.ts" },
     format: ["es", "cjs", "iife"],
     globalName: "driverChecklist",

@@ -16,6 +16,7 @@ const driverCss = fileURLToPath(new URL("../../packages/driver/src/styles/driver
 const hintsSource = fileURLToPath(new URL("../../packages/driver/src/hints.ts", import.meta.url));
 const hintsCss = fileURLToPath(new URL("../../packages/driver/src/styles/hints.css", import.meta.url));
 const checklistSource = fileURLToPath(new URL("../../packages/driver/src/checklist.ts", import.meta.url));
+const headlessSource = fileURLToPath(new URL("../../packages/driver/src/headless.ts", import.meta.url));
 const checklistCss = fileURLToPath(new URL("../../packages/driver/src/styles/checklist.css", import.meta.url));
 
 // https://astro.build/config
@@ -94,6 +95,7 @@ export default defineConfig({
         { find: "driver.js/dist/checklist.css", replacement: checklistCss },
         { find: "driver.js/hints", replacement: hintsSource },
         { find: "driver.js/checklist", replacement: checklistSource },
+        { find: "driver.js/headless", replacement: headlessSource },
         { find: "driver.js", replacement: driverSource },
       ],
     },

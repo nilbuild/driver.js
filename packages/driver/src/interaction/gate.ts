@@ -1,8 +1,7 @@
-import type { Activation, Context } from "../core/context";
+import { hookOpts } from "../core/context";
+import type { Context } from "../core/context";
 import { elementBlockOf, GATED_EVENTS } from "./gesture";
 import { stepOption } from "../core/options";
-import { nudge } from "../tour/nudge";
-import { isKeyCarriedOverFromEarlierStep, keyId } from "./keys";
 import { regionOf } from "./region";
 import { isActionStep } from "../tour/step";
 import { isDummyElement } from "../core/utils";
@@ -16,12 +15,16 @@ const CANCELED_EVENTS = new Set<string>(["pointerdown", "mousedown", "pointerup"
 function consume(ctx: Context, event: Event) {
   event.preventDefault();
   event.stopImmediatePropagation();
-  ctx.consume(event);
+  ctx.consumed.add(event);
 }
 
 type DeadHit = "root" | "overlay";
 
 function deadHitOf(ctx: Context, event: Event): DeadHit | undefined {
+  if (!ctx.ui.blocksInteraction) {
+    return undefined;
+  }
+
   const path = event.composedPath();
   if (regionOf(ctx, path) !== "outside") {
     return undefined;
@@ -32,7 +35,7 @@ function deadHitOf(ctx: Context, event: Event): DeadHit | undefined {
     return "root";
   }
 
-  const overlay = ctx.getState("__overlaySvg");
+  const overlay = ctx.state.__overlaySvg;
   if (overlay && path.includes(overlay)) {
     return "overlay";
   }
@@ -49,11 +52,11 @@ function swallow(event: Event) {
 }
 
 function onGatedEvent(ctx: Context, event: MouseEvent) {
-  if (!ctx.getState("isInitialized")) {
+  if (!ctx.state.isInitialized) {
     return;
   }
 
-  const step = ctx.getState("activeStep");
+  const step = ctx.state.activeStep;
   const onInteraction = stepOption(ctx, step, "onInteraction");
   if (!step || !onInteraction) {
     return;
@@ -68,9 +71,9 @@ function onGatedEvent(ctx: Context, event: MouseEvent) {
     return;
   }
 
-  const element = ctx.getState("activeElement");
+  const element = ctx.state.activeElement;
   const result = onInteraction(isDummyElement(element) ? undefined : element, step, {
-    ...ctx.getHookOpts(),
+    ...hookOpts(ctx),
     event,
     region,
   });
@@ -86,7 +89,7 @@ export function initGate(ctx: Context): () => void {
   let isDeadPress = false;
 
   const onPress = (event: Event) => {
-    if (!ctx.getState("isInitialized") || !isUserEvent(event)) {
+    if (!ctx.state.isInitialized || !isUserEvent(event)) {
       return;
     }
 
@@ -97,7 +100,7 @@ export function initGate(ctx: Context): () => void {
   };
 
   const onRelease = (event: Event) => {
-    if (!ctx.getState("isInitialized") || !isUserEvent(event)) {
+    if (!ctx.state.isInitialized || !isUserEvent(event)) {
       return;
     }
 
@@ -108,7 +111,7 @@ export function initGate(ctx: Context): () => void {
 
   const onGated = (event: Event) => {
     onGatedEvent(ctx, event as MouseEvent);
-    if (!ctx.getState("isInitialized") || ctx.isConsumed(event) || !isUserEvent(event)) {
+    if (!ctx.state.isInitialized || ctx.consumed.has(event) || !isUserEvent(event)) {
       return;
     }
 
@@ -116,8 +119,8 @@ export function initGate(ctx: Context): () => void {
 
     if (isDeadPress && deadHitOf(ctx, event) === "root") {
       swallow(event);
-      if (isActionStep(ctx.getState("activeStep")) && !isSecondEnd) {
-        nudge(ctx);
+      if (isActionStep(ctx.state.activeStep) && !isSecondEnd) {
+        ctx.ui.nudge(ctx);
       }
 
       return;
@@ -130,7 +133,7 @@ export function initGate(ctx: Context): () => void {
 
     consume(ctx, event);
     if (block === "strict" && !isSecondEnd) {
-      nudge(ctx);
+      ctx.ui.nudge(ctx);
     }
   };
 
@@ -145,31 +148,6 @@ export function initGate(ctx: Context): () => void {
   PRESS_EVENTS.forEach(type => listen(type, onPress));
   RELEASE_EVENTS.forEach(type => listen(type, onRelease));
   GATED_EVENTS.forEach(type => listen(type, onGated));
-
-  const pressedIn = new Map<string, Activation | undefined>();
-  ctx.setState("__pressedKeys", pressedIn);
-
-  const keepCarriedOverKeysOffPopover = (event: Event) => {
-    const key = event as KeyboardEvent;
-    if (key.type === "keydown" && !key.repeat) {
-      pressedIn.set(keyId(key), ctx.getState("__activation"));
-    }
-
-    const popover = ctx.getState("popover")?.wrapper;
-    if (popover && key.composedPath().includes(popover) && isKeyCarriedOverFromEarlierStep(ctx, key)) {
-      key.preventDefault();
-    }
-  };
-  ["keydown", "keypress", "keyup"].forEach(type => listen(type, keepCarriedOverKeysOffPopover));
-
-  window.addEventListener(
-    "blur",
-    () => {
-      ctx.setState("__widgetKey", undefined);
-      pressedIn.clear();
-    },
-    { signal: controller.signal }
-  );
 
   return () => controller.abort();
 }

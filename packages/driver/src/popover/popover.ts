@@ -47,6 +47,7 @@ export type PopoverRenderOptions = {
 
   popoverClass?: string;
   smoothScroll?: boolean;
+  scrollIntoView?: boolean;
 
   onNextClick?: () => void;
   onPrevClick?: () => void;
@@ -304,7 +305,9 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
 
   repositionPopover(popover, anchor, options.position);
   repositionOnImagesLoad(popover, anchor, options.position);
-  bringInView(popoverWrapper, options.smoothScroll);
+  if (options.scrollIntoView !== false) {
+    bringInView(popoverWrapper, options.smoothScroll);
+  }
 
   if (!options.keepFocus) {
     focusPopover(popover);

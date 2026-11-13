@@ -30,13 +30,13 @@ function strictGestures(ctx: Context, step: DriveStep): string[] | undefined {
 export type ElementBlock = "disabled" | "strict";
 
 export function elementBlockOf(ctx: Context, event: Event): ElementBlock | undefined {
-  const step = ctx.getState("activeStep");
+  const step = ctx.state.activeStep;
   const part = gesturePartOf(event);
   if (!step || !part || regionOf(ctx, event.composedPath()) !== "element") {
     return undefined;
   }
 
-  if (stepOption(ctx, step, "disableActiveInteraction")) {
+  if (ctx.ui.blocksInteraction && stepOption(ctx, step, "disableActiveInteraction")) {
     return "disabled";
   }
 

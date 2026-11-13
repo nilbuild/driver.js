@@ -1,0 +1,5 @@
+{
+  "main": "../dist/headless.cjs",
+  "module": "../dist/headless.mjs",
+  "types": "../dist/headless.d.ts"
+}

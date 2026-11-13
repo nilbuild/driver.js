@@ -1,33 +1,51 @@
-import {
-  beginActivation,
-  dropPlaceholder,
-  enterStep,
-  hasElementWait,
-  isCurrent,
-  placeholderOf,
-  setElementWait,
-  unlatch,
-} from "./lifecycle";
-import type { Context } from "../core/context";
-import { mountDummyElement, removeDummyElement } from "./highlight";
-import { destroyPopover } from "../popover/popover";
+import { clearWait, hasElementWait, isCurrent, placeholderOf, setElementWait, setWait, unlatch } from "./lifecycle";
+import { hookOpts } from "../core/context";
+import type { Context, StepWait } from "../core/context";
 import { resolveMissing } from "./removal";
-import { clearStepPopoverWaiting, markStepPopoverWaiting, renderStepPopover, resolveTourStep } from "./step";
+import { resolveTourStep } from "./step";
 import type { DriveStep } from "../types";
 import { resolveElement } from "../core/utils";
+import { stepOption } from "../core/options";
 
 export function popoverTarget(ctx: Context) {
   const placeholder = placeholderOf(ctx);
 
   return {
-    element: placeholder?.element ?? ctx.getState("activeElement"),
-    step: placeholder?.step ?? ctx.getState("activeStep"),
+    element: placeholder?.element ?? ctx.state.activeElement,
+    step: placeholder?.step ?? ctx.state.activeStep,
   };
+}
+
+export function markWaiting(ctx: Context, wait: StepWait) {
+  setWait(ctx, wait);
+  ctx.ui.showWaiting(ctx);
+}
+
+export function reportWaiting(ctx: Context, step: DriveStep, index: number | undefined, element?: Element) {
+  const activation = ctx.state.__activation;
+  const onWaitingForElement = stepOption(ctx, step, "onWaitingForElement");
+  if (!onWaitingForElement || !activation?.wait) {
+    return;
+  }
+
+  activation.waitController?.abort();
+  const controller = new AbortController();
+  activation.waitController = controller;
+
+  onWaitingForElement(element, step, {
+    ...hookOpts(ctx),
+    index,
+    signal: controller.signal,
+  });
 }
 
 export function clearWaiting(ctx: Context) {
   const target = popoverTarget(ctx);
-  clearStepPopoverWaiting(ctx, target.element, target.step);
+  if (!clearWait(ctx)) {
+    return;
+  }
+
+  ctx.ui.hideWaiting(ctx, target.element, target.step);
 }
 
 export function waitForStepElement(
@@ -36,7 +54,7 @@ export function waitForStepElement(
   timeout: number,
   onSettled: (found: boolean) => void
 ) {
-  const originating = ctx.getState("__activation");
+  const originating = ctx.state.__activation;
   let frame: number | undefined;
 
   const stop = () => {
@@ -75,50 +93,27 @@ export function waitForStepElement(
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
 }
 
-export function showInitialWait(ctx: Context, stepIndex: number) {
-  const step = resolveTourStep(ctx, stepIndex);
-  if (!step.popover) {
-    return;
-  }
-
-  const element = mountDummyElement();
-  enterStep(ctx, stepIndex, true);
-  beginActivation(ctx, step, { element, index: stepIndex });
-  renderStepPopover(ctx, element, step);
-  markStepPopoverWaiting(ctx, "initial");
-}
-
-export function endInitialWait(ctx: Context) {
-  if (!dropPlaceholder(ctx)) {
-    return;
-  }
-
-  destroyPopover(ctx.getState("popover"));
-  ctx.setState("popover", undefined);
-  removeDummyElement();
-}
-
 export function handleWaitTimeout(ctx: Context, stepIndex: number) {
   const waitedStep = resolveTourStep(ctx, stepIndex);
   const missing = resolveMissing(ctx, waitedStep);
-  const hasCurrentStep = !!ctx.getState("activeStep");
+  const hasCurrentStep = !!ctx.state.activeStep;
   if (missing === "stay" || (typeof missing === "string" && !hasCurrentStep)) {
     ctx.tour.drive(stepIndex, true);
     return;
   }
 
-  const activation = ctx.getState("__activation");
+  const activation = ctx.state.__activation;
   clearWaiting(ctx);
   if (typeof missing === "string") {
     return;
   }
 
   const result = missing(undefined, waitedStep, {
-    ...ctx.getHookOpts(),
+    ...hookOpts(ctx),
     index: stepIndex,
     cause: "timeout",
   });
-  const hasMoved = !ctx.getState("isInitialized") || !isCurrent(ctx, activation) || hasElementWait(ctx);
+  const hasMoved = !ctx.state.isInitialized || !isCurrent(ctx, activation) || hasElementWait(ctx);
   if (result === false || hasMoved) {
     return;
   }

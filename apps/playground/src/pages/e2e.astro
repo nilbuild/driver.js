@@ -68,8 +68,9 @@
       import { driver } from "driver.js";
       import { hints } from "driver.js/hints";
       import { checklist } from "driver.js/checklist";
+      import { driver as headless } from "driver.js/headless";
 
-      Object.assign(window, { driverjs: { driver, hints, checklist }, log: [] });
+      Object.assign(window, { driverjs: { driver, hints, checklist, headless }, log: [] });
       document.documentElement.dataset.ready = "true";
     </script>
   </body>

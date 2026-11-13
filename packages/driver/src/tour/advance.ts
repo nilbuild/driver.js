@@ -1,3 +1,4 @@
+import { hookOpts } from "../core/context";
 import type { Activation, Context } from "../core/context";
 import { advanceEvents, isClickGesture, usesAdvanceOnClick } from "../core/options";
 import type { AdvanceOn } from "../types";
@@ -31,7 +32,7 @@ export function listenForAdvanceEvents(
   const isLegacyClickDuringTransition = () => usesAdvanceOnClick(ctx, activation.step) && isTransitioning(ctx);
 
   const isRestOfCompletingMultiClick = (event: Event) => {
-    const completingClick = ctx.getState("__advanceClick");
+    const completingClick = ctx.state.__advanceClick;
     const click = event as MouseEvent;
     if (!completingClick || click.detail < 2 || click.timeStamp - completingClick.timeStamp > MULTI_CLICK_MS) {
       return false;
@@ -50,8 +51,8 @@ export function listenForAdvanceEvents(
       return true;
     }
 
-    const element = ctx.getState("activeElement");
-    return !!element && when(element, activation.step, { ...ctx.getHookOpts(), event });
+    const element = ctx.state.activeElement;
+    return !!element && when(element, activation.step, { ...hookOpts(ctx), event });
   };
 
   let pendingEvent: Event | undefined;
@@ -71,9 +72,9 @@ export function listenForAdvanceEvents(
       return;
     }
 
-    if (!ctx.isConsumed(event) && isMet(event)) {
+    if (!ctx.consumed.has(event) && isMet(event)) {
       if (isClickGesture(event.type)) {
-        ctx.setState("__advanceClick", event as MouseEvent);
+        ctx.state.__advanceClick = event as MouseEvent;
       }
 
       onComplete();
@@ -83,7 +84,7 @@ export function listenForAdvanceEvents(
   };
 
   const onCapture = (event: Event) => {
-    if (!isOnPath(event, ctx.getState("activeElement"))) {
+    if (!isOnPath(event, ctx.state.activeElement)) {
       return;
     }
 

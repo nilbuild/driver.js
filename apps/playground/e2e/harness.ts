@@ -2,10 +2,11 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import type { driver, Driver } from "driver.js";
 import type { hints } from "driver.js/hints";
 import type { checklist } from "driver.js/checklist";
+import type { driver as headless } from "driver.js/headless";
 
 declare global {
   interface Window {
-    driverjs: { driver: typeof driver; hints: typeof hints; checklist: typeof checklist };
+    driverjs: { driver: typeof driver; hints: typeof hints; checklist: typeof checklist; headless: typeof headless };
     tour: Driver;
     log: string[];
   }

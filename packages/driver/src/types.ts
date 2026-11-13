@@ -69,6 +69,16 @@ export type ElementMissingHook = (
   opts: ElementMissingOpts
 ) => false | void;
 
+export type WaitingForElementOpts = HookOpts & {
+  signal: AbortSignal;
+};
+
+export type WaitingForElementHook = (
+  element: Element | undefined,
+  step: DriveStep,
+  opts: WaitingForElementOpts
+) => void;
+
 export type ElementMissingPreset = "stay" | "previous" | "previousAction";
 export type ElementMissing = ElementMissingPreset | ElementMissingHook;
 
@@ -80,6 +90,7 @@ export type Config = {
   overlayColor?: string;
   overlayOpacity?: number;
   smoothScroll?: boolean;
+  scrollIntoView?: boolean;
   allowClose?: boolean;
   allowScroll?: boolean;
   overlayClickBehavior?: "close" | "nextStep" | "none" | DriverHook;
@@ -94,6 +105,8 @@ export type Config = {
   onInteraction?: InteractionHook;
   allowedElements?: AllowedElements;
   onElementMissing?: ElementMissing;
+  onWaitingForElement?: WaitingForElementHook;
+  onElementReplaced?: DriverHook;
 
   skipMissingElement?: boolean;
 
@@ -170,9 +183,12 @@ export type DriveStep = {
   onInteraction?: InteractionHook;
   allowedElements?: AllowedElements;
   onElementMissing?: ElementMissing;
+  onWaitingForElement?: WaitingForElementHook;
+  onElementReplaced?: DriverHook;
   skipMissingElement?: boolean;
   waitForElement?: number;
   advanceDelay?: number;
+  scrollIntoView?: boolean;
   data?: Record<string, any>;
 };
 

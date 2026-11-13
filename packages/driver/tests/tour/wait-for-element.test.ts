@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { append, createDriver, nextFrame, popoverEl, popoverTitle, tick, useDriverHarness } from "../utils";
 
 useDriverHarness();
@@ -194,5 +194,81 @@ describe("waitForElement", () => {
     await tick(30);
 
     expect(popoverTitle()).toBe("Highlighted");
+  });
+});
+
+describe("onWaitingForElement", () => {
+  it("reports the wait for the next step and ends it when the element appears", async () => {
+    const onWaitingForElement = vi.fn();
+    const d = createDriver({
+      animate: false,
+      onWaitingForElement,
+      steps: [
+        { element: "#intro", popover: { title: "Step 1" } },
+        { element: "#late", waitForElement: 500, popover: { title: "Step 2" } },
+      ],
+    });
+    d.drive();
+    d.moveNext();
+
+    expect(onWaitingForElement).toHaveBeenCalledTimes(1);
+    const [element, step, opts] = onWaitingForElement.mock.calls[0];
+    expect(element).toBeUndefined();
+    expect(step.element).toBe("#late");
+    expect(opts).toMatchObject({ index: 1 });
+    expect(opts.signal.aborted).toBe(false);
+
+    appendElement("late");
+    await tick(50);
+
+    expect(opts.signal.aborted).toBe(true);
+    expect(d.getActiveIndex()).toBe(1);
+  });
+
+  it("reports the wait for the first step", async () => {
+    const onWaitingForElement = vi.fn();
+    const d = createDriver({
+      animate: false,
+      steps: [{ element: "#late", waitForElement: 500, onWaitingForElement, popover: { title: "Step 1" } }],
+    });
+    d.drive();
+
+    expect(onWaitingForElement).toHaveBeenCalledTimes(1);
+    expect(onWaitingForElement.mock.calls[0][2]).toMatchObject({ index: 0 });
+
+    d.destroy();
+    expect(onWaitingForElement.mock.calls[0][2].signal.aborted).toBe(true);
+  });
+
+  it("ends the wait when it times out", async () => {
+    const onWaitingForElement = vi.fn();
+    const d = createDriver({
+      animate: false,
+      onWaitingForElement,
+      steps: [
+        { element: "#intro", popover: { title: "Step 1" } },
+        { element: "#never", waitForElement: 30, popover: { title: "Step 2" } },
+      ],
+    });
+    d.drive();
+    d.moveNext();
+    const { signal } = onWaitingForElement.mock.calls[0][2];
+
+    await tick(60);
+    expect(signal.aborted).toBe(true);
+  });
+
+  it("is not called when the element is already there", async () => {
+    const onWaitingForElement = vi.fn();
+    const d = createDriver({
+      animate: false,
+      waitForElement: 500,
+      onWaitingForElement,
+      steps: [{ element: "#intro", popover: { title: "Step 1" } }],
+    });
+    d.drive();
+    await nextFrame();
+
+    expect(onWaitingForElement).not.toHaveBeenCalled();
   });
 });

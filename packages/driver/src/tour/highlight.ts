@@ -1,7 +1,8 @@
 import { Context } from "../core/context";
 import type { DriveStep } from "../types";
 import { refreshOverlay, trackActiveElement, transitionStage } from "../overlay/overlay";
-import { beginTransition, endTransition, isCurrent, isTransitioning, missRefresh, ownsTransition } from "./lifecycle";
+import { beginTransition, endTransition, isTransitioning, missRefresh, ownsTransition } from "./lifecycle";
+import { reboundElement, startTransfer } from "./transfer";
 import { stepOption } from "../core/options";
 import { hidePopover } from "../popover/popover";
 import { renderStepPopover, repositionStepPopover } from "./step";
@@ -77,7 +78,7 @@ export function highlight(ctx: Context, step: DriveStep) {
 }
 
 function observeSize(ctx: Context, element?: Element) {
-  const observer = ctx.getState("__resizeObserver");
+  const observer = ctx.state.__resizeObserver;
   observer?.disconnect();
   if (element) {
     observer?.observe(element);
@@ -85,8 +86,8 @@ function observeSize(ctx: Context, element?: Element) {
 }
 
 export function refreshActiveHighlight(ctx: Context) {
-  const activeHighlight = ctx.getState("__activeElement");
-  const activeStep = ctx.getState("__activeStep");
+  const activeHighlight = ctx.state.__activeElement;
+  const activeStep = ctx.state.__activeStep;
 
   if (!activeHighlight || !activeStep) {
     return;
@@ -98,7 +99,7 @@ export function refreshActiveHighlight(ctx: Context) {
     return;
   }
 
-  ctx.getState("__syncAllowedElements")?.();
+  ctx.state.__syncAllowedElements?.();
   followLayer(ctx, activeHighlight);
   trackActiveElement(ctx, activeHighlight);
   refreshOverlay(ctx);
@@ -106,65 +107,29 @@ export function refreshActiveHighlight(ctx: Context) {
 }
 
 function followLayer(ctx: Context, element: Element) {
-  const wrapper = ctx.getState("popover")?.wrapper;
+  const wrapper = ctx.state.popover?.wrapper;
   if (wrapper) {
     moveToLayerOf(wrapper, element);
   }
 }
 
 function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) {
-  const activation = ctx.getState("__activation");
-  const isSuperseded = () => !isCurrent(ctx, activation);
-
   observeSize(ctx);
-  const duration = ctx.getConfig("duration") || 400;
+  const duration = ctx.config.duration || 400;
   const start = Date.now();
+  const isAnimatedTour = ctx.config.animate;
 
-  const fromStep = ctx.getState("__activeStep");
-  const fromElement = ctx.getState("__activeElement") || toElement;
-
-  const isFirstHighlight = !fromElement || fromElement === toElement;
-  const isToDummyElement = isDummyElement(toElement);
-  const isFromDummyElement = isDummyElement(fromElement);
-
-  const isAnimatedTour = ctx.getConfig("animate");
-  const highlightStartedHook = toStep.onHighlightStarted || ctx.getConfig("onHighlightStarted");
-  const highlightedHook = toStep.onHighlighted || ctx.getConfig("onHighlighted");
-  const deselectedHook = fromStep?.onDeselected || ctx.getConfig("onDeselected");
-  const signal = activation?.controller.signal;
-
-  const hookOpts = ctx.getHookOpts();
-
-  if (fromStep && fromStep !== toStep && deselectedHook) {
-    deselectedHook(isFromDummyElement ? undefined : fromElement, fromStep, hookOpts);
-    if (isSuperseded()) {
-      return;
-    }
+  const commitTransfer = startTransfer(ctx, toElement, toStep);
+  if (!commitTransfer) {
+    return;
   }
 
-  if (highlightStartedHook) {
-    highlightStartedHook(isToDummyElement ? undefined : toElement, toStep, { ...hookOpts, signal });
-    if (isSuperseded()) {
-      return;
-    }
-  }
-
+  const fromElement = ctx.state.previousElement || toElement;
+  const isFirstHighlight = fromElement === toElement;
   const hasDelayedPopover = !isFirstHighlight && isAnimatedTour;
   let isPopoverRendered = false;
 
-  hidePopover(ctx.getState("popover"));
-
-  ctx.setState("previousStep", fromStep);
-  ctx.setState("previousElement", fromElement);
-  ctx.setState("activeStep", toStep);
-  ctx.setState("activeElement", toElement);
-
-  const commitBeforeHighlightedHook = (targetElement: Element) => {
-    ctx.setState("__previousStep", fromStep);
-    ctx.setState("__previousElement", fromElement);
-    ctx.setState("__activeStep", toStep);
-    ctx.setState("__activeElement", targetElement);
-  };
+  hidePopover(ctx.state.popover);
 
   const animate = () => {
     if (!ownsTransition(ctx, animate)) {
@@ -174,24 +139,19 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
     const elapsed = Date.now() - start;
     const timeRemaining = duration - elapsed;
     const isHalfwayThrough = timeRemaining <= duration / 2;
-    const reboundElement = ctx.getState("activeStep") === toStep ? ctx.getState("activeElement") : undefined;
-    const targetElement = reboundElement || toElement;
+    const targetElement = reboundElement(ctx, toStep, toElement);
 
     if (toStep.popover && isHalfwayThrough && !isPopoverRendered && hasDelayedPopover) {
       renderStepPopover(ctx, targetElement, toStep);
       isPopoverRendered = true;
     }
 
-    if (ctx.getConfig("animate") && elapsed < duration) {
+    if (ctx.config.animate && elapsed < duration) {
       transitionStage(ctx, elapsed, duration, fromElement, targetElement);
     } else {
       trackActiveElement(ctx, targetElement);
 
-      commitBeforeHighlightedHook(targetElement);
-
-      if (highlightedHook) {
-        highlightedHook(isToDummyElement ? undefined : targetElement, toStep, { ...ctx.getHookOpts(), signal });
-      }
+      commitTransfer(targetElement);
 
       if (!ownsTransition(ctx, animate)) {
         return;
@@ -215,7 +175,9 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
 
   clearParentMarks(ctx);
 
-  bringInView(toElement, ctx.getConfig("smoothScroll"));
+  if (stepOption(ctx, toStep, "scrollIntoView") !== false) {
+    bringInView(toElement, ctx.config.smoothScroll);
+  }
   if (!hasDelayedPopover && toStep.popover) {
     renderStepPopover(ctx, toElement, toStep);
   }
@@ -247,7 +209,7 @@ function clearActiveElement(element: Element) {
 }
 
 function clearElementMarks(ctx: Context) {
-  const marked = ctx.getState("__marked")?.element;
+  const marked = ctx.state.__marked?.element;
   new Set([marked, ...document.querySelectorAll(".driver-active-element")]).forEach(element => {
     if (element) {
       clearActiveElement(element);
@@ -256,7 +218,7 @@ function clearElementMarks(ctx: Context) {
 }
 
 function clearParentMarks(ctx: Context) {
-  const marked = ctx.getState("__marked")?.parent;
+  const marked = ctx.state.__marked?.parent;
   new Set([marked, ...document.querySelectorAll(".driver-active-element-parent")]).forEach(parent => {
     parent?.classList.remove("driver-active-element-parent", "driver-active-element-parent-no-scroll");
   });
@@ -278,7 +240,7 @@ function markActiveElement(ctx: Context, element: Element, step: DriveStep) {
     }
   }
 
-  ctx.setState("__marked", { element, parent: markedParent });
+  ctx.state.__marked = { element, parent: markedParent };
   element.classList.add("driver-active-element");
   if (!isDummyElement(element)) {
     setPopoverAria(element);
@@ -302,7 +264,7 @@ export function destroyHighlight(ctx: Context) {
 }
 
 export function rebindActiveElement(ctx: Context, element: Element) {
-  const step = ctx.getState("activeStep");
+  const step = ctx.state.activeStep;
   if (!step) {
     return;
   }
@@ -311,8 +273,8 @@ export function rebindActiveElement(ctx: Context, element: Element) {
   clearElementMarks(ctx);
   markActiveElement(ctx, element, step);
 
-  ctx.setState("activeElement", element);
-  ctx.setState("__activeElement", element);
+  ctx.state.activeElement = element;
+  ctx.state.__activeElement = element;
   observeSize(ctx, element);
 
   followLayer(ctx, element);

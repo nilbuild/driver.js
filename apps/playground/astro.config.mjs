@@ -7,6 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 const driverSource = fileURLToPath(new URL("../../packages/driver/src/driver.ts", import.meta.url));
 const hintsSource = fileURLToPath(new URL("../../packages/driver/src/hints.ts", import.meta.url));
 const checklistSource = fileURLToPath(new URL("../../packages/driver/src/checklist.ts", import.meta.url));
+const headlessSource = fileURLToPath(new URL("../../packages/driver/src/headless.ts", import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
@@ -18,6 +19,7 @@ export default defineConfig({
         // "driver.js" entry would otherwise rewrite "driver.js/hints" too.
         "driver.js/hints": hintsSource,
         "driver.js/checklist": checklistSource,
+        "driver.js/headless": headlessSource,
         "driver.js": driverSource,
       },
     },

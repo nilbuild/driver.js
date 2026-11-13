@@ -1,7 +1,7 @@
 import type { Context } from "../core/context";
 
 export function mountLiveRegion(ctx: Context) {
-  if (ctx.getState("__liveRegion")) {
+  if (ctx.state.__liveRegion) {
     return;
   }
 
@@ -14,20 +14,20 @@ export function mountLiveRegion(ctx: Context) {
     "position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0";
 
   document.body.appendChild(region);
-  ctx.setState("__liveRegion", region);
+  ctx.state.__liveRegion = region;
 }
 
 export function announce(ctx: Context, message: string) {
-  const region = ctx.getState("__liveRegion");
+  const region = ctx.state.__liveRegion;
   const text = message.trim();
-  if (!region || !text || ctx.getState("__lastAnnouncement") === text) {
+  if (!region || !text || ctx.state.__lastAnnouncement === text) {
     return;
   }
 
-  ctx.setState("__lastAnnouncement", text);
+  ctx.state.__lastAnnouncement = text;
   region.textContent = text;
 }
 
 export function destroyLiveRegion(ctx: Context) {
-  ctx.getState("__liveRegion")?.remove();
+  ctx.state.__liveRegion?.remove();
 }

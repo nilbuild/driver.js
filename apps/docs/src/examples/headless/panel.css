@@ -1,0 +1,58 @@
+.is-guided {
+  outline: 2px solid #f59e0b;
+  outline-offset: 3px;
+  transition: outline-color 0.2s;
+}
+
+.tour-panel {
+  min-width: 200px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #fffbeb;
+  font-size: 14px;
+}
+
+.panel-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #fde68a linear-gradient(#f59e0b, #f59e0b) no-repeat;
+  background-size: calc(var(--done) * 100%) 100%;
+  transition: background-size 0.3s;
+}
+
+.tour-panel ol {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tour-panel li {
+  padding: 4px 0 4px 26px;
+  position: relative;
+  color: #78716c;
+}
+
+.tour-panel li::before {
+  content: "○";
+  position: absolute;
+  left: 4px;
+}
+
+.tour-panel li.current {
+  color: #1c1917;
+  font-weight: 600;
+}
+
+.tour-panel li.current::before {
+  content: "→";
+  color: #f59e0b;
+}
+
+.tour-panel li.done {
+  text-decoration: line-through;
+}
+
+.tour-panel li.done::before {
+  content: "✓";
+  color: #16a34a;
+}

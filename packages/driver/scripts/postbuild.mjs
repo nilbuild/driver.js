@@ -6,3 +6,4 @@ import { copyFileSync } from "node:fs";
 copyFileSync("dist/driver.js.d.mts", "dist/driver.js.d.ts");
 copyFileSync("dist/hints.d.mts", "dist/hints.d.ts");
 copyFileSync("dist/checklist.d.mts", "dist/checklist.d.ts");
+copyFileSync("dist/headless.d.mts", "dist/headless.d.ts");

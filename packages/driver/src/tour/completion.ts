@@ -1,6 +1,5 @@
 import type { Activation, Context } from "../core/context";
 import { stepOption } from "../core/options";
-import { announce } from "../popover/live-region";
 import { isCurrent, latch, markDone, unlatch } from "./lifecycle";
 import { isActionStep } from "./step";
 
@@ -19,7 +18,7 @@ export function requestCompletion(ctx: Context, activation: Activation) {
   markDone(activation);
   ctx.tour.refreshPopover();
   if (isActionStep(activation.step)) {
-    announce(ctx, activation.step.popover?.doneBtnText || ctx.getConfig("doneBtnText") || "Done");
+    ctx.ui.announce(ctx, activation.step.popover?.doneBtnText || ctx.config.doneBtnText || "Done");
   }
 
   const timer = window.setTimeout(() => {

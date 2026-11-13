@@ -39,19 +39,11 @@ export function easeInOutQuad(elapsed: number, initialValue: number, amountOfCha
   return (-amountOfChange / 2) * (--elapsed * (elapsed - 2) - 1) + initialValue;
 }
 
-const FOCUSABLE_QUERY = [
-  "a[href]",
-  "area[href]",
-  "button:not([disabled])",
-  'input:not([disabled]):not([type="hidden"])',
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  "summary",
-  "audio[controls]",
-  "video[controls]",
-  '[contenteditable]:not([contenteditable="false"])',
-  '[tabindex]:not([tabindex="-1"]):not([disabled])',
-].join(", ");
+const FOCUSABLE_QUERY =
+  "a[href], area[href], button:not([disabled]), " +
+  'input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), ' +
+  "summary, audio[controls], video[controls], " +
+  '[contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"]):not([disabled])';
 
 function focusableCandidates(parentEls: Element[]): HTMLElement[] {
   return parentEls.flatMap(parentEl => {
@@ -213,23 +205,9 @@ export function moveToLayerOf(node: Element, element: Element, isUnderneath = fa
   return true;
 }
 
-const KEY_WIDGETS = [
-  "input",
-  "textarea",
-  "select",
-  "[role=combobox]",
-  "[role=grid]",
-  "[role=listbox]",
-  "[role=menu]",
-  "[role=menubar]",
-  "[role=radiogroup]",
-  "[role=slider]",
-  "[role=spinbutton]",
-  "[role=tablist]",
-  "[role=textbox]",
-  "[role=tree]",
-  "[role=treegrid]",
-].join(", ");
+const KEY_WIDGETS =
+  "input, textarea, select, [role=combobox], [role=grid], [role=listbox], [role=menu], [role=menubar], " +
+  "[role=radiogroup], [role=slider], [role=spinbutton], [role=tablist], [role=textbox], [role=tree], [role=treegrid]";
 
 export function isKeyWidget(node: EventTarget | null | undefined): boolean {
   if (!(node instanceof HTMLElement)) {

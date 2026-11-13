@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import * as checklistEntry from "../../src/checklist";
 import * as driverEntry from "../../src/driver";
 import * as hintsEntry from "../../src/hints";
+import * as headlessEntry from "../../src/headless";
 import { createDriver, nextFrame, SAMPLE_STEPS, useDriverHarness } from "../utils";
 
 useDriverHarness();
@@ -184,6 +185,7 @@ describe("entry points", () => {
     expect(Object.keys(driverEntry)).toEqual(["driver"]);
     expect(Object.keys(hintsEntry)).toEqual(["hints"]);
     expect(Object.keys(checklistEntry)).toEqual(["checklist"]);
+    expect(Object.keys(headlessEntry)).toEqual(["driver"]);
   });
 
   it("are published under the same file names", () => {
@@ -200,6 +202,10 @@ describe("entry points", () => {
       "./hints": {
         import: { types: "./dist/hints.d.mts", default: "./dist/hints.mjs" },
         require: { types: "./dist/hints.d.cts", default: "./dist/hints.cjs" },
+      },
+      "./headless": {
+        import: { types: "./dist/headless.d.mts", default: "./dist/headless.mjs" },
+        require: { types: "./dist/headless.d.cts", default: "./dist/headless.cjs" },
       },
       "./checklist": {
         import: { types: "./dist/checklist.d.mts", default: "./dist/checklist.mjs" },
@@ -218,7 +224,7 @@ describe("entry points", () => {
       },
     });
 
-    for (const entry of ["hints", "checklist"]) {
+    for (const entry of ["hints", "checklist", "headless"]) {
       expect(JSON.parse(read(`${entry}/package.json`))).toMatchObject({
         main: `../dist/${entry}.cjs`,
         module: `../dist/${entry}.mjs`,
@@ -233,6 +239,7 @@ describe("entry points", () => {
     expect(config).toContain('globalName: "driver.js"');
     expect(config).toContain('globalName: "driverHints"');
     expect(config).toContain('globalName: "driverChecklist"');
+    expect(config).toContain('globalName: "driverHeadless"');
   });
 });
 

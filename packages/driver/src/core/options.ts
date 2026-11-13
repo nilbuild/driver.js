@@ -4,7 +4,7 @@ import type { AdvanceOn, AdvanceOnEvent, Config, DriveStep } from "../types";
 type SharedOption = keyof DriveStep & keyof Config;
 
 export function stepOption<K extends SharedOption>(ctx: Context, step: DriveStep | undefined, key: K): Config[K] {
-  return (step?.[key] ?? ctx.getConfig(key)) as Config[K];
+  return (step?.[key] ?? ctx.config[key]) as Config[K];
 }
 
 export function resolveAdvanceOn(ctx: Context, step: DriveStep): AdvanceOn | undefined {
@@ -16,12 +16,12 @@ export function resolveAdvanceOn(ctx: Context, step: DriveStep): AdvanceOn | und
     return step.advanceOnClick ? "click" : undefined;
   }
 
-  const advanceOn = ctx.getConfig("advanceOn");
+  const advanceOn = ctx.config.advanceOn;
   if (advanceOn !== undefined) {
     return advanceOn || undefined;
   }
 
-  return ctx.getConfig("advanceOnClick") ? "click" : undefined;
+  return ctx.config.advanceOnClick ? "click" : undefined;
 }
 
 export function usesAdvanceOnClick(ctx: Context, step: DriveStep): boolean {
@@ -29,7 +29,7 @@ export function usesAdvanceOnClick(ctx: Context, step: DriveStep): boolean {
     return false;
   }
 
-  return step.advanceOnClick ?? (ctx.getConfig("advanceOn") === undefined && !!ctx.getConfig("advanceOnClick"));
+  return step.advanceOnClick ?? (ctx.config.advanceOn === undefined && !!ctx.config.advanceOnClick);
 }
 
 export type AdvanceEvents = {

@@ -59,6 +59,8 @@ type Config = {
   stageRadius?: number;
   // Scroll smoothly to the highlighted element. (default: false)
   smoothScroll?: boolean;
+  // Scroll the highlighted element and the popover into view. (default: true)
+  scrollIntoView?: boolean;
   // Let the page scroll while the tour is open. (default: true)
   allowScroll?: boolean;
 
@@ -101,6 +103,11 @@ type Config = {
   // What to do when the highlighted element leaves the page for good, or a
   // wait runs out. (default: "stay")
   onElementMissing?: ElementMissing;
+  // Called when driver.js starts waiting for an element.
+  onWaitingForElement?: WaitingForElementHook;
+  // Called when the app re-renders the highlighted element and the step
+  // moves to the new one.
+  onElementReplaced?: DriverHook;
 
   // --- Popover defaults (see Popover Configuration) ---
 
@@ -160,6 +167,9 @@ type DriveStep = {
   waitForElement?: number;
   skipMissingElement?: boolean;
   onElementMissing?: ElementMissing;
+  onWaitingForElement?: WaitingForElementHook;
+  onElementReplaced?: DriverHook;
+  scrollIntoView?: boolean;
   advanceOnClick?: boolean;
 
   // Per-step hooks. They run instead of the driver's.
@@ -326,7 +336,7 @@ Only what the user does is stopped. Events your code dispatches, like `element.c
 | --- | --- | --- |
 | The next element renders late | `waitForElement: 3000` | The current step stays, with its popover in a waiting state, until the element appears or the time runs out |
 | The element may not exist at all | `skipMissingElement: true` | The step is skipped in the direction of travel |
-| The highlighted element is replaced | nothing | The step follows the new element matching its selector |
+| The highlighted element is replaced | nothing, or `onElementReplaced` to hear about it | The step follows the new element matching its selector |
 | The highlighted element is removed | `onElementMissing` | See below |
 
 `onElementMissing` takes a preset or a function:
@@ -352,6 +362,31 @@ type ElementMissingHook = (
 ```
 
 A function is called with `cause: "removed"` when the highlighted element is gone, and decides what to do. It is called with `cause: "timeout"` when a step's `waitForElement` runs out, with that step and its index; the step then shows without its element unless the function returns `false` or navigates.
+
+`onWaitingForElement` is called when driver.js starts waiting for an element:
+
+- A step's element hasn't appeared yet. `element` is `undefined`, and `opts.index` is that step's index. If another step is showing, it stays the current step until the element appears.
+- The highlighted element was removed, and `onElementMissing` is not `"stay"`. `element` is the removed one, which gets `waitForElement` to come back. With `"stay"` there is no wait: the step stays, and `onElementReplaced` runs if a new element shows up.
+
+`opts.signal` aborts when the wait ends: the element showed up, the time ran out or the tour moved on. It means "stop showing that you're waiting", not "found". `onHighlighted` or `onElementMissing` tells you how it ended.
+
+```typescript
+type WaitingForElementHook = (
+  element: Element | undefined,
+  step: DriveStep,
+  opts: HookOpts & { signal: AbortSignal }
+) => void;
+
+driver({
+  waitForElement: 3000,
+  onWaitingForElement: (element, step, opts) => {
+    showSpinner();
+    opts.signal.addEventListener("abort", hideSpinner);
+  },
+});
+```
+
+`onElementReplaced` runs after the step has moved to the new element, so `getActiveElement()` already returns it. It doesn't run when the same element is put back.
 
 Examples: [Wait for Elements](/docs/interactive-tours#wait-for-elements), [Optional Steps](/docs/interactive-tours#optional-steps), [menus](/docs/action-driven-tours#let-the-user-use-a-menu) and [slow loads](/docs/action-driven-tours#recover-from-a-slow-load).
 

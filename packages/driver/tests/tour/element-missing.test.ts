@@ -345,6 +345,29 @@ describe("onElementMissing: removed", () => {
     expect(replacement.classList.contains("driver-active-element")).toBe(true);
   });
 
+  it("runs onElementReplaced with the new element, not when the same one comes back", async () => {
+    const target = append("target");
+    const onElementReplaced = vi.fn();
+    const d = createDriver({ animate: false, onElementReplaced, steps: steps() });
+    d.drive();
+    await nextFrame();
+
+    target.remove();
+    const replacement = append("target");
+    await nextFrame();
+    await nextFrame();
+
+    expect(onElementReplaced).toHaveBeenCalledTimes(1);
+    expect(onElementReplaced.mock.calls[0][0]).toBe(replacement);
+
+    replacement.remove();
+    document.body.appendChild(replacement);
+    await nextFrame();
+    await nextFrame();
+
+    expect(onElementReplaced).toHaveBeenCalledTimes(1);
+  });
+
   it("waits out the grace period before firing", async () => {
     const target = append("target");
     const onElementMissing = vi.fn();

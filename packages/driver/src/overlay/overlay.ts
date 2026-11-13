@@ -20,7 +20,7 @@ import {
 } from "./stage";
 
 export function transitionStage(ctx: Context, elapsed: number, duration: number, from: Element, to: Element) {
-  let activeStagePosition = ctx.getState("__activeStagePosition");
+  let activeStagePosition = ctx.state.__activeStagePosition;
 
   const fromDefinition = activeStagePosition ? activeStagePosition : from.getBoundingClientRect();
   const toDefinition = to.getBoundingClientRect();
@@ -38,7 +38,7 @@ export function transitionStage(ctx: Context, elapsed: number, duration: number,
   };
 
   renderOverlay(ctx, activeStagePosition, to);
-  ctx.setState("__activeStagePosition", activeStagePosition);
+  ctx.state.__activeStagePosition = activeStagePosition;
 }
 
 export function trackActiveElement(ctx: Context, element: Element) {
@@ -55,14 +55,14 @@ export function trackActiveElement(ctx: Context, element: Element) {
     height: definition.height,
   };
 
-  ctx.setState("__activeStagePosition", activeStagePosition);
+  ctx.state.__activeStagePosition = activeStagePosition;
 
   renderOverlay(ctx, activeStagePosition, element);
 }
 
 export function refreshOverlay(ctx: Context) {
-  const activeStagePosition = ctx.getState("__activeStagePosition");
-  const overlaySvg = ctx.getState("__overlaySvg");
+  const activeStagePosition = ctx.state.__activeStagePosition;
+  const overlaySvg = ctx.state.__overlaySvg;
 
   if (!activeStagePosition || !overlaySvg) {
     return;
@@ -84,7 +84,7 @@ function mountOverlay(ctx: Context, stagePosition: StageDefinition, element: Ele
     ctx.tour.overlayClick();
   });
 
-  ctx.setState("__overlaySvg", overlaySvg);
+  ctx.state.__overlaySvg = overlaySvg;
 
   return overlaySvg;
 }
@@ -114,7 +114,7 @@ function allowedCutouts(overlaySvg: SVGSVGElement, cutout: StageCutout): string 
 }
 
 function renderOverlay(ctx: Context, stagePosition: StageDefinition, element: Element) {
-  const overlaySvg = ctx.getState("__overlaySvg") ?? mountOverlay(ctx, stagePosition, element);
+  const overlaySvg = ctx.state.__overlaySvg ?? mountOverlay(ctx, stagePosition, element);
   placeOverlay(overlaySvg, element);
 
   const pathElement = overlaySvg.firstElementChild as SVGPathElement | null;
@@ -132,23 +132,23 @@ function renderOverlay(ctx: Context, stagePosition: StageDefinition, element: El
 }
 
 export function redrawOverlay(ctx: Context, isOutsideDialogToo = false) {
-  const stagePosition = ctx.getState("__activeStagePosition");
-  const element = ctx.getState("activeElement");
-  const overlaySvg = ctx.getState("__overlaySvg");
+  const stagePosition = ctx.state.__activeStagePosition;
+  const element = ctx.state.activeElement;
+  const overlaySvg = ctx.state.__overlaySvg;
   if (stagePosition && element && overlaySvg && (isOutsideDialogToo || overlaySvg.closest("dialog"))) {
     renderOverlay(ctx, stagePosition, element);
   }
 }
 
 function stageOptions(ctx: Context) {
-  const element = ctx.getState("activeElement");
+  const element = ctx.state.activeElement;
   if (element && (isDummyElement(element) || isInsideAllowedElement(element))) {
     return { padding: 0, radius: 0 };
   }
 
   return {
-    padding: ctx.getConfig("stagePadding") || 0,
-    radius: ctx.getConfig("stageRadius") || 0,
+    padding: ctx.config.stagePadding || 0,
+    radius: ctx.config.stageRadius || 0,
   };
 }
 
@@ -156,8 +156,8 @@ function createOverlaySvg(ctx: Context, stage: StageDefinition): SVGSVGElement {
   const svg = createStageSvg(
     "driver-overlay driver-overlay-animated",
     generateStageSvgPathString(stage, stageOptions(ctx)),
-    ctx.getConfig("overlayColor") || "rgb(0,0,0)",
-    `${ctx.getConfig("overlayOpacity")}`
+    ctx.config.overlayColor || "rgb(0,0,0)",
+    `${ctx.config.overlayOpacity}`
   );
 
   svg.setAttribute("version", "1.1");
@@ -169,7 +169,7 @@ function createOverlaySvg(ctx: Context, stage: StageDefinition): SVGSVGElement {
 }
 
 export function destroyOverlay(ctx: Context) {
-  const overlaySvg = ctx.getState("__overlaySvg");
+  const overlaySvg = ctx.state.__overlaySvg;
   if (overlaySvg) {
     destroyDriverClick(overlaySvg);
     removeFromLayer(overlaySvg);

@@ -81,7 +81,7 @@ const driverObj = driver({
 });
 ```
 
-Hints and checklists are separate entries: `driver.js/hints` and `driver.js/checklist`.
+Hints, checklists and headless tours are separate entries: `driver.js/hints`, `driver.js/checklist` and `driver.js/headless`.
 
 ## Documentation
 

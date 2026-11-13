@@ -1,0 +1,20 @@
+.field:has(.inline-hint) input {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 4px rgb(14 165 233 / 0.15);
+}
+
+.inline-hint {
+  margin: 6px 0 0;
+  padding-left: 10px;
+  border-left: 3px solid #0ea5e9;
+  color: #0369a1;
+  font-size: 13px;
+  animation: hint-in 0.3s ease-out;
+}
+
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    translate: -6px 0;
+  }
+}
