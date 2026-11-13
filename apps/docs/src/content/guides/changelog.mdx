@@ -9,6 +9,13 @@ _Unreleased_ lists what is merged for the next release.
 
 ## Unreleased
 
+### Added
+
+- [`driver.js/headless`](/docs/headless-tours) runs a tour without drawing anything, so you can render your own UI.
+- `scrollIntoView: false` stops driver.js from scrolling to the highlighted element and popover.
+- `onWaitingForElement` tells you when a step starts waiting for its element, and its `signal` when the wait ends.
+- `onElementReplaced` tells you when the app re-renders the highlighted element and the step moves to the new one.
+
 ## 1.12.1
 
 ### Changed
