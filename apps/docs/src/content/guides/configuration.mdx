@@ -59,8 +59,10 @@ type Config = {
   stageRadius?: number;
   // Scroll smoothly to the highlighted element. (default: false)
   smoothScroll?: boolean;
-  // Scroll the highlighted element and the popover into view. (default: true)
-  scrollIntoView?: boolean;
+  // Scroll the highlighted element and the popover into view. An object
+  // says where the element ends up, like { block: "start" }. See
+  // Scrolling and Focus. (default: true)
+  scrollIntoView?: boolean | ScrollIntoViewOpts;
   // Let the page scroll while the tour is open. (default: true)
   allowScroll?: boolean;
 
@@ -74,6 +76,10 @@ type Config = {
   overlayClickBehavior?: "close" | "nextStep" | "none" | DriverHook;
   // Arrow keys move between steps and Escape closes. (default: true)
   allowKeyboardControl?: boolean;
+  // Where the keyboard goes when a step shows: "popover", "element" (the
+  // first thing to use in the highlighted element) or "none" (it stays
+  // where it is). (default: "popover")
+  focus?: StepFocus;
 
   // --- Interaction (all step) ---
 
@@ -90,14 +96,20 @@ type Config = {
   allowedElements?: AllowedElements;
   // Called for every click during a step. Return false to block it.
   onInteraction?: InteractionHook;
+  // Let the user use the whole page during a step, not only the
+  // highlighted element. (default: false)
+  allowPageInteraction?: boolean;
   // Deprecated: use advanceOn: "click".
   advanceOnClick?: boolean;
 
   // --- Missing elements (all step) ---
 
-  // Milliseconds to wait for a step's element to appear.
-  // (default: 0, no wait)
+  // Milliseconds to wait for a step's element to appear. Infinity waits
+  // as long as it takes. (default: 0, no wait)
   waitForElement?: number;
+  // Milliseconds a highlighted element that was removed gets to come back
+  // before onElementMissing runs. (default: waitForElement)
+  waitForRemovedElement?: number;
   // Skip a step whose element is not on the page. (default: false)
   skipMissingElement?: boolean;
   // What to do when the highlighted element leaves the page for good, or a
@@ -127,6 +139,7 @@ type Config = {
   // --- Hooks (see Hooks) ---
 
   onPopoverRender?: (popover: PopoverDOM, opts: HookOpts) => void;
+  onPopoverPositioned?: (popover: PopoverDOM, opts: HookOpts) => void;
   onHighlightStarted?: DriverHook;
   onHighlighted?: DriverHook;
   onDeselected?: DriverHook;
@@ -160,16 +173,19 @@ type DriveStep = {
 
   // Per-step versions of the driver options with the same name.
   disableActiveInteraction?: boolean | "clicks";
+  allowPageInteraction?: boolean;
   advanceOn?: false | string | string[] | AdvanceOnEvent;
   advanceDelay?: number;
   allowedElements?: AllowedElements;
   onInteraction?: InteractionHook;
   waitForElement?: number;
+  waitForRemovedElement?: number;
   skipMissingElement?: boolean;
   onElementMissing?: ElementMissing;
   onWaitingForElement?: WaitingForElementHook;
   onElementReplaced?: DriverHook;
-  scrollIntoView?: boolean;
+  scrollIntoView?: boolean | ScrollIntoViewOpts;
+  focus?: StepFocus;
   advanceOnClick?: boolean;
 
   // Per-step hooks. They run instead of the driver's.
@@ -224,6 +240,7 @@ type Popover = {
 
   // Per-step hooks. They run instead of the driver's.
   onPopoverRender?: (popover: PopoverDOM, opts: HookOpts) => void;
+  onPopoverPositioned?: (popover: PopoverDOM, opts: HookOpts) => void;
   onNextClick?: DriverHook;
   onPrevClick?: DriverHook;
   onCloseClick?: DriverHook;
@@ -261,6 +278,7 @@ By default the user can use the highlighted element, and nothing else on the pag
 | Accept one gesture on the element and block other clicks | `advanceOn: { event, strict: true }` |
 | Take away the Next button so the user has to act | [`popover.instruction`](#action-steps) |
 | Let the user use something outside the element, like a menu | `allowedElements` |
+| Let the user use the whole page, like trying something out | `allowPageInteraction: true` |
 | Let the user look but not touch | `disableActiveInteraction: true` |
 | Keep hover and tooltips, block clicks | `disableActiveInteraction: "clicks"` |
 | Decide per click, or react to a wrong click | `onInteraction` |
@@ -314,6 +332,10 @@ type AllowedElements =
 
 Selectors, elements, or a function returning elements. They stay clickable, sit above the overlay and take part in Tab navigation. Selectors and functions are evaluated again as the page changes, so elements that appear later are included. If one still sits under the overlay, set `--driver-allowed-z-index` or target its positioned wrapper. When the highlighted element is inside an allowed element, like an item in an open menu, it gets the `driver-active-element-raised` class and a ring instead of the cutout; see [Theming](/docs/theming#css-variables).
 
+### allowPageInteraction
+
+With `allowPageInteraction: true` the page stays usable during the step: clicks go through the overlay, Tab moves through the whole page, and arrow keys and Escape typed into the page's own fields stay with the page. The highlighted element still follows `disableActiveInteraction` and a `strict` `advanceOn`, and `onInteraction` is still called. `overlayClickBehavior` doesn't apply, since clicks on the overlay reach the page. The [headless build](/docs/headless-tours) never blocks anything, so it doesn't need it.
+
 ### overlayClickBehavior
 
 `"close"` ends the tour, `"nextStep"` moves on, `"none"` does nothing. On an [action step](#action-steps), `"close"` and `"nextStep"` shake the popover instead. `"nextStep"` does nothing while a step waits for its element. A function runs in every case.
@@ -330,6 +352,26 @@ The same goes for presses on an element with `disableActiveInteraction`, which a
 
 Only what the user does is stopped. Events your code dispatches, like `element.click()`, go through.
 
+## Scrolling and Focus
+
+When a step's element is not fully in view, driver.js scrolls it to the middle of the screen, or its top to the top of the screen when it is taller than the screen. `scrollIntoView` takes `block` and `inline` like the DOM's `scrollIntoView()` to put it somewhere else; what you leave out stays as it is. `false` turns scrolling off. A fixed header can be cleared with `scroll-margin-top` on the element.
+
+```typescript
+type ScrollIntoViewOpts = { block?: ScrollLogicalPosition; inline?: ScrollLogicalPosition };
+
+driver({ scrollIntoView: { inline: "nearest" } }); // a wide table row keeps its first columns in view
+```
+
+The cutout and the popover follow the part of the element you can see: a row wider than the panel it scrolls in is only highlighted inside the panel, and the highlight moves as the panel scrolls.
+
+`focus` decides where the keyboard goes when a step shows:
+
+- `"popover"` (default): Next, or the popover itself.
+- `"element"`: the first thing to use inside the highlighted element, like the field a step asks the user to fill in. It falls back to the popover when there is nothing to use there, or the element has `disableActiveInteraction: true`.
+- `"none"`: it stays where it is. Use it with `allowPageInteraction`, so the user can keep typing where they were.
+
+Either way, a screen reader still reads the popover out. When the tour ends, the keyboard goes back where it was before only if it is still on the popover.
+
 ## Missing Elements
 
 | Situation | Option | What happens |
@@ -345,7 +387,7 @@ Only what the user does is stopped. Events your code dispatches, like `element.c
 - `"previous"`: go back one step.
 - `"previousAction"`: go back to the last [action step](#action-steps) whose element is still on the page, or one step back if there is none.
 
-With `waitForElement` set, a removed element first gets that long to come back. `"previous"` and `"previousAction"` also keep the current step when the next step's `waitForElement` runs out, instead of showing that step without its element.
+A removed element first gets `waitForRemovedElement` to come back, or `waitForElement` when that is not set. Set `waitForRemovedElement` when the two should differ, like waiting as long as it takes for an element to appear (`waitForElement: Infinity`) but going back soon after it is gone. A driver-level `waitForRemovedElement` applies to every step, including steps that set their own `waitForElement`. With `"stay"` there is no wait. `"previous"` and `"previousAction"` also keep the current step when the next step's `waitForElement` runs out, instead of showing that step without its element.
 
 ```typescript
 type ElementMissing =
@@ -366,7 +408,7 @@ A function is called with `cause: "removed"` when the highlighted element is gon
 `onWaitingForElement` is called when driver.js starts waiting for an element:
 
 - A step's element hasn't appeared yet. `element` is `undefined`, and `opts.index` is that step's index. If another step is showing, it stays the current step until the element appears.
-- The highlighted element was removed, and `onElementMissing` is not `"stay"`. `element` is the removed one, which gets `waitForElement` to come back. With `"stay"` there is no wait: the step stays, and `onElementReplaced` runs if a new element shows up.
+- The highlighted element was removed, and `onElementMissing` is not `"stay"`. `element` is the removed one, which gets `waitForRemovedElement` (or `waitForElement`) to come back. With `"stay"` there is no wait: the step stays, and `onElementReplaced` runs if a new element shows up.
 
 `opts.signal` aborts when the wait ends: the element showed up, the time ran out or the tour moved on. It means "stop showing that you're waiting", not "found". `onHighlighted` or `onElementMissing` tells you how it ended.
 
@@ -420,7 +462,8 @@ type HookOpts = {
 | `onDeselected` | When a step is left, and when the tour ends |
 | `onDestroyStarted` | When the user tries to end the tour. The tour only ends if you call `destroy()` |
 | `onDestroyed` | After the tour has ended |
-| `onPopoverRender` | After the popover is added to the page, before it is positioned. Change its DOM here |
+| `onPopoverRender` | When a step's popover is built, after it is added to the page and before it is positioned. Change its content here |
+| `onPopoverPositioned` | Every time driver.js places the popover: when it shows, and again on scroll, resize, `refresh()` and `updatePopover()`. Move it here |
 | `onNextClick`, `onPrevClick`, `onCloseClick` | Instead of the button's default action |
 | `onDoneClick` | Instead of `onNextClick` on the last step |
 
@@ -428,6 +471,7 @@ type HookOpts = {
 - On an [action step](#action-steps), pressing the disabled Next, the right arrow key or the overlay doesn't run `onNextClick`; completing the step does.
 - The click hooks replace the default. Call `moveNext()`, `movePrevious()` or `destroy()` yourself. `onNextClick` also runs for the right arrow key, `overlayClickBehavior: "nextStep"`, `advanceOn` and `advance()`.
 - `index` is always the active step. Inside the `onDeselected` that runs between steps, that is the step being moved to.
+- Content added in `onPopoverRender` stays for the whole step. A position set there is replaced the next time driver.js places the popover; set it in `onPopoverPositioned` instead, and it stays until the next placement. That hook can run once a frame while the page scrolls, so keep it quick.
 - `signal` cleans up listeners for you: `window.addEventListener("saved", onSaved, { signal })`.
 - `destroy()` does not run `onDestroyStarted`. Neither does a tour that is replaced by another instance.
 

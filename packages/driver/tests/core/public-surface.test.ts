@@ -458,8 +458,10 @@ describe("stylesheets", () => {
 });
 
 describe("types", () => {
-  it("still compile code written against 1.10 and 1.11", () => {
-    const fixtures = ["usage-1.10.ts", "usage-1.11.ts"].map(name => `${root}tests/core/fixtures/${name}`);
+  it("still compile code written against 1.10, 1.11 and 1.13", () => {
+    const fixtures = ["usage-1.10.ts", "usage-1.11.ts", "usage-1.13.ts"].map(
+      name => `${root}tests/core/fixtures/${name}`
+    );
     const program = ts.createProgram([...fixtures, `${root}src/css.d.ts`], {
       target: ts.ScriptTarget.ES2020,
       module: ts.ModuleKind.ESNext,
@@ -473,6 +475,7 @@ describe("types", () => {
         "driver.js": [`${root}src/driver.ts`],
         "driver.js/hints": [`${root}src/hints.ts`],
         "driver.js/checklist": [`${root}src/checklist.ts`],
+        "driver.js/headless": [`${root}src/headless.ts`],
       },
     });
 

@@ -1,4 +1,5 @@
 import type { Alignment, PopoverDOM, Side } from "./popover";
+import { visibleRect } from "../core/utils";
 
 type Placement = Side | "over";
 
@@ -8,6 +9,7 @@ export type PositionOptions = {
   offset: number;
   padding: number;
   centered?: boolean;
+  onPositioned?: () => void;
 };
 
 function alignAlongEdge(
@@ -43,7 +45,7 @@ export function repositionPopover(popover: PopoverDOM, anchor: Element, options:
   const reservedWidth = popoverWidth + options.offset;
   const reservedHeight = popoverHeight + options.offset;
   const popoverArrowDimensions = popover.arrow.getBoundingClientRect();
-  const elementDimensions = anchor.getBoundingClientRect();
+  const elementDimensions = visibleRect(anchor);
 
   const topValue = elementDimensions.top - reservedHeight;
   let isTopOptimal = topValue >= 0;
@@ -154,6 +156,8 @@ export function repositionPopover(popover: PopoverDOM, anchor: Element, options:
   if (!classList.contains(alignClass)) {
     classList.add(alignClass);
   }
+
+  options.onPositioned?.();
 }
 
 export const ARROW_SIZE = 10;

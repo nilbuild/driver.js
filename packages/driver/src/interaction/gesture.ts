@@ -1,5 +1,5 @@
 import type { Context } from "../core/context";
-import { regionOf } from "./region";
+import { isOnElement } from "./region";
 import { advanceEvents, GESTURE_PARTS, isClickGesture, resolveAdvanceOn, stepOption } from "../core/options";
 import type { DriveStep } from "../types";
 
@@ -32,7 +32,7 @@ export type ElementBlock = "disabled" | "strict";
 export function elementBlockOf(ctx: Context, event: Event): ElementBlock | undefined {
   const step = ctx.state.activeStep;
   const part = gesturePartOf(event);
-  if (!step || !part || regionOf(ctx, event.composedPath()) !== "element") {
+  if (!step || !part || !isOnElement(ctx, event.composedPath())) {
     return undefined;
   }
 

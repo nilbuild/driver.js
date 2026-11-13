@@ -1,7 +1,7 @@
 import { hookOpts } from "../core/context";
 import type { Context } from "../core/context";
 import { elementBlockOf, GATED_EVENTS } from "./gesture";
-import { stepOption } from "../core/options";
+import { isPageInteractive, stepOption } from "../core/options";
 import { regionOf } from "./region";
 import { isActionStep } from "../tour/step";
 import { isDummyElement } from "../core/utils";
@@ -21,7 +21,7 @@ function consume(ctx: Context, event: Event) {
 type DeadHit = "root" | "overlay";
 
 function deadHitOf(ctx: Context, event: Event): DeadHit | undefined {
-  if (!ctx.ui.blocksInteraction) {
+  if (!ctx.ui.blocksInteraction || isPageInteractive(ctx)) {
     return undefined;
   }
 

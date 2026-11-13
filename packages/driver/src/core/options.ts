@@ -7,6 +7,11 @@ export function stepOption<K extends SharedOption>(ctx: Context, step: DriveStep
   return (step?.[key] ?? ctx.config[key]) as Config[K];
 }
 
+// the whole page stays usable during the current step: nothing is blocked, and keys typed into it are the page's
+export function isPageInteractive(ctx: Context): boolean {
+  return !!stepOption(ctx, ctx.state.activeStep, "allowPageInteraction");
+}
+
 export function resolveAdvanceOn(ctx: Context, step: DriveStep): AdvanceOn | undefined {
   if (step.advanceOn !== undefined) {
     return step.advanceOn || undefined;

@@ -4,7 +4,7 @@ import type { Context, StepWait } from "../core/context";
 import { resolveMissing } from "./removal";
 import { resolveTourStep } from "./step";
 import type { DriveStep } from "../types";
-import { resolveElement } from "../core/utils";
+import { isEndless, resolveElement } from "../core/utils";
 import { stepOption } from "../core/options";
 
 export function popoverTarget(ctx: Context) {
@@ -86,7 +86,7 @@ export function waitForStepElement(
     frame ??= window.requestAnimationFrame(check);
   });
 
-  const timer = window.setTimeout(() => settle(false), timeout);
+  const timer = isEndless(timeout) ? undefined : window.setTimeout(() => settle(false), timeout);
 
   setElementWait(ctx, stop);
 

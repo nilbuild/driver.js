@@ -14,6 +14,7 @@ import {
 import { resolveTourStep } from "../tour/step";
 import { markWaiting } from "../tour/wait";
 import { reboundElement, startTransfer } from "../tour/transfer";
+import { resolveAllowedElements, resolveAllowedSetting } from "../tour/allowed";
 
 function highlight(ctx: Context, step: DriveStep) {
   const element = resolveElement(step.element) || undefined;
@@ -55,6 +56,18 @@ function showInitialWait(ctx: Context, stepIndex: number) {
   markWaiting(ctx, "initial");
 }
 
+// nothing is marked on the page, so the allowed elements are looked up when a click comes in
+function isAllowed(ctx: Context, path: EventTarget[]): boolean {
+  const step = ctx.state.activeStep;
+  if (!step) {
+    return false;
+  }
+
+  const allowed = resolveAllowedElements(resolveAllowedSetting(ctx, step));
+
+  return allowed.length > 0 && path.some(node => node instanceof Element && allowed.includes(node));
+}
+
 const noop = () => {};
 
 export const headlessRenderer: Renderer = {
@@ -68,6 +81,7 @@ export const headlessRenderer: Renderer = {
   rebind,
   refresh: ctx => ctx.state.__activation?.recheck?.(),
   trackAllowed: noop,
+  isAllowed,
   showWaiting: noop,
   hideWaiting: noop,
   showInitialWait,

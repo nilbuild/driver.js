@@ -388,6 +388,49 @@ describe("onElementMissing: removed", () => {
     expect(onElementMissing).toHaveBeenCalledTimes(1);
   });
 
+  it("gives a removed element waitForRemovedElement to come back, not waitForElement", async () => {
+    const target = append("target");
+    const onElementMissing = vi.fn();
+    createDriver({
+      animate: false,
+      onElementMissing,
+      waitForElement: 5000,
+      steps: [{ element: "#target", waitForRemovedElement: 30, popover: { title: "Target" } }],
+    }).drive();
+    await nextFrame();
+
+    target.remove();
+    await nextFrame();
+    await nextFrame();
+    expect(onElementMissing).not.toHaveBeenCalled();
+
+    await tick(60);
+    expect(onElementMissing).toHaveBeenCalledTimes(1);
+    expect(onElementMissing.mock.calls[0][2].cause).toBe("removed");
+  });
+
+  it("waits for good with Infinity", async () => {
+    const target = append("target");
+    const onElementMissing = vi.fn();
+    createDriver({
+      animate: false,
+      onElementMissing,
+      steps: [{ element: "#target", waitForRemovedElement: Infinity, popover: { title: "Target" } }],
+    }).drive();
+    await nextFrame();
+
+    target.remove();
+    await nextFrame();
+    await tick(30);
+    expect(onElementMissing).not.toHaveBeenCalled();
+    expect(isWaiting()).toBe(true);
+
+    append("target");
+    await nextFrame();
+    await nextFrame();
+    expect(isWaiting()).toBe(false);
+  });
+
   it("continues silently when the element returns within the grace period", async () => {
     const target = append("target");
     const onElementMissing = vi.fn();

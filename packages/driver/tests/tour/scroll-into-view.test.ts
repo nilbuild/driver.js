@@ -4,11 +4,14 @@ import { createDriver, nextFrame, SAMPLE_STEPS, useDriverHarness } from "../util
 useDriverHarness();
 
 let scrolled: Element[];
+let scrollArgs: Map<string, ScrollIntoViewOptions | boolean | undefined>;
 
 beforeEach(() => {
   scrolled = [];
-  Element.prototype.scrollIntoView = function (this: Element) {
+  scrollArgs = new Map();
+  Element.prototype.scrollIntoView = function (this: Element, arg?: ScrollIntoViewOptions | boolean) {
     scrolled.push(this);
+    scrollArgs.set(this.id || this.className, arg);
   };
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 5000, 100, 20));
 
@@ -64,5 +67,33 @@ describe("scrollIntoView", () => {
     d.moveNext();
     await nextFrame();
     expect(scrolledIds()).toContain("card-1");
+  });
+
+  it("puts the element where block and inline say, and the rest where it always goes", async () => {
+    const d = createDriver({ animate: false, scrollIntoView: { inline: "nearest" }, steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+
+    expect(scrollArgs.get("intro")).toMatchObject({ inline: "nearest", block: "center" });
+  });
+
+  it("takes block and inline per step", async () => {
+    const d = createDriver({
+      animate: false,
+      steps: [{ ...SAMPLE_STEPS[0], scrollIntoView: { block: "start" } }],
+    });
+    d.drive();
+    await nextFrame();
+
+    expect(scrollArgs.get("intro")).toMatchObject({ inline: "center", block: "start" });
+  });
+
+  it("scrolls the popover only as far as it takes", async () => {
+    const d = createDriver({ animate: false, steps: SAMPLE_STEPS });
+    d.drive();
+    await nextFrame();
+
+    const popover = [...scrollArgs.entries()].find(entry => entry[0].includes("driver-popover"));
+    expect(popover?.[1]).toMatchObject({ inline: "nearest", block: "nearest" });
   });
 });

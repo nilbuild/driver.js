@@ -5,7 +5,7 @@ import { beginTransition, endTransition, isTransitioning, missRefresh, ownsTrans
 import { reboundElement, startTransfer } from "./transfer";
 import { stepOption } from "../core/options";
 import { hidePopover } from "../popover/popover";
-import { renderStepPopover, repositionStepPopover } from "./step";
+import { focusStepElement, renderStepPopover, repositionStepPopover } from "./step";
 import {
   bringInView,
   DUMMY_ELEMENT_ID,
@@ -13,6 +13,7 @@ import {
   isInsideAllowedElement,
   isScrollable,
   moveToLayerOf,
+  PAGE_INTERACTIVE_CLASS,
   RAISED_CLASS,
   resolveElement,
 } from "../core/utils";
@@ -157,6 +158,8 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
         return;
       }
 
+      focusStepElement(ctx, targetElement, toStep);
+
       const hasMissedRefresh = endTransition(ctx);
       observeSize(ctx, targetElement);
       if (hasMissedRefresh) {
@@ -175,8 +178,9 @@ function transferHighlight(ctx: Context, toElement: Element, toStep: DriveStep) 
 
   clearParentMarks(ctx);
 
-  if (stepOption(ctx, toStep, "scrollIntoView") !== false) {
-    bringInView(toElement, ctx.config.smoothScroll);
+  const scroll = stepOption(ctx, toStep, "scrollIntoView");
+  if (scroll !== false) {
+    bringInView(toElement, ctx.config.smoothScroll, typeof scroll === "object" ? scroll : undefined);
   }
   if (!hasDelayedPopover && toStep.popover) {
     renderStepPopover(ctx, toElement, toStep);
@@ -225,6 +229,8 @@ function clearParentMarks(ctx: Context) {
 }
 
 function markActiveElement(ctx: Context, element: Element, step: DriveStep) {
+  document.body.classList.toggle(PAGE_INTERACTIVE_CLASS, !!stepOption(ctx, step, "allowPageInteraction"));
+
   const isBlocked = stepOption(ctx, step, "disableActiveInteraction") === true;
   if (isBlocked) {
     element.classList.add("driver-no-interaction");

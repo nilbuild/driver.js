@@ -17,6 +17,8 @@ export type {
   ElementMissingPreset,
   WaitingForElementHook,
   WaitingForElementOpts,
+  ScrollIntoViewOpts,
+  StepFocus,
   HookOpts,
   InteractionHook,
   InteractionOpts,

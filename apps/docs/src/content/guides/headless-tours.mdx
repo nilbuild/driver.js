@@ -34,7 +34,8 @@ It takes the same config and steps as `driver.js` and returns the same [API](/do
 ## What still works
 
 - Finding elements: selectors, elements and functions.
-- [Missing elements](/docs/configuration#missing-elements): `waitForElement`, `skipMissingElement`, `onElementMissing` and `onWaitingForElement`.
+- [Missing elements](/docs/configuration#missing-elements): `waitForElement`, `waitForRemovedElement`, `skipMissingElement`, `onElementMissing` and `onWaitingForElement`.
+- `onInteraction` for every click, with `region` telling the highlighted element, the `allowedElements` and the rest of the page apart. Nothing is blocked unless it returns `false`.
 - `advanceOn` with `when` and `strict`, `advanceDelay` and `advance()`.
 - Hooks: `onHighlightStarted`, `onHighlighted`, `onDeselected`, `onDestroyStarted`, `onDestroyed`, `onInteraction`, `onWaitingForElement` and `onElementReplaced`.
 - Navigation: `drive()`, `moveNext()`, `movePrevious()`, `moveTo()`, `highlight()` and `destroy()`.
@@ -59,7 +60,7 @@ driver({
 - The overlay, popover and every option that styles them. `updatePopover()` and `nudge()` do nothing.
 - Scrolling. Call `element.scrollIntoView()` in `onHighlighted` if you want it.
 - Keyboard control. Arrow keys and Escape don't move or close the tour.
-- Focus. It is not moved into a popover or back when the tour ends.
+- Focus. It is not moved into a popover or back when the tour ends, and `focus` does nothing.
 - Blocking clicks. `disableActiveInteraction` and `allowedElements` are ignored. A `strict` `advanceOn` and an `onInteraction` that returns `false` still hold back clicks.
 
 Starting a tour ends any other tour from the same build. A headless tour and a full one come from different builds, so they can run at the same time.

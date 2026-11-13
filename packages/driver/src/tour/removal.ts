@@ -4,8 +4,11 @@ import { stepOption } from "../core/options";
 import { isBusy, isLeaving } from "./lifecycle";
 import { isActionStep } from "./step";
 import type { DriveStep, ElementMissing, ElementMissingPreset } from "../types";
-import { isDummyElement, resolveElement } from "../core/utils";
+import { isDummyElement, isEndless, resolveElement } from "../core/utils";
 import { clearWaiting, markWaiting, reportWaiting } from "./wait";
+
+// stands in for the timer of a wait that has none
+const WAIT_FOREVER = -1;
 
 export function resolveMissing(ctx: Context, step: DriveStep): ElementMissing {
   return stepOption(ctx, step, "onElementMissing") ?? "stay";
@@ -103,21 +106,23 @@ export function watchForRemoval(ctx: Context, activation: Activation) {
       return;
     }
 
-    const grace = stepOption(ctx, step, "waitForElement") ?? 0;
+    const grace = stepOption(ctx, step, "waitForRemovedElement") ?? stepOption(ctx, step, "waitForElement") ?? 0;
     if (grace <= 0) {
       report(element);
       return;
     }
 
     markWaiting(ctx, "missing");
-    graceTimer = window.setTimeout(() => {
-      graceTimer = undefined;
-      if (signal.aborted || isBusy(ctx, activation) || recover()) {
-        return;
-      }
+    graceTimer = !isEndless(grace)
+      ? window.setTimeout(() => {
+          graceTimer = undefined;
+          if (signal.aborted || isBusy(ctx, activation) || recover()) {
+            return;
+          }
 
-      report(element);
-    }, grace);
+          report(element);
+        }, grace)
+      : WAIT_FOREVER;
     reportWaiting(ctx, step, ctx.state.activeIndex, element);
   };
 

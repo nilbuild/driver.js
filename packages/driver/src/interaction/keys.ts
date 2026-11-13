@@ -1,11 +1,12 @@
 import type { Activation, Context } from "../core/context";
 import { pathOf, regionOf } from "./region";
 import { isKeyWidget } from "../core/utils";
+import { isPageInteractive } from "../core/options";
 
 function isInPlay(ctx: Context, path: EventTarget[]): boolean {
   const region = regionOf(ctx, path);
 
-  return region === "element" || region === "allowed";
+  return region === "element" || region === "allowed" || (region === "outside" && isPageInteractive(ctx));
 }
 
 export function isKeyInPlay(ctx: Context, path: EventTarget[]): boolean {

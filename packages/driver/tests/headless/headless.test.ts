@@ -311,6 +311,32 @@ describe("headless advanceOn", () => {
   });
 });
 
+describe("headless onInteraction", () => {
+  it("tells clicks on the allowed elements from clicks outside, without blocking either", async () => {
+    const regions: string[] = [];
+    const list = append("list");
+    const d = createHeadless({
+      steps: [{ element: "#card-1", allowedElements: () => [list] }],
+      onInteraction: (_el, _step, opts) => {
+        regions.push(opts.region);
+      },
+    });
+    d.drive();
+    await nextFrame();
+
+    const outside = new MouseEvent("click", { bubbles: true, cancelable: true });
+    const allowed = new MouseEvent("click", { bubbles: true, cancelable: true });
+    click("#card-1");
+    list.dispatchEvent(allowed);
+    document.querySelector("#intro")!.dispatchEvent(outside);
+
+    expect(regions).toEqual(["element", "allowed", "outside"]);
+    expect(allowed.defaultPrevented).toBe(false);
+    expect(outside.defaultPrevented).toBe(false);
+    expect(list.className).toBe("");
+  });
+});
+
 describe("headless missing elements", () => {
   it("waits for a target that shows up later", async () => {
     const onHighlighted = vi.fn();

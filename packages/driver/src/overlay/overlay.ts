@@ -6,6 +6,7 @@ import {
   moveToLayerOf,
   placeInLayer,
   removeFromLayer,
+  visibleRect,
 } from "../core/utils";
 import { destroyDriverClick, onDriverClick } from "../core/click";
 import { Context } from "../core/context";
@@ -22,8 +23,8 @@ import {
 export function transitionStage(ctx: Context, elapsed: number, duration: number, from: Element, to: Element) {
   let activeStagePosition = ctx.state.__activeStagePosition;
 
-  const fromDefinition = activeStagePosition ? activeStagePosition : from.getBoundingClientRect();
-  const toDefinition = to.getBoundingClientRect();
+  const fromDefinition = activeStagePosition ? activeStagePosition : visibleRect(from);
+  const toDefinition = visibleRect(to);
 
   const x = easeInOutQuad(elapsed, fromDefinition.x, toDefinition.x - fromDefinition.x, duration);
   const y = easeInOutQuad(elapsed, fromDefinition.y, toDefinition.y - fromDefinition.y, duration);
@@ -46,7 +47,7 @@ export function trackActiveElement(ctx: Context, element: Element) {
     return;
   }
 
-  const definition = element.getBoundingClientRect();
+  const definition = visibleRect(element);
 
   const activeStagePosition: StageDefinition = {
     x: definition.x,

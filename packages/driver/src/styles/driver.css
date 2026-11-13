@@ -11,6 +11,7 @@
 .driver-active
   :where(
     :not(
+      .driver-page-interactive *,
       .driver-active-element,
       .driver-active-element *,
       .driver-allowed-element,
@@ -20,6 +21,11 @@
     )
   ) {
   pointer-events: none;
+}
+
+/* allowPageInteraction: clicks go through the dimmed overlay to the page */
+.driver-page-interactive .driver-overlay path {
+  pointer-events: none !important;
 }
 
 .driver-active .driver-active-element,

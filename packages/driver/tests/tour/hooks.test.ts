@@ -148,6 +148,7 @@ describe("hook order", () => {
     expect(trace).toMatchInlineSnapshot(`
       [
         "onHighlightStarted:Step 1:intro",
+        "onDestroyed:Step 1:intro (api)",
       ]
     `);
   });

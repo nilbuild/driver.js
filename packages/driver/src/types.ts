@@ -79,6 +79,13 @@ export type WaitingForElementHook = (
   opts: WaitingForElementOpts
 ) => void;
 
+// what has the keyboard when a step shows: the popover, the first thing to use inside the element, or whatever had it
+export type StepFocus = "popover" | "element" | "none";
+
+// where the element ends up when driver.js scrolls to it; what is left out keeps the default (centred, or its top at the
+// top of the viewport when it is taller than the viewport)
+export type ScrollIntoViewOpts = Pick<ScrollIntoViewOptions, "block" | "inline">;
+
 export type ElementMissingPreset = "stay" | "previous" | "previousAction";
 export type ElementMissing = ElementMissingPreset | ElementMissingHook;
 
@@ -90,9 +97,11 @@ export type Config = {
   overlayColor?: string;
   overlayOpacity?: number;
   smoothScroll?: boolean;
-  scrollIntoView?: boolean;
+  scrollIntoView?: boolean | ScrollIntoViewOpts;
   allowClose?: boolean;
   allowScroll?: boolean;
+  allowPageInteraction?: boolean;
+  focus?: StepFocus;
   overlayClickBehavior?: "close" | "nextStep" | "none" | DriverHook;
   stagePadding?: number;
   stageRadius?: number;
@@ -111,6 +120,7 @@ export type Config = {
   skipMissingElement?: boolean;
 
   waitForElement?: number;
+  waitForRemovedElement?: number;
 
   advanceDelay?: number;
 
@@ -129,6 +139,7 @@ export type Config = {
   closeBtnLabel?: string;
 
   onPopoverRender?: (popover: PopoverDOM, opts: HookOpts) => void;
+  onPopoverPositioned?: (popover: PopoverDOM, opts: HookOpts) => void;
 
   onHighlightStarted?: DriverHook;
   onHighlighted?: DriverHook;
@@ -163,6 +174,7 @@ export type Popover = {
   instruction?: string;
 
   onPopoverRender?: (popover: PopoverDOM, opts: HookOpts) => void;
+  onPopoverPositioned?: (popover: PopoverDOM, opts: HookOpts) => void;
 
   onNextClick?: DriverHook;
   onPrevClick?: DriverHook;
@@ -177,6 +189,8 @@ export type DriveStep = {
   onDeselected?: DriverHook;
   popover?: Popover;
   disableActiveInteraction?: boolean | "clicks";
+  allowPageInteraction?: boolean;
+  focus?: StepFocus;
   advanceOn?: AdvanceOn;
   /** @deprecated Use `advanceOn: "click"`. */
   advanceOnClick?: boolean;
@@ -187,8 +201,9 @@ export type DriveStep = {
   onElementReplaced?: DriverHook;
   skipMissingElement?: boolean;
   waitForElement?: number;
+  waitForRemovedElement?: number;
   advanceDelay?: number;
-  scrollIntoView?: boolean;
+  scrollIntoView?: boolean | ScrollIntoViewOpts;
   data?: Record<string, any>;
 };
 
@@ -250,6 +265,6 @@ export type State = {
     onKeydown: (e: KeyboardEvent) => void;
     onKeydownCapture: (e: KeyboardEvent) => void;
     onResize: () => void;
-    onScroll: () => void;
+    onScroll: (e: Event) => void;
   };
 };

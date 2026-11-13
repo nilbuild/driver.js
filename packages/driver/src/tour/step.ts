@@ -11,7 +11,7 @@ import {
   updatePopoverContent,
 } from "../popover/popover";
 import { PositionOptions, repositionPopover } from "../popover/position";
-import { isDummyElement, resolveElement } from "../core/utils";
+import { getFocusableElements, isDummyElement, resolveElement } from "../core/utils";
 import { isFocusWithinStep } from "./allowed";
 import { announce } from "../popover/live-region";
 import { stepOption } from "../core/options";
@@ -171,6 +171,12 @@ function resolveStepPosition(ctx: Context, element: Element, step: DriveStep): P
     offset: stagePadding + (ctx.config.popoverOffset || 0),
     padding: stagePadding,
     centered: isDummyElement(element),
+    onPositioned: () => {
+      const onPopoverPositioned = step.popover?.onPopoverPositioned || ctx.config.onPopoverPositioned;
+      if (onPopoverPositioned && ctx.state.popover) {
+        onPopoverPositioned(ctx.state.popover, hookOpts(ctx));
+      }
+    },
   };
 }
 
@@ -247,10 +253,30 @@ function resolveStepPopover(ctx: Context, element: Element, step: DriveStep): Po
   };
 }
 
+// the first thing to use inside the step's element, when the step asks for the keyboard to go there; otherwise (or with
+// nothing usable in it) the popover has it
+function elementFocusTarget(ctx: Context, element: Element, step: DriveStep): HTMLElement | undefined {
+  const isUsable = !isDummyElement(element) && stepOption(ctx, step, "disableActiveInteraction") !== true;
+  if (stepOption(ctx, step, "focus") !== "element" || !isUsable) {
+    return undefined;
+  }
+
+  return getFocusableElements([element])[0];
+}
+
+export function focusStepElement(ctx: Context, element: Element, step: DriveStep) {
+  if (!isFocusWithinStep(ctx, element, step)) {
+    elementFocusTarget(ctx, element, step)?.focus({ preventScroll: true });
+  }
+}
+
 export function renderStepPopover(ctx: Context, element: Element, step: DriveStep) {
   destroyPopover(ctx.state.popover);
 
-  const keepFocus = isFocusWithinStep(ctx, element, step);
+  const keepFocus =
+    isFocusWithinStep(ctx, element, step) ||
+    stepOption(ctx, step, "focus") === "none" ||
+    !!elementFocusTarget(ctx, element, step);
   const popover = renderPopover(element, {
     ...resolveStepPopover(ctx, element, step),
     keepFocus,

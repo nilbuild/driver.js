@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createDriver, navButton, nextFrame, popoverEl, progressText, SAMPLE_STEPS, useDriverHarness } from "../utils";
 
 useDriverHarness();
@@ -235,5 +235,60 @@ describe("popover click target", () => {
 
     window.removeEventListener("error", onError);
     expect(errors).toEqual([]);
+  });
+});
+
+describe("onPopoverPositioned", () => {
+  it("runs after onPopoverRender, and again whenever driver.js places the popover", async () => {
+    const calls: string[] = [];
+    const d = createDriver({
+      animate: false,
+      steps: SAMPLE_STEPS,
+      onPopoverRender: () => calls.push("render"),
+      onPopoverPositioned: (popover, opts) => {
+        expect(popover.wrapper).toBe(document.querySelector(".driver-popover"));
+        expect(opts.driver).toBe(d);
+        calls.push("positioned");
+      },
+    });
+    d.drive();
+    await nextFrame();
+    expect(calls).toEqual(["render", "positioned"]);
+
+    d.refresh();
+    await nextFrame();
+    expect(calls).toEqual(["render", "positioned", "positioned"]);
+  });
+
+  it("keeps a placement made in the hook until the next one", async () => {
+    const d = createDriver({
+      animate: false,
+      steps: SAMPLE_STEPS,
+      onPopoverPositioned: popover => {
+        popover.wrapper.style.left = "7px";
+      },
+    });
+    d.drive();
+    await nextFrame();
+    expect(popoverEl()?.style.left).toBe("7px");
+
+    d.refresh();
+    await nextFrame();
+    expect(popoverEl()?.style.left).toBe("7px");
+  });
+
+  it("prefers the step's hook", async () => {
+    const own = vi.fn();
+    const shared = vi.fn();
+    const d = createDriver({
+      animate: false,
+      onPopoverPositioned: shared,
+      steps: [{ ...SAMPLE_STEPS[0], popover: { title: "Own", onPopoverPositioned: own } }],
+    });
+    d.drive();
+    await nextFrame();
+
+    expect(own).toHaveBeenCalledTimes(1);
+    expect(shared).not.toHaveBeenCalled();
   });
 });

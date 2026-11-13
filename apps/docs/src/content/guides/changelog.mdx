@@ -9,6 +9,27 @@ _Unreleased_ lists what is merged for the next release.
 
 ## Unreleased
 
+### Added
+
+- `waitForRemovedElement` sets how long a removed element gets to come back, separately from `waitForElement`. Both take `Infinity`.
+- `scrollIntoView` takes `{ block, inline }` to say where the element ends up.
+- `allowPageInteraction` lets the user use the whole page during a step.
+- `focus` puts the keyboard on the popover, in the highlighted element, or leaves it where it is.
+- In the headless build, `onInteraction` reports clicks on `allowedElements` as `region: "allowed"`.
+- `onPopoverPositioned` runs every time the popover is placed, so you can move it somewhere else and keep it there.
+
+### Changed
+
+- The cutout and popover only cover the part of the element in view, so a row wider than its scrolling panel is highlighted inside the panel.
+- The popover scrolls into view only as far as it needs to, so it no longer undoes where the element was scrolled to.
+- When the tour ends, the keyboard goes back where it was only if it is still on the popover.
+
+### Fixed
+
+- The highlight follows a panel that scrolls inside the page.
+- `onDestroyed` runs when the tour is closed before the first step has settled.
+- A `waitForElement` longer than about 24 days no longer runs out at once.
+
 ## 1.13.0
 
 ### Added

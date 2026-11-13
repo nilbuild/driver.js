@@ -1,6 +1,7 @@
 import { destroyDriverClick, onDriverClick } from "../core/click";
 import { PositionOptions, repositionPopover } from "./position";
 import { bringInView, layerFor, removeFromLayer } from "../core/utils";
+import type { ScrollIntoViewOpts } from "../types";
 
 export type Side = "top" | "right" | "bottom" | "left";
 export type Alignment = "start" | "center" | "end";
@@ -47,7 +48,7 @@ export type PopoverRenderOptions = {
 
   popoverClass?: string;
   smoothScroll?: boolean;
-  scrollIntoView?: boolean;
+  scrollIntoView?: boolean | ScrollIntoViewOpts;
 
   onNextClick?: () => void;
   onPrevClick?: () => void;
@@ -306,7 +307,8 @@ export function renderPopover(anchor: Element, options: PopoverRenderOptions): P
   repositionPopover(popover, anchor, options.position);
   repositionOnImagesLoad(popover, anchor, options.position);
   if (options.scrollIntoView !== false) {
-    bringInView(popoverWrapper, options.smoothScroll);
+    // only as far as it takes, so it doesn't undo where the element was scrolled to
+    bringInView(popoverWrapper, options.smoothScroll, { block: "nearest", inline: "nearest" });
   }
 
   if (!options.keepFocus) {

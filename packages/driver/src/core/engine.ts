@@ -277,15 +277,20 @@ export function createEngine(options: Config, ui: Renderer): Driver {
       reason = ctx.state.__destroyReason ?? "api";
     }
 
-    const activeElement = ctx.state.__activeElement;
-    const hasHighlighted = !!activeElement || !!ctx.state.__activeStep;
-    const activeStep = ctx.state.__activeStep ?? placeholderOf(ctx)?.step;
+    const hasHighlighted = !!ctx.state.__activeElement || !!ctx.state.__activeStep;
+    // closed while the first step was still moving in: its element and step aren't committed yet
+    const activeElement = hasHighlighted ? ctx.state.__activeElement : ctx.state.activeElement;
+    const activeStep =
+      ctx.state.__activeStep ?? placeholderOf(ctx)?.step ?? ctx.state.activeStep ?? ctx.state.__activation?.step;
     const hookElement = isDummyElement(activeElement) ? undefined : activeElement;
 
-    const activeOnDestroyed = ctx.state.__activeOnDestroyed;
+    // the keyboard goes back where it was only if the tour still has it (the user may have moved on into the page)
+    const focused = document.activeElement;
+    const hasFocus = !focused || focused === document.body || !!ctx.state.popover?.wrapper.contains(focused);
+    const activeOnDestroyed = hasFocus ? ctx.state.__activeOnDestroyed : undefined;
 
     const onDestroyStarted = ctx.config.onDestroyStarted;
-    const startedStep = popoverStep(ctx) ?? ctx.state.activeStep;
+    const startedStep = popoverStep(ctx) ?? ctx.state.activeStep ?? ctx.state.__activation?.step;
     if (withOnDestroyStartedHook && onDestroyStarted && startedStep) {
       ctx.state.__destroyReason = reason;
       onDestroyStarted(hookElement, startedStep, hookOpts(ctx, undefined, reason));

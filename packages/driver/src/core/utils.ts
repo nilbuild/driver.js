@@ -1,4 +1,4 @@
-import type { DriveStep } from "../types";
+import type { DriveStep, ScrollIntoViewOpts } from "../types";
 
 export function resolveElement(element: DriveStep["element"]): Element | null | undefined {
   if (typeof element === "function") {
@@ -20,6 +20,7 @@ export function isDummyElement(element: Element | undefined): boolean {
 
 export const ALLOWED_CLASS = "driver-allowed-element";
 export const RAISED_CLASS = "driver-active-element-raised";
+export const PAGE_INTERACTIVE_CLASS = "driver-page-interactive";
 
 export function isInsideAllowedElement(element: Element): boolean {
   return !!element.closest(`.${ALLOWED_CLASS}`);
@@ -62,7 +63,7 @@ export function getFocusableElements(parentEls: Element[]) {
   return focusableCandidates(parentEls).filter(isFocusable);
 }
 
-export function bringInView(element: Element, shouldSmoothScroll?: boolean) {
+export function bringInView(element: Element, shouldSmoothScroll?: boolean, position?: ScrollIntoViewOpts) {
   if (!element || isElementInView(element)) {
     return;
   }
@@ -71,8 +72,8 @@ export function bringInView(element: Element, shouldSmoothScroll?: boolean) {
 
   element.scrollIntoView({
     behavior: !shouldSmoothScroll || hasScrollableParent(element) ? "auto" : "smooth",
-    inline: "center",
-    block: isTallerThanViewport ? "start" : "center",
+    inline: position?.inline ?? "center",
+    block: position?.block ?? (isTallerThanViewport ? "start" : "center"),
   });
 }
 
@@ -95,42 +96,103 @@ function isElementInView(element: Element) {
     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
     rect.right <= (window.innerWidth || document.documentElement.clientWidth);
 
-  return isInViewport && !isClippedByScrollContainer(element, rect);
+  return isInViewport && !isClipped(element, rect);
 }
 
-function isClippedByScrollContainer(element: Element, rect: DOMRect) {
-  let current: Element | null = element;
+function flatParent(element: Element): Element | null {
+  const parent = element.assignedSlot ?? element.parentElement;
+  if (parent) {
+    return parent;
+  }
 
-  while (current) {
-    if (getComputedStyle(current).position === "fixed") {
-      return false;
+  const root = element.parentNode;
+  return root instanceof ShadowRoot ? root.host : null;
+}
+
+function matchesSafely(element: Element, selector: string): boolean {
+  try {
+    return element.matches(selector);
+  } catch {
+    return false;
+  }
+}
+
+function containsPaint(style: CSSStyleDeclaration): boolean {
+  return /paint|strict|content/.test(style.contain || "");
+}
+
+// whether `ancestor` is the containing block of a box positioned `position` (so its overflow clips that box)
+function containsBox(style: CSSStyleDeclaration, position: string): boolean {
+  if (position !== "absolute" && position !== "fixed") {
+    return true;
+  }
+
+  const isTransformed =
+    (style.transform || "none") !== "none" ||
+    (style.perspective || "none") !== "none" ||
+    (style.filter || "none") !== "none" ||
+    /layout|paint|strict|content/.test(style.contain || "") ||
+    /transform|perspective|filter/.test(style.willChange || "");
+
+  return isTransformed || (position === "absolute" && style.position !== "static");
+}
+
+const clips = (overflow: string | undefined) => !!overflow && overflow !== "visible";
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+// the part of the element its scrolling (or otherwise clipping) ancestors let you see. An element clipped out of sight
+// entirely comes back as a sliver on the edge it is hidden behind.
+export function visibleRect(element: Element): DOMRect {
+  const rect = element.getBoundingClientRect();
+  let { left, top, right, bottom } = rect;
+  let position = getComputedStyle(element).position;
+
+  for (let ancestor = flatParent(element); ancestor; ancestor = flatParent(ancestor)) {
+    if (ancestor === document.body || ancestor === document.documentElement) {
+      break;
     }
 
-    const parent: HTMLElement | null = current.parentElement;
-    if (!parent || parent === document.body || parent === document.documentElement) {
-      return false;
+    const style = getComputedStyle(ancestor);
+    if (!containsBox(style, position)) {
+      continue;
     }
 
-    if (isScrollable(parent)) {
-      const box = parent.getBoundingClientRect();
-      const top = box.top + parent.clientTop;
-      const left = box.left + parent.clientLeft;
-
-      const isClipped =
-        rect.top < top ||
-        rect.left < left ||
-        rect.bottom > top + (parent.clientHeight || box.height) ||
-        rect.right > left + (parent.clientWidth || box.width);
-
-      if (isClipped) {
-        return true;
+    const isPainted = containsPaint(style);
+    const overflow = (style.overflow || "").split(" ");
+    const clipsX = isPainted || clips(style.overflowX) || clips(overflow[0]);
+    const clipsY = isPainted || clips(style.overflowY) || clips(overflow[1] ?? overflow[0]);
+    if (clipsX || clipsY) {
+      const box = ancestor.getBoundingClientRect();
+      const boxLeft = box.left + ancestor.clientLeft;
+      const boxTop = box.top + ancestor.clientTop;
+      const boxRight = boxLeft + (ancestor.clientWidth || box.width);
+      const boxBottom = boxTop + (ancestor.clientHeight || box.height);
+      if (clipsX) {
+        left = clamp(left, boxLeft, boxRight);
+        right = clamp(right, boxLeft, boxRight);
+      }
+      if (clipsY) {
+        top = clamp(top, boxTop, boxBottom);
+        bottom = clamp(bottom, boxTop, boxBottom);
       }
     }
 
-    current = parent;
+    // nothing outside the top layer clips what is in it
+    if (matchesSafely(ancestor, ":modal, :popover-open")) {
+      break;
+    }
+
+    position = style.position;
   }
 
-  return false;
+  return new DOMRect(left, top, right - left, bottom - top);
+}
+
+function isClipped(element: Element, rect: DOMRect): boolean {
+  const visible = visibleRect(element);
+
+  return visible.width < rect.width || visible.height < rect.height;
 }
 
 export function isElementVisible(el: HTMLElement) {
@@ -215,4 +277,11 @@ export function isKeyWidget(node: EventTarget | null | undefined): boolean {
   }
 
   return node.isContentEditable || !!node.closest(KEY_WIDGETS);
+}
+
+// setTimeout fires at once past this many milliseconds, so a wait that long (or Infinity) has no timer at all
+const LONGEST_TIMER = 2 ** 31 - 1;
+
+export function isEndless(ms: number): boolean {
+  return ms > LONGEST_TIMER;
 }

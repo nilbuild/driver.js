@@ -112,3 +112,16 @@ describe("destroy reason for a single highlight", () => {
     expect(reason()).toBe(expected);
   });
 });
+
+describe("destroy before the first step settles", () => {
+  it("still runs onDestroyed once, with the step", () => {
+    const onDestroyed = vi.fn();
+    const d = createDriver({ animate: true, steps: ONE_STEP, onDestroyed });
+    d.drive();
+    d.destroy();
+
+    expect(onDestroyed).toHaveBeenCalledTimes(1);
+    expect(onDestroyed.mock.calls[0][1].popover?.title).toBe("Only");
+    expect(onDestroyed.mock.calls[0][0]).toBe(document.querySelector("#intro"));
+  });
+});

@@ -1,9 +1,14 @@
-import { ALLOWED_CLASS } from "../tour/allowed";
 import type { Context } from "../core/context";
 import type { InteractionRegion } from "../types";
 import { isDummyElement } from "../core/utils";
 
 type Region = InteractionRegion | "popover";
+
+export function isOnElement(ctx: Context, path: EventTarget[]): boolean {
+  const element = ctx.state.activeElement;
+
+  return !isDummyElement(element) && !!element && path.includes(element);
+}
 
 export function regionOf(ctx: Context, path: EventTarget[]): Region {
   const popover = ctx.state.popover?.wrapper;
@@ -11,14 +16,11 @@ export function regionOf(ctx: Context, path: EventTarget[]): Region {
     return "popover";
   }
 
-  const element = ctx.state.activeElement;
-  if (!isDummyElement(element) && path.includes(element!)) {
+  if (isOnElement(ctx, path)) {
     return "element";
   }
 
-  const isAllowed = path.some(node => node instanceof Element && node.classList.contains(ALLOWED_CLASS));
-
-  return isAllowed ? "allowed" : "outside";
+  return ctx.ui.isAllowed(ctx, path) ? "allowed" : "outside";
 }
 
 export function pathOf(node: Node | null): EventTarget[] {

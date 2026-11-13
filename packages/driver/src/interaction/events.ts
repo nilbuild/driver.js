@@ -1,6 +1,7 @@
 import { Context } from "../core/context";
 import { refreshActiveHighlight } from "../tour/highlight";
 import { getFocusableElements } from "../core/utils";
+import { isPageInteractive } from "../core/options";
 import { initGate } from "./gate";
 import {
   handledKeys,
@@ -37,7 +38,7 @@ function trapFocus(ctx: Context, e: KeyboardEvent) {
   }
 
   const isTabKey = e.key === "Tab" || e.keyCode === 9;
-  if (!isTabKey) {
+  if (!isTabKey || isPageInteractive(ctx)) {
     return;
   }
 
@@ -119,7 +120,14 @@ export function initEvents(ctx: Context) {
   };
   const onWindowKeydownCapture = (e: KeyboardEvent) => onKeydownCapture(ctx, e);
   const onWindowResize = () => requireRefresh(ctx);
-  const onWindowScroll = () => requireRefresh(ctx);
+  // captured, so a panel scrolling inside the page moves the highlight too (scroll doesn't bubble); not the popover's own
+  const onWindowScroll = (event: Event) => {
+    if (event.target instanceof Node && ctx.state.popover?.wrapper.contains(event.target)) {
+      return;
+    }
+
+    requireRefresh(ctx);
+  };
 
   ctx.state.__events = {
     onKeyup: onWindowKeyup,
@@ -147,7 +155,7 @@ export function initEvents(ctx: Context) {
   window.addEventListener("keyup", onWindowKeyup, false);
   window.addEventListener("keydown", onWindowKeydown, false);
   window.addEventListener("resize", onWindowResize);
-  window.addEventListener("scroll", onWindowScroll);
+  window.addEventListener("scroll", onWindowScroll, true);
   document.addEventListener("close", onWindowResize, true);
 }
 
@@ -165,5 +173,5 @@ export function destroyEvents(ctx: Context) {
   ctx.state.__openObserver?.disconnect();
   window.removeEventListener("resize", events.onResize);
   document.removeEventListener("close", events.onResize, true);
-  window.removeEventListener("scroll", events.onScroll);
+  window.removeEventListener("scroll", events.onScroll, true);
 }

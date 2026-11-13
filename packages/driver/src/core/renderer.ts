@@ -13,6 +13,7 @@ export type Renderer = {
   rebind: (ctx: Context, element: Element) => void;
   refresh: (ctx: Context) => void;
   trackAllowed: (ctx: Context, step: DriveStep, signal: AbortSignal) => void;
+  isAllowed: (ctx: Context, path: EventTarget[]) => boolean;
 
   showWaiting: (ctx: Context) => void;
   hideWaiting: (ctx: Context, element: Element | undefined, step: DriveStep | undefined) => void;

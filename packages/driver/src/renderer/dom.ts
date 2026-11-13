@@ -4,7 +4,7 @@ import { destroyEvents, initEvents, requireRefresh } from "../interaction/events
 import { announce, destroyLiveRegion, mountLiveRegion } from "../popover/live-region";
 import { destroyPopover } from "../popover/popover";
 import { destroyOverlay } from "../overlay/overlay";
-import { trackAllowedElements } from "../tour/allowed";
+import { ALLOWED_CLASS, trackAllowedElements } from "../tour/allowed";
 import { createControls } from "./controls";
 import {
   destroyHighlight,
@@ -14,6 +14,7 @@ import {
   removeDummyElement,
 } from "../tour/highlight";
 import { beginActivation, dropPlaceholder, enterStep } from "../tour/lifecycle";
+import { PAGE_INTERACTIVE_CLASS } from "../core/utils";
 import { nudge } from "../tour/nudge";
 import {
   hidePopoverWaiting,
@@ -37,7 +38,13 @@ function mount(ctx: Context) {
 }
 
 function detach() {
-  document.body.classList.remove("driver-active", "driver-fade", "driver-simple", "driver-no-scroll");
+  document.body.classList.remove(
+    "driver-active",
+    "driver-fade",
+    "driver-simple",
+    "driver-no-scroll",
+    PAGE_INTERACTIVE_CLASS
+  );
   document.body.style.removeProperty("--driver-animation-duration");
 }
 
@@ -105,6 +112,7 @@ export const domRenderer: Renderer = {
   rebind: rebindActiveElement,
   refresh: requireRefresh,
   trackAllowed: trackAllowedElements,
+  isAllowed: (_ctx, path) => path.some(node => node instanceof Element && node.classList.contains(ALLOWED_CLASS)),
   showWaiting: showPopoverWaiting,
   hideWaiting: hidePopoverWaiting,
   showInitialWait,
