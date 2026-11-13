@@ -56,7 +56,8 @@ function focusableCandidates(parentEls: Element[]): HTMLElement[] {
 }
 
 function isFocusable(el: HTMLElement) {
-  return getComputedStyle(el).pointerEvents !== "none" && isElementVisible(el);
+  const style = getComputedStyle(el);
+  return style.pointerEvents !== "none" && style.visibility === "visible" && isElementVisible(el);
 }
 
 export function getFocusableElements(parentEls: Element[]) {
