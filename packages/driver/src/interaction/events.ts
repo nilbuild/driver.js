@@ -55,19 +55,20 @@ function trapFocus(ctx: Context, e: KeyboardEvent) {
     ),
   ];
 
-  const firstFocusableEl = focusableEls[0];
-  const lastFocusableEl = focusableEls[focusableEls.length - 1];
-
   e.preventDefault();
 
-  if (e.shiftKey) {
-    const previousFocusableEl =
-      focusableEls[focusableEls.indexOf(document.activeElement as HTMLElement) - 1] || lastFocusableEl;
-    previousFocusableEl?.focus();
-  } else {
-    const nextFocusableEl =
-      focusableEls[focusableEls.indexOf(document.activeElement as HTMLElement) + 1] || firstFocusableEl;
-    nextFocusableEl?.focus();
+  const direction = e.shiftKey ? -1 : 1;
+  const currentIndex = focusableEls.indexOf(document.activeElement as HTMLElement);
+  const startIndex = currentIndex === -1 && direction === -1 ? focusableEls.length : currentIndex;
+
+  for (let offset = 1; offset <= focusableEls.length; offset++) {
+    const index =
+      (((startIndex + direction * offset) % focusableEls.length) + focusableEls.length) % focusableEls.length;
+    const candidate = focusableEls[index];
+    candidate.focus();
+    if (candidate.matches(":focus")) {
+      return;
+    }
   }
 }
 

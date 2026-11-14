@@ -126,6 +126,59 @@ test.describe("focus when Next cannot take it", () => {
 });
 
 test.describe("Tab", () => {
+  test("skips controls hidden with visibility in both directions", async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector("#slot")!.innerHTML = `
+        <div id="panel">
+          <button id="first" type="button">First</button>
+          <button id="hidden" type="button" style="visibility: hidden">Hidden</button>
+          <button id="last" type="button">Last</button>
+        </div>
+      `;
+    });
+    await start(page, { steps: [{ element: "#panel", popover: { title: "Panel", showButtons: [] } }] });
+
+    await page.locator("#first").focus();
+    expect(await tabThrough(page, "Tab", 3)).toEqual(["last", "first", "last"]);
+    expect(await tabThrough(page, "Shift+Tab", 3)).toEqual(["first", "last", "first"]);
+  });
+
+  test("reaches visible descendants of a hidden ancestor", async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector("#slot")!.innerHTML = `
+        <div id="panel">
+          <button id="first" type="button">First</button>
+          <div style="visibility: hidden">
+            <button id="hidden" type="button">Hidden</button>
+            <button id="visible" type="button" style="visibility: visible">Visible</button>
+          </div>
+        </div>
+      `;
+    });
+    await start(page, { steps: [{ element: "#panel", popover: { title: "Panel", showButtons: [] } }] });
+
+    await page.locator("#first").focus();
+    expect(await tabThrough(page, "Tab", 3)).toEqual(["visible", "first", "visible"]);
+    expect(await tabThrough(page, "Shift+Tab", 3)).toEqual(["first", "visible", "first"]);
+  });
+
+  test("skips controls that refuse focus", async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector("#slot")!.innerHTML = `
+        <div id="panel">
+          <button id="first" type="button">First</button>
+          <div inert><button id="inert" type="button">Inert</button></div>
+          <button id="last" type="button">Last</button>
+        </div>
+      `;
+    });
+    await start(page, { steps: [{ element: "#panel", popover: { title: "Panel", showButtons: [] } }] });
+
+    await page.locator("#first").focus();
+    expect(await tabThrough(page, "Tab", 3)).toEqual(["last", "first", "last"]);
+    expect(await tabThrough(page, "Shift+Tab", 3)).toEqual(["first", "last", "first"]);
+  });
+
   test("reaches allowed elements", async ({ page }) => {
     await start(page, {
       steps: [{ element: "#intro", allowedElements: "#side", popover: { title: "Intro", showButtons: [] } }],
